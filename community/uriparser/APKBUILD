@@ -1,0 +1,50 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Contributor: Fabian Affolter <fabian@affolter-engineering.ch>
+maintainer="Achill Gilgenast <achill@achill.org>"
+pkgname=uriparser
+pkgver=0.9.9
+pkgrel=0
+pkgdesc="strictly RFC 3986 compliant URI parsing and handling library"
+url="https://uriparser.github.io/"
+arch="all"
+license="BSD-3-Clause"
+makedepends="cmake gtest-dev samurai"
+subpackages="$pkgname-dev lib$pkgname:libs"
+source="https://github.com/uriparser/uriparser/releases/download/uriparser-$pkgver/uriparser-$pkgver.tar.bz2"
+
+# secfixes:
+#   0.9.8-r0:
+#     - CVE-2024-34402
+#     - CVE-2024-34403
+#   0.9.6-r0:
+#     - CVE-2021-46141
+#     - CVE-2021-46142
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		CMAKE_CROSSOPTS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	cmake -B build -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		-DCMAKE_BUILD_TYPE=None \
+		-DURIPARSER_BUILD_DOCS=OFF \
+		-DURIPARSER_BUILD_TOOLS=ON \
+		-DURIPARSER_BUILD_TESTS=ON \
+		-DBUILD_SHARED_LIBS=ON \
+		$CMAKE_CROSSOPTS
+	cmake --build build
+}
+
+check() {
+	make test ARGS=--verbose
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+1c4ac63e7a872fdc7ce84ee5e8736dcafe58242b80218a3457bdcd1b358bfec5437658e2ad99427c6d94b14b30c7f7c3d059b9d106cd1a7149adf23e77072de6  uriparser-0.9.9.tar.bz2
+"

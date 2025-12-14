@@ -1,0 +1,57 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=libkcddb
+pkgver=25.08.3
+pkgrel=0
+# armhf blocked by qt6-qtdeclarative -> ki18n
+arch="all !armhf"
+url="https://www.kde.org/applications/multimedia/"
+pkgdesc="KDE CDDB library"
+license="LGPL-2.0-or-later AND GPL-2.0-or-later"
+makedepends="
+	extra-cmake-modules
+	kcmutils-dev
+	kcodecs-dev
+	kconfig-dev
+	kdoctools-dev
+	ki18n-dev
+	kio-dev
+	kwidgetsaddons-dev
+	libmusicbrainz-dev
+	qt6-qtbase-dev
+	samurai
+	"
+checkdepends="
+	dbus
+	xwayland-run
+	"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+_repo_url="https://invent.kde.org/multimedia/libkcddb.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/libkcddb-$pkgver.tar.xz"
+options="net" # Required for tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_TESTING=ON
+	cmake --build build
+}
+
+check() {
+	# musicbrainztest-severaldiscs fails due to utf16/8 (?)
+	# synchttplookuptest hangs
+	# asyncmusicbrainztest and musicbrainztest require network access
+	dbus-run-session -- wlheadless-run -- ctest --test-dir build \
+		-E "(asyncmusicbrainztest|synchttplookuptest|musicbrainztest-severaldiscs|synccddblookuptest|asynchttpsubmittest|synchttpsubmittest|sitestest|utf8test|musicbrainztest)"
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+ec3a3dcf021f16e717a19a8c23e35ec1cdac9bd8e5860fb898cdb7f37cfcba7e94a7fff88924399d5574692b10c2e61834a4ca2c1e2a6910e1a5e40804880ed8  libkcddb-25.08.3.tar.xz
+"

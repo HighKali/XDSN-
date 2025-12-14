@@ -1,0 +1,28 @@
+# Maintainer: Willow Barraco <contact@willowbarraco.fr>
+pkgname=hare-xkb
+pkgver=0.25.2.0
+pkgrel=0
+pkgdesc="Hare interface to the xkbcommon library"
+url="https://git.sr.ht/~stacyharper/hare-xkb"
+arch="x86_64 aarch64 riscv64" # hare
+license="MPL-2.0"
+makedepends="hare"
+source="
+	$pkgname-$pkgver.tar.gz::https://git.sr.ht/~stacyharper/hare-xkb/archive/$pkgver.tar.gz
+"
+
+build() {
+	make -j1 PREFIX=/usr
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" PREFIX=/usr install
+}
+
+sha512sums="
+b51f96c8036a6db7262c96e577e042e391cb732013db3714fb03bff59fb056c272a0c623382b017dc1e27b28016c3c2d73c8b81b489d2907240348a90940804c  hare-xkb-0.25.2.0.tar.gz
+"

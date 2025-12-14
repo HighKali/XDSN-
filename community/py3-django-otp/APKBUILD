@@ -1,0 +1,51 @@
+# Contributor: Antoine Martin (ayakael) <dev@ayakael.net>
+# Maintainer: Antoine Martin (ayakael) <dev@ayakael.net>
+pkgname=py3-django-otp
+_pyname=django_otp
+pkgver=1.6.3
+pkgrel=0
+arch="noarch"
+pkgdesc="A pluggable framework for adding two-factor authentication to Django using one-time passwords."
+url="https://pypi.python.org/project/django-otp"
+license="BSD-2-Clause"
+# also supports py3-segno
+depends="
+	py3-django
+	py3-qrcode
+	"
+makedepends="
+	py3-gpep517
+	py3-setuptools
+	py3-wheel
+	py3-hatchling
+	"
+checkdepends="
+	py3-freezegun
+	"
+source="$pkgname-$pkgver.tar.gz::https://pypi.io/packages/source/d/django-otp/django_otp-$pkgver.tar.gz"
+builddir="$srcdir"/$_pyname-$pkgver
+subpackages="$pkgname-pyc"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	PYTHONPATH="test" \
+	DJANGO_SETTINGS_MODULE="test_project.settings" \
+	.testenv/bin/python3 -s -m django test -v 2 django_otp
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+	install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
+
+sha512sums="
+3e671e643d37b734ec4e2808ce50d7636315a57dd59c9466ee2ededd4a94201f2340b0d1dc711106c0af154cca5229b4688d05db9085bc48483385ca534d6753  py3-django-otp-1.6.3.tar.gz
+"

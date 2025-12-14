@@ -1,0 +1,39 @@
+# Maintainer: Celeste <cielesti@protonmail.com>
+maintainer="Celeste <cielesti@protonmail.com>"
+pkgname=emacs-llama
+pkgver=1.0.2
+pkgrel=0
+_pkgreal=llama
+pkgdesc="Compact syntax for short lambda"
+url="https://github.com/tarsius/llama"
+arch="noarch"
+license="GPL-3.0-or-later"
+depends="cmd:emacs"
+makedepends="emacs-nox"
+source="https://github.com/tarsius/llama/archive/refs/tags/v$pkgver/emacs-llama-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgreal-$pkgver"
+
+build() {
+	emacs -batch -q -no-site-file -L . \
+		-eval '(setq byte-compile-error-on-warn t)' \
+		-f batch-byte-compile \
+		./*.el
+}
+
+check() {
+	emacs -batch -q -no-site-file -L . \
+		-l ert -l llama-tests -f ert-run-tests-batch-and-exit
+}
+
+package() {
+	install -Dvm644 llama.el llama.elc \
+		-t "$pkgdir"/usr/share/emacs/site-lisp/
+
+	cd "$pkgdir"/usr/share/emacs/site-lisp
+	emacs -batch -q -no-site-file \
+		-eval "(loaddefs-generate \".\" \"$_pkgreal-loaddefs.el\")"
+}
+
+sha512sums="
+05721f093fc45b4cc7f2c9517f6f16cbf1b72d123767cda6acfbf2af68aa87f44b7a061f75a8759eba63ba7f4560746f82721b46da425a03f130b96607583d44  emacs-llama-1.0.2.tar.gz
+"

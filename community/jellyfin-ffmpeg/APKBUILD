@@ -1,0 +1,134 @@
+# Contributor: Sergei Lukin <sergej.lukin@gmail.com>
+# Contributor: Łukasz Jendrysik <scadu@yandex.com>
+# Contributor: Jakub Skrzypnik <j.skrzypnik@openmailbox.org>
+# Maintainer: FintasticMan <finlay.neon.kid@gmail.com>
+pkgname=jellyfin-ffmpeg
+pkgver=7.1.2_p3
+_pkgver="${pkgver/_p/-}"
+pkgrel=0
+pkgdesc="Modified version of FFmpeg for Jellyfin"
+url="https://github.com/jellyfin/jellyfin-ffmpeg"
+arch="all"
+license="GPL-3.0-only"
+makedepends="
+	alsa-lib-dev
+	bzip2-dev
+	chromaprint-dev
+	coreutils
+	dav1d-dev
+	fontconfig-dev
+	freetype-dev
+	fribidi-dev
+	gmp-dev
+	imlib2-dev
+	lame-dev
+	libass-dev
+	libbluray-dev
+	libdrm-dev
+	libopenmpt-dev
+	libplacebo-dev
+	libtheora-dev
+	libva-dev
+	libvorbis-dev
+	libvpx-dev
+	libwebp-dev
+	nasm
+	opencl-dev
+	openssl-dev
+	opus-dev
+	perl-dev
+	shaderc-dev
+	vulkan-loader-dev
+	x264-dev
+	x265-dev
+	xz-dev
+	zimg-dev
+	zlib-dev
+	"
+checkdepends="rsync"
+source="$pkgname-$_pkgver.tar.gz::https://github.com/jellyfin/jellyfin-ffmpeg/archive/refs/tags/v$_pkgver.tar.gz"
+options="!check" # tests/data/hls-lists.append.m3u8 fails
+builddir="$srcdir/$pkgname-$_pkgver"
+
+case "$CARCH" in
+x86_64)
+	makedepends="$makedepends libvpl-dev"
+	_libvpl="--enable-libvpl"
+	;;
+esac
+
+prepare() {
+	default_prepare
+
+	for i in debian/patches/*.patch; do
+		patch -p1 -i "$i"
+	done
+}
+
+build() {
+	case "$CARCH" in
+	x86) local asm="--disable-asm" ;;
+	esac
+
+	./configure \
+		--prefix="/usr/lib/$pkgname" \
+		--target-os=linux \
+		--extra-version=Jellyfin \
+		--disable-doc \
+		--disable-ffplay \
+		--disable-librtmp \
+		--disable-libxcb \
+		--disable-sdl2 \
+		--disable-shared \
+		--disable-xlib \
+		--enable-chromaprint \
+		--enable-gmp \
+		--enable-gpl \
+		--enable-libass \
+		--enable-libbluray \
+		--enable-libdav1d \
+		--enable-libdrm \
+		--enable-libfontconfig \
+		--enable-libfreetype \
+		--enable-libfribidi \
+		--enable-libmp3lame \
+		--enable-libopenmpt \
+		--enable-libopus \
+		--enable-libplacebo \
+		--enable-libshaderc \
+		--enable-libtheora \
+		--enable-libvorbis \
+		--enable-libvpx \
+		--enable-libwebp \
+		--enable-libx264 \
+		--enable-libx265 \
+		--enable-libzimg \
+		--enable-opencl \
+		--enable-openssl \
+		--enable-pic \
+		--enable-pthreads \
+		--enable-static \
+		--enable-vaapi \
+		--enable-version3 \
+		--enable-vulkan \
+		$asm \
+		$_libvpl
+	make
+}
+
+# https://ffmpeg.org/fate.html
+check() {
+	./configure \
+		--samples=fate-suite/
+	make fate-rsync
+	make fate-list
+	make fate
+}
+
+package() {
+	install -Dm755 -t "$pkgdir/usr/lib/$pkgname" ffmpeg ffprobe
+}
+
+sha512sums="
+073c6d5d17787690ce3e8f6ff1d4d1c07eea5154fde86b96bd65b6a9897a791b265d2b7434cc070f4e7b68b6d66e9333315398af65be1042dd3017a4d93ea2ed  jellyfin-ffmpeg-7.1.2-3.tar.gz
+"

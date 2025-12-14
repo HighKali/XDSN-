@@ -1,0 +1,36 @@
+maintainer="mekyt <hello@mek.yt>"
+pkgname=lefthook
+pkgver=2.0.4
+pkgrel=1
+pkgdesc="Fast and powerful Git hooks manager"
+url="https://github.com/evilmartians/lefthook"
+license="MIT"
+arch="all"
+subpackages="$pkgname-doc"
+makedepends="go"
+source="
+	$pkgname-$pkgver.tar.gz::https://github.com/evilmartians/lefthook/archive/refs/tags/v$pkgver.tar.gz
+"
+options="net" # download Go modules
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	go build -ldflags "-s -w -X main.version=$pkgver"
+}
+
+check() {
+	# Auto-update only avaiable for x86_64 and aarch64 arch
+	go test  ./... -skip TestUpdater_SelfUpdate
+}
+
+package() {
+	install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+	install -Dm755 lefthook -t "$pkgdir"/usr/bin/
+}
+
+sha512sums="
+88e8adb18e029d554ab211d6b3cbc18fe22f58c1da8f1bf924a8761c03732033b282d7c9e5daaf5cfa56f7ba96bc5ccea0409349ae57afba64292d9ec89df5fe  lefthook-2.0.4.tar.gz
+"

@@ -1,0 +1,48 @@
+maintainer="Patrycja Rosa <alpine@ptrcnull.me>"
+pkgname=dinit
+pkgver=0.19.4
+pkgrel=0
+pkgdesc="Service monitoring/init system"
+url="https://github.com/davmac314/dinit"
+arch="all"
+license="Apache-2.0"
+subpackages="$pkgname-dbg $pkgname-doc $pkgname-shutdown:_shutdown"
+makedepends="m4"
+source="$pkgname-$pkgver.tar.gz::https://github.com/davmac314/dinit/archive/refs/tags/v$pkgver.tar.gz"
+
+prepare() {
+	default_prepare
+	CXXFLAGS="$CXXFLAGS -fno-rtti -flto" \
+	./configure \
+		--platform=Linux \
+		--exec-prefix=/usr \
+		--disable-strip \
+		--shutdown-prefix=dinit-
+}
+
+build() {
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+_shutdown() {
+	pkgdesc="dinit shutdown utils"
+	depends="$pkgname=$pkgver-r$pkgrel"
+
+	amove usr/sbin/dinit-shutdown
+	amove usr/sbin/dinit-halt
+	amove usr/sbin/dinit-reboot
+	amove usr/sbin/dinit-soft-reboot
+	amove usr/sbin/dinit-poweroff
+}
+
+sha512sums="
+ad91deb1c644bae4491a4938c54dc968ac24acf24880c17794895d9a78fa8aad60a0a127eedc2c1362ba55dce081a25930efeaf5400ea925157cce8e25ad99d8  dinit-0.19.4.tar.gz
+"

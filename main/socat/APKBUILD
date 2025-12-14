@@ -1,0 +1,58 @@
+# Contributor: Sheila Aman <sheila@vulpine.house>
+# Maintainer: Celeste <cielesti@protonmail.com>
+maintainer="Celeste <cielesti@protonmail.com>"
+pkgname=socat
+pkgver=1.8.1.0
+pkgrel=0
+pkgdesc="Multipurpose relay for binary protocols"
+# test  58 CHILDDEFAULT: child process default properties... FAILED:
+# ./socat -t 0.1  -u exec:./procan -
+options="!check"
+url="http://www.dest-unreach.org/socat/"
+arch="all"
+license="GPL-2.0-only WITH OpenSSL-Exception"
+makedepends="openssl-dev readline-dev linux-headers"
+checkdepends="bash"
+subpackages="$pkgname-doc $pkgname-scripts::noarch"
+source="http://www.dest-unreach.org/socat/download/socat-$pkgver.tar.gz
+	use-linux-headers.patch
+	"
+
+# secfixes:
+#   0:
+#     - CVE-2024-54661
+
+build() {
+	CFLAGS="$CFLAGS -Wno-int-conversion" \
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var
+	make
+}
+
+check() {
+	make test
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+
+	install -Dm644 EXAMPLES doc/*.html doc/*.css \
+		-t "$pkgdir"/usr/share/doc/$pkgname/
+}
+
+scripts() {
+	pkgdesc="$pkgdesc (helper scripts)"
+	depends="$pkgname=$pkgver-r$pkgrel bash"
+
+	amove usr/bin/socat-*.sh
+}
+
+sha512sums="
+16cb7d3425fb844b07b8837b7a3604967c146b4bc8bbc9db0431dadb07f176c981106fa6bbbad88ce61a61d0078146d34855fb2f75d414d7c67f3600f1e036a6  socat-1.8.1.0.tar.gz
+582a48d64f7925a11b4e38b94e5c4ec11a0dea9ae0780d0e6d09ca1239c95fced787350d04ba2613bf058f9b8b6de04ed10f20880b644e58de1faaa6c1824f54  use-linux-headers.patch
+"

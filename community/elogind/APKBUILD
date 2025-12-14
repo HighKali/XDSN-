@@ -1,0 +1,122 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Maintainer: team/alpine-desktop <pabloyoyoista@postmarketos.org>
+pkgname=elogind
+pkgver=255.22
+pkgrel=1
+pkgdesc="Standalone fork of systemd's elogind"
+url="https://github.com/elogind/elogind"
+arch="all"
+license="GPL-2.0-or-later LGPL-2.1-or-later"
+depends="dbus shadow busctl=$pkgver-r$pkgrel"
+options="!check" # Tests fail on builders
+makedepends="
+	acl-dev
+	coreutils
+	dbus-dev
+	docbook-xsl
+	eudev-dev
+	gettext-dev
+	glib-dev
+	gperf
+	libcap-dev
+	libseccomp-dev
+	libxslt-dev
+	linux-pam-dev
+	m4
+	meson
+	pcre2-dev
+	py3-jinja2
+	"
+subpackages="
+	$pkgname-common:_common
+	$pkgname-dev
+	$pkgname-doc
+	$pkgname-lang
+	$pkgname-openrc
+	lib$pkgname:libs
+	$pkgname-zsh-completion
+	$pkgname-bash-completion
+	busctl:_busctl
+	"
+source="https://github.com/elogind/elogind/archive/V$pkgver/elogind-V$pkgver.tar.gz
+	elogind.initd
+	0001-shared-remove-gshadow.patch
+	0002-basic-use-sh-instead-of-bash-in-the-shebang.patch
+	0003-shared-include-signal.h-in-async.h.patch
+	0004-add-missing-musl_missing.h.patch
+	0005-use-sys-prctl-instead-of-linux-prctl-to-avoid-duplic.patch
+	0006-pass-correct-parameters-to-getdents64.patch
+	0007-errno-util-Make-STRERROR-portable-for-musl.patch
+	0008-distinguish-XSI-compliant-strerror_r-from-GNU-specif.patch
+	0009-sd-journal-remove-last_stat.patch
+	0010-Revert-pam_elogind-Add-special-treatment-of-openrc-u.patch
+	"
+
+build() {
+	export LDFLAGS="$LDFLAGS -lintl"
+	abuild-meson \
+		--libexecdir=/usr/libexec/elogind \
+		-Db_lto=true \
+		-Dcgroup-controller=elogind \
+		-Ddefault-hierarchy=unified \
+		-Ddefault-kill-user-processes=false \
+		-Dhalt-path=/sbin/halt \
+		-Dman=enabled \
+		-Dpolkit=enabled \
+		-Dreboot-path=/sbin/reboot \
+		-Dtests="$(want_check && echo true || echo false)" \
+		\
+		-Dpamconfdir=/etc/pam.d \
+		-Dudevrulesdir=/usr/lib/udev/rules.d \
+		-Dsplit-usr=false \
+		-Dutmp=false \
+		build
+	meson compile -C build
+}
+
+check() {
+	meson test --print-errorlogs -C build
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C build
+
+	# Claim compatiblity with systemd and systemd-logind
+	ln -s libelogind.pc "$pkgdir"/usr/lib/pkgconfig/libsystemd.pc
+	ln -s libelogind.pc "$pkgdir"/usr/lib/pkgconfig/libsystemd-logind.pc
+	ln -s elogind "$pkgdir"/usr/include/systemd
+
+	# Install headers from elogind
+	install -Dm644 src/systemd/sd-id128.h usr/include/sd-id128.h
+	install -Dm644 src/systemd/_sd-common.h usr/include/_sd-common.h
+
+	# Install openrc service
+	install -Dm755 "$srcdir"/elogind.initd "$pkgdir"/etc/init.d/elogind
+}
+
+_common() {
+	pkgdesc="common components for elogind and related tools"
+	depends=
+	amove usr/lib/elogind/libelogind-shared-*.so
+}
+
+_busctl() {
+	pkgdesc="tool for monitoring and introspecting the D-Bus bus"
+	depends=
+	amove usr/bin/busctl
+}
+
+sha512sums="
+7b1e1c6cc917bcaac1b6f8ac538b355cf53a4236f1c5248bdc44caec25d012b6bced5395dc3a0d77c4e2783f196d939e0edbabd7c901124e683c54e298c05b03  elogind-V255.22.tar.gz
+fe8855ffbb8149a8c3892791c4d179c8edf863e9641892c700637b352e8d9d31e406b1d6c5fed5c19e35eb9dcf33bfdb93f0b5a659aaef299ec10b442a878146  elogind.initd
+3872a4df28921ced50048ef30cd78a9d8284f0e4dac7475350ba1e780ea75c8216dd3077ef8a26e5e6feddea61fe8964e2aa0819bc0c6a91a666374147df599e  0001-shared-remove-gshadow.patch
+5438fce109740df24efc61bfec5f5f9b586dd2a24c85f04d8b99b12f8e50c0ad10b5ea33d80eb6bd39de5fa06ef317704e4e6ca439e300e79aa1b8ab41695669  0002-basic-use-sh-instead-of-bash-in-the-shebang.patch
+c8493e6c71cb2cf3c47892b7447f2a6c5565c9ff76ade284a19ccaad56f26a634c3cb250219cc8f4a1512504747eafdf9c6d0a3c84e67bacc65e935b0ef76954  0003-shared-include-signal.h-in-async.h.patch
+800dfa1d85a8b7b835ba4c9d8f8434a95384cbfe3cb4477c7450fd1c9719708480e8d3b2a27fc70c0921acc912c1b2c492fce967611a5da1d137f1873356e0cc  0004-add-missing-musl_missing.h.patch
+b20a1bfaeb722293d66ea162cc611bdd0aaec206e1e91d98aafd286b94d4a785b3265eff648a156445d6aeee8656fd1f27e3c9e7307b871b02401dd6469851e1  0005-use-sys-prctl-instead-of-linux-prctl-to-avoid-duplic.patch
+a05e9cee9ea9542db173c8e7c5de3a3051ec3e0fa75a8b6b8557bd8b22cba2389ab46f9b0666569eb743c9bd0980a9334dca62a66571f39104b7342b4588058f  0006-pass-correct-parameters-to-getdents64.patch
+f39b0cef8d9ca6017f15e926a082a792e127e9db350036840e8a1147e0ac6a39eaca0a99f8ce89f7858a24a95112c467303edd06a1e5b5a18a600b9aecd7d4de  0007-errno-util-Make-STRERROR-portable-for-musl.patch
+bc02f96a096ac76ff5fcdcfa5aba3c18f6dabd9502111354d8e143162f92cc96b30a64a2724b6ffa86fe9f5386deecdc119db426fe6f8830c096d69ff2a52d29  0008-distinguish-XSI-compliant-strerror_r-from-GNU-specif.patch
+5ccd35051d6e39d0eac94355883960475f018b6529bdf359d4288f8bae7a93f9e2a67f8625d6b39cabcbeddb5465665073631be5f18b1922eb5eb3583310b81c  0009-sd-journal-remove-last_stat.patch
+a9f6d4fdc6849bacb8c45166557d31e54402500e4e3dd7e405d3e797128d25cf12d77f3ae32821b2fa3a9a32c4ecce609395af465621fbb17d967cc38d4513d2  0010-Revert-pam_elogind-Add-special-treatment-of-openrc-u.patch
+"

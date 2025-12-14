@@ -1,0 +1,30 @@
+# Maintainer: Daniel Markstedt <daniel@mindani.net>
+pkgname=bstring
+pkgver=1.0.3
+pkgrel=0
+pkgdesc="The Better String Library for C"
+url="https://mike.steinert.ca/bstring/"
+arch="all"
+license="BSD-3-Clause"
+makedepends="check check-dev meson ninja"
+subpackages="$pkgname-dev"
+source="$pkgname-$pkgver.tar.gz::https://github.com/msteinert/bstring/archive/refs/tags/v$pkgver.tar.gz"
+
+build() {
+	abuild-meson \
+		-Denable-tests=true \
+		. build
+	meson compile -C build
+}
+
+check() {
+	meson test -C build
+}
+
+package() {
+	meson install -C build --destdir "$pkgdir"
+}
+
+sha512sums="
+17697793bcc4dd80e476060296ff88e2cfbf231525f5783147867dca1f4c8213728663878ee4d490d4349e822c914adf4a4d746a1de6f9c90390f876efe46485  bstring-1.0.3.tar.gz
+"

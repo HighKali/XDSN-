@@ -1,0 +1,40 @@
+# Maintainer: mio <miyopan@e.email>
+maintainer="mio <miyopan@e.email>"
+pkgname=libgedit-gtksourceview
+pkgver=299.5.0
+pkgrel=0
+pkgdesc="Gedit Technology — source code editing widget"
+url="https://gitlab.gnome.org/World/gedit/libgedit-gtksourceview"
+arch="all"
+license="LGPL-2.1-or-later"
+makedepends="
+	docbook-xsl-nons
+	gobject-introspection-dev
+	gtk-doc
+	gtk+3.0-dev
+	meson
+	"
+checkdepends="xvfb-run"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+source="https://gitlab.gnome.org/World/gedit/libgedit-gtksourceview/-/archive/$pkgver/libgedit-gtksourceview-$pkgver.tar.gz"
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		-Dgobject_introspection=true \
+		-Dgtk_doc=true \
+		. output
+	meson compile -C output
+}
+
+check() {
+	xvfb-run -a meson test -v -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+d8c782ce097d121df2158043ff34fd0e6b4f43391ad27fa3e2346482b460be6001137f2462f6df846124612a8a8e97aef7753c14cc9bf6ba2cdbe1d32db6a3f8  libgedit-gtksourceview-299.5.0.tar.gz
+"

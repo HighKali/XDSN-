@@ -1,0 +1,43 @@
+# Maintainer: omni <omni+alpine@hack.org>
+maintainer="omni <omni+alpine@hack.org>"
+pkgname=iaito
+pkgver=6.0.7
+pkgrel=1
+pkgdesc="Official QT frontend of radare2"
+url="https://www.radare.org/n/iaito.html"
+license="GPL-3.0-only"
+arch="all"
+depends="radare2
+	graphviz
+	qt6-qtsvg
+	"
+makedepends="radare2-dev
+	bash
+	qt6-qtsvg-dev
+	qt6-qtbase-dev
+	qt6-qttools-dev
+	"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/radareorg/iaito/archive/refs/tags/$pkgver.tar.gz
+	93e3e13d2f7231c64069745edac9ae2d3af0b827.patch
+	"
+options="!check" # no testsuite
+
+build() {
+	./configure \
+		--with-qmake6 \
+		--build=$CBUILD \
+		--target=$CTARGET \
+		--prefix=/usr \
+		--sysconfdir=/etc
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+bd84db33561c6d809743342949571ffa8fac27dbba8c28c2bb5fb3494135abcaff749ba932e6c2d1a854db5087cfed82a98b8996dc84dedf10de73f1e4d4a842  iaito-6.0.7.tar.gz
+d2a53a7a50dcd8a902723488c7a1407789e8fc122bc8ad308da136d2b262505929bdc51af67d449d989be3cb6804e36f65aca6edaace12a9d7edaabfad1f33e1  93e3e13d2f7231c64069745edac9ae2d3af0b827.patch
+"

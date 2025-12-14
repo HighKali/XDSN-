@@ -1,0 +1,50 @@
+# Contributor: Fabian Affolter <fabian@affolter-engineering.ch>
+# Maintainer: Fabian Affolter <fabian@affolter-engineering.ch>
+pkgname=py3-ujson
+pkgver=5.11.0
+pkgrel=0
+pkgdesc="Fast Python JSON encoder and decoder"
+url="https://github.com/ultrajson/ultrajson"
+arch="all"
+license="BSD-3-Clause"
+makedepends="
+	py3-gpep517
+	py3-setuptools
+	py3-setuptools_scm
+	py3-wheel
+	python3-dev
+	"
+checkdepends="
+	py3-pytest
+	py3-tz
+	"
+source="https://pypi.io/packages/source/u/ujson/ujson-$pkgver.tar.gz"
+builddir="$srcdir/ujson-$pkgver"
+
+# secfixes:
+#   5.4.0-r0:
+#     - CVE-2022-31116
+#     - CVE-2022-31117
+#   5.2.0-r0:
+#     - CVE-2021-45958
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+93f94534201dc8227f11eb6852fa15e432d1506fea3a21ec2f16468a78307a9f23f938e55ec6bf7e5707859cd3a5a84e2d15493224675cda2fc70c72967c042e  ujson-5.11.0.tar.gz
+"

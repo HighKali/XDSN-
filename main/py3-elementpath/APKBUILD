@@ -1,0 +1,45 @@
+# Contributor: Aiden Grossman <agrossman154@yahoo.com>
+# Maintainer: Celeste <cielesti@protonmail.com>
+maintainer="Celeste <cielesti@protonmail.com>"
+pkgname=py3-elementpath
+pkgver=5.0.4
+pkgrel=0
+pkgdesc="XPath 1.0/2.0 parsers and selectors for ElementTree and lxml"
+url="https://github.com/sissaschool/elementpath"
+arch="noarch"
+license="MIT"
+makedepends="py3-gpep517 py3-setuptools py3-wheel"
+checkdepends="py3-pytest py3-lxml"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/sissaschool/elementpath/archive/refs/tags/v$pkgver.tar.gz"
+builddir="$srcdir/elementpath-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	# first: AssertionError: ElementPathError not raised
+	# rest: AssertionError: First sequence is not a list: -1
+	.testenv/bin/python3 -m pytest \
+		--deselect tests/test_collations.py::CollationsTest::test_context_activation \
+		--deselect tests/test_xpath2_functions.py::XPath2FunctionsTest::test_compare_function \
+		--deselect tests/test_xpath2_functions.py::LxmlXPath2FunctionsTest::test_compare_function \
+		--deselect tests/test_xpath30.py::XPath30FunctionsTest::test_compare_function \
+		--deselect tests/test_xpath30.py::LxmlXPath30FunctionsTest::test_compare_function \
+		--deselect tests/test_xpath31.py::XPath31FunctionsTest::test_compare_function \
+		--deselect tests/test_xpath31.py::LxmlXPath31FunctionsTest::test_compare_function
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+b3cab3dd26f62d7e35df2eac46a293d7e695396787123207cc9bcc77fad977c47b9bb9eb80e4b2292ed59206488b501fd03c74c042d545615fe029014c9bb5cf  py3-elementpath-5.0.4.tar.gz
+"

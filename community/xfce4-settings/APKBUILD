@@ -1,0 +1,50 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=xfce4-settings
+pkgver=4.20.1
+pkgrel=0
+pkgdesc="Settings manager for xfce"
+url="https://xfce.org/"
+arch="all"
+license="GPL-2.0-only"
+subpackages="$pkgname-lang"
+makedepends="
+	exo-dev
+	garcon-dev
+	intltool
+	libcanberra-dev
+	libnotify-dev
+	libxcursor-dev
+	libxfce4ui-dev
+	libxi-dev
+	libxklavier-dev
+	libxrandr-dev
+	xf86-input-libinput-dev
+	"
+source="https://archive.xfce.org/src/xfce/xfce4-settings/${pkgver%.*}/xfce4-settings-$pkgver.tar.bz2"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--localstatedir=/var \
+		--disable-static \
+		--enable-libxklavier \
+		--enable-xrandr \
+		--enable-sound-settings \
+		--enable-xorg-libinput
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+d29307ab93f4db961154541bddc9cfa80886c7ab7bcd42941995c1b9ff24fd8816e65bd690e35c247e25913c352d653386743663443def0b825d415f40b50ef9  xfce4-settings-4.20.1.tar.bz2
+"

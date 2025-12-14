@@ -1,0 +1,35 @@
+# Contributor: Henrik Riomar <henrik.riomar@gmail.com>
+# Maintainer: Henrik Riomar <henrik.riomar@gmail.com>
+pkgname=libp11
+pkgver=0.4.16
+pkgrel=0
+pkgdesc="PKCS#11 wrapper library"
+url="https://github.com/OpenSC/libp11/wiki"
+arch="all"
+license="LGPL-2.1-or-later"
+makedepends="openssl-dev"
+options="!check" # tests not working
+checkdepends="opensc softhsm"
+subpackages="$pkgname-dev $pkgname-doc"
+source="https://github.com/OpenSC/libp11/releases/download/libp11-$pkgver/libp11-$pkgver.tar.gz
+	"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--disable-static
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+sha512sums="
+91248a39b30fc032079441506b49cfe1a8784b2cc4dd795a7633694d9e292dbf1075244366227d3924692d58129eecabae3e62ec006838bb1ac8942a4aed236b  libp11-0.4.16.tar.gz
+"

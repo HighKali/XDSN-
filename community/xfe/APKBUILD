@@ -1,0 +1,72 @@
+# Contributor: Peter Shkenev <santurysim@gmail.com>
+# Maintainer: Peter Shkenev <santurysim@gmail.com>
+pkgname=xfe
+pkgver=2.1.1
+pkgrel=0
+pkgdesc="MS-Explorer or Commander like file manager for X"
+url="http://roland65.free.fr/xfe/index.php?page=home"
+arch="all"
+license="GPL-2.0-only"
+makedepends="
+	fox-dev
+	libx11-dev
+	freetype-dev
+	libxft-dev
+	xcb-util-dev
+	gettext-dev
+	intltool
+	"
+subpackages="
+	$pkgname-doc
+	$pkgname-lang
+	$pkgname-xfi
+	$pkgname-xfp
+	$pkgname-xfw
+	$pkgname-xfa
+	"
+source="
+	https://downloads.sourceforge.net/xfe/xfe-$pkgver.tar.xz
+	"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+xfi() {
+	pkgdesc="$pkgdesc (image viewer)"
+	amove usr/bin/xfi
+}
+
+xfp() {
+	pkgdesc="$pkgdesc (DEB/RPM package viewer)"
+	amove usr/bin/xfp
+}
+
+xfw() {
+	pkgdesc="$pkgdesc (text editor)"
+	amove usr/bin/xfw
+}
+
+xfa() {
+	pkgdesc="$pkgdesc (archive viewer)"
+	amove usr/bin/xfa
+}
+
+sha512sums="
+e1bda64e395dbae8fe9f5e40e8a9cb895108af404347188ec43906ab8789c1385aa90e7fc7e019d02142aa9853ace77dec0e60ffaedd2fd2afd6a56244e69e65  xfe-2.1.1.tar.xz
+"

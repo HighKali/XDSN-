@@ -1,0 +1,40 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=gc
+pkgver=8.2.10
+pkgrel=0
+pkgdesc="garbage collector for C and C++"
+url="https://hboehm.info/gc/"
+arch="all"
+license="Boehm-GC"
+makedepends="linux-headers"
+subpackages="$pkgname-dbg $pkgname-static $pkgname-dev $pkgname-doc libgc++:libgccpp"
+source="https://github.com/ivmai/bdwgc/releases/download/v$pkgver/gc-$pkgver.tar.gz"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--datadir=/usr/share/doc/gc \
+		--enable-static \
+		--enable-cplusplus
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+	install -Dm644 README.md "$pkgdir/usr/share/licenses/$pkgname/README.md"
+}
+
+libgccpp() {
+	install -d "$subpkgdir"/usr/lib
+	mv "$pkgdir"/usr/lib/libgccpp.* "$subpkgdir"/usr/lib/
+}
+
+sha512sums="
+56558bf81716caa882fd015f3f0d0d86d05f38680266b22798153b1e7f4a6fbbcded2efb3e125c41a4c52d44259ac4900061e61729663f62427e73b691e317b0  gc-8.2.10.tar.gz
+"

@@ -1,0 +1,74 @@
+# Maintainer: Noel Kuntze <noel.kuntze@contauro.com>
+pkgname=grommunio-sync
+pkgver=2.2
+pkgrel=0
+pkgdesc="Exchange ActiveSync interface for grommunio"
+# s390x: blocked by grommunio-gromox
+arch="noarch !s390x"
+url="https://grommunio.com/"
+license="AGPL-3.0-only"
+options="!check" # No test suite
+_php=php83
+install="$pkgname.pre-install $pkgname.pre-upgrade"
+subpackages="$pkgname-doc"
+depends="grommunio-gromox
+	grommunio-mapi-header-php
+	$_php
+	$_php-curl
+	$_php-gettext
+	$_php-iconv
+	$_php-intl
+	$_php-json
+	$_php-mbstring
+	$_php-openssl
+	$_php-pecl-redis
+	$_php-pdo_sqlite
+	$_php-posix
+	$_php-session
+	$_php-simplexml
+	$_php-soap"
+
+pkgusers="grommunio grosync"
+pkggroups="grommunio grosync"
+
+source="$pkgname-$pkgver.tar.gz::https://github.com/grommunio/grommunio-sync/archive/refs/tags/$pkgver.tar.gz"
+
+builddir="$srcdir/grommunio-sync-$pkgver/"
+
+build() {
+	:
+}
+
+package() {
+	# webapp & vendor libraries
+	install -dm755 "$pkgdir"/usr/share/webapps/$pkgname/
+	cp -rp -- *.php grommunio-sync-top lib vendor "$pkgdir"/usr/share/webapps/$pkgname/
+
+	# license
+	install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+
+	# nginx conf
+	sed -i "s@/var/log/grommunio/@/var/log/nginx/@" build/grommunio-sync.conf
+	sed -i "s@/usr/share/grommunio-sync/@/usr/share/webapps/grommunio-sync/@" build/grommunio-sync.conf
+	install -Dpm644 build/grommunio-sync.conf "$pkgdir"/usr/share/grommunio-common/nginx/locations.d/grommunio-sync.conf
+	sed -i "s@/php-fpm/@/php-fpm${_php#php}/@" build/grommunio-sync-upstream.conf
+	install -Dpm644 build/grommunio-sync-upstream.conf "$pkgdir"/usr/share/grommunio-common/nginx/upstreams.d/grommunio-sync.conf
+
+	# php-fpm
+	sed -i "s@/php-fpm/@/php-fpm${_php#php}/@" build/pool-grommunio-sync.conf
+	install -Dpm644 build/pool-grommunio-sync.conf "$pkgdir"/etc/$_php/php-fpm.d/pool-grommunio-sync.conf
+
+	# logrotate
+	install -Dm644 build/grommunio-sync.lr "$pkgdir"/etc/logrotate.d/grommunio-sync
+
+	# web config
+	install -Dm644 config.php "$pkgdir"/etc/grommunio-sync/config.php
+	ln -sf "/etc/grommunio-sync/config.php" "$pkgdir"/usr/share/webapps/grommunio-sync/config.php
+
+	# log folder
+	install -dm 0770 -o grosync "$pkgdir"/var/log/grommunio-sync
+}
+
+sha512sums="
+337d54a2428c2b8c125b159ea04143de3f83f92931c8797991ce43f7feaf5d5758c6c66d2624a0753a961f25ad35336909a4265e4671c21c0da9690c9c8c0213  grommunio-sync-2.2.tar.gz
+"

@@ -1,0 +1,41 @@
+# Maintainer: Celeste <cielesti@protonmail.com>
+maintainer="Celeste <cielesti@protonmail.com>"
+pkgname=trealla
+pkgver=2.87.0
+pkgrel=0
+pkgdesc="Compact and efficient Prolog interpreter"
+url="https://github.com/trealla-prolog/trealla"
+arch="all"
+license="MIT"
+makedepends="
+	libffi-dev
+	openssl-dev
+	readline-dev
+	xxd
+	"
+checkdepends="
+	bash
+	diffutils
+	"
+subpackages="$pkgname-doc"
+source="https://github.com/trealla-prolog/trealla/archive/v$pkgver/trealla-$pkgver.tar.gz"
+
+build() {
+	make GIT_VERSION="\"v$pkgver\""
+}
+
+check() {
+	make test
+}
+
+package() {
+	install -Dvm755 tpl -t "$pkgdir"/usr/bin/
+
+	mkdir -p "$pkgdir"/usr/share/doc/$pkgname
+	cp -R samples "$pkgdir"/usr/share/doc/$pkgname/
+	install -Dvm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
+}
+
+sha512sums="
+f3df554a3cc77d84a303cf1dcc55ce0dd4a9a52da085019f0ebbb0e719e7f2a8e04a378275962f72f70790a9316fb34c646bdda76602cfb1b2adfa647eb643e3  trealla-2.87.0.tar.gz
+"

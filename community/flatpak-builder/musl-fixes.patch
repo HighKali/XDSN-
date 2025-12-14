@@ -1,0 +1,20 @@
+Upstream: No
+Reason: making it works with Alpine musl
+
+--- a/config.h.in
++++ b/config.h.in
+@@ -223,3 +223,14 @@
+ 
+ /* Define to 1 on platforms where this makes time_t a 64-bit type. */
+ #undef __MINGW_USE_VC2005_COMPAT
++
++/* taken from glibc unistd.h and fixes musl */
++#ifndef TEMP_FAILURE_RETRY
++#define TEMP_FAILURE_RETRY(expression) \
++  (__extension__                                                              \
++    ({ long int __result;                                                     \
++       do __result = (long int) (expression);                                 \
++       while (__result == -1L && errno == EINTR);                             \
++       __result; }))
++#endif
++

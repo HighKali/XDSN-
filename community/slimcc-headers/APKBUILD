@@ -1,0 +1,28 @@
+# Maintainer: Celeste <cielesti@protonmail.com>
+maintainer="Celeste <cielesti@protonmail.com>"
+pkgname=slimcc-headers
+pkgver=0_git20251207
+_gitrev=69b2786a3c3856aab2adf07fcb820073faf46cac
+pkgrel=0
+pkgdesc="C11 compiler with C23/C2y/GNU extensions (header files)"
+url="https://github.com/fuhsnn/slimcc"
+arch="x86_64"
+license="MIT" # license file is distributed with the main slimcc package
+source="https://github.com/fuhsnn/slimcc/archive/$_gitrev/slimcc-$_gitrev.tar.gz"
+builddir="$srcdir/slimcc-$_gitrev"
+
+# !check: headers are split so slimcc's check() can find them
+# at their usual location, without having to rely on relative
+# paths, so if slimcc check() passes, then this should be good.
+# !archcheck: headers are for slimcc, which is x86_64-only.
+options="!check !archcheck"
+replaces="slimcc"
+
+package() {
+	install -Dvm644 slimcc_headers/include/* \
+		-t "$pkgdir"/usr/lib/slimcc/include/
+}
+
+sha512sums="
+5af5c80b3a78223d3a38ff5a7488a479a89f8950067f312c73fa62406f509838e0257e96c0e9cc6ca68cab3c6494bf201563350609b62874423dc3a91a016c77  slimcc-69b2786a3c3856aab2adf07fcb820073faf46cac.tar.gz
+"

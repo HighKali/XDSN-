@@ -1,0 +1,122 @@
+# Contriburo: Łukasz Jendrysik <scadu@yandex.com>
+# Contributor: Michael Mason <ms13sp@gmail.com>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=gnutls
+pkgver=3.8.11
+pkgrel=0
+pkgdesc="TLS protocol implementation"
+url="https://www.gnutls.org/"
+arch="all"
+license="LGPL-2.1-or-later"
+checkdepends="diffutils datefudge"
+makedepends="
+	brotli-dev
+	libidn2-dev
+	libkcapi-dev
+	libtasn1-dev
+	libunistring-dev
+	linux-headers
+	nettle-dev
+	p11-kit-dev
+	texinfo
+	zlib-dev
+	zstd-dev
+	"
+subpackages="$pkgname-dbg $pkgname-doc $pkgname-dev $pkgname-utils $pkgname-c++:xx"
+_v=${pkgver%.*}
+case $pkgver in
+*.*.*.*) _v=${_v%.*};;
+esac
+source="https://www.gnupg.org/ftp/gcrypt/gnutls/v$_v/gnutls-$pkgver.tar.xz
+	tests-certtool.patch
+	gnutls-3.8.8-tests-ktls-skip-tls12-chachapoly.patch
+	"
+
+# Upstream Tracker: https://gnutls.org/security-new.html
+# secfixes:
+#   3.8.11-r0:
+#     - CVE-2025-9820 GNUTLS-SA-2025-11-18
+#     - CVE-2025-32988 GNUTLS-SA-2025-07-07-2
+#     - CVE-2025-32989 GNUTLS-SA-2025-07-07-1
+#     - CVE-2025-32990 GNUTLS-SA-2025-07-07-3
+#     - CVE-2025-6395 GNUTLS-SA-2025-07-07-4
+#   3.8.5-r0:
+#     - CVE-2024-28834 GNUTLS-SA-2023-12-04
+#     - CVE-2024-28835 GNUTLS-SA-2024-01-23
+#   3.8.3-r0:
+#     - CVE-2023-5981
+#     - CVE-2024-0553
+#     - CVE-2024-0567
+#   3.8.0-r0:
+#     - CVE-2023-0361
+#   3.7.7-r0:
+#     - CVE-2022-2509 GNUTLS-SA-2022-07-07
+#   3.7.1-r0:
+#     - CVE-2021-20231 GNUTLS-SA-2021-03-10
+#     - CVE-2021-20232 GNUTLS-SA-2021-03-10
+#   3.6.15-r0:
+#     - CVE-2020-24659 GNUTLS-SA-2020-09-04
+#   3.6.14-r0:
+#     - CVE-2020-13777 GNUTLS-SA-2020-06-03
+#   3.6.13-r0:
+#     - CVE-2020-11501 GNUTLS-SA-2020-03-31
+#   3.6.7-r0:
+#     - CVE-2019-3836
+#     - CVE-2019-3829
+#   3.5.13-r0:
+#     - CVE-2017-7507
+
+build() {
+	local _enable_ktls="--enable-ktls"
+	case "$CARCH" in
+		# test-memset_explicit fails with -Os which indicates miscompliation
+		armhf) CFLAGS="${CFLAGS//-Os/-O2}";;
+		# tests fails on ppc64le
+		ppc64le) _enable_ktls="--disable-ktls";;
+	esac
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--infodir=/usr/share/info \
+		$_enable_ktls \
+		--disable-openssl-compatibility \
+		--disable-rpath \
+		--disable-static \
+		--disable-valgrind-tests
+	make
+}
+
+check() {
+	# millis, 100s
+	export GNUTLS_TEST_TIMEOUT=100000
+	make check 	|| {
+		cat tests/test-suite.log
+		return 1
+	}
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+
+utils() {
+	license="GPL-3.0-or-later"
+	pkgdesc="Command line tools for TLS protocol"
+	mkdir -p "$subpkgdir"/usr/
+	mv "$pkgdir"/usr/bin "$subpkgdir"/usr/
+}
+
+xx() {
+	pkgdesc="The C++ interface to GnuTLS"
+	mkdir -p "$subpkgdir"/usr/lib
+	mv "$pkgdir"/usr/lib/lib*xx.so.* "$subpkgdir"/usr/lib/
+}
+
+sha512sums="
+68f9e5bec3aa6686fd3319cc9c88a5cc44e2a75144049fc9de5fb55fef2241b4e16996af4be5dd48308abbee8cfaed6c862903f6bb89aff5dfa5410075bd7386  gnutls-3.8.11.tar.xz
+fadfe4f451d6ae2f657117c9b647d2343db5cdab51dcf602c92428edbc178138e47b5b72d008eda93674ca476563d678a602eb9351f484504998f14105a67242  tests-certtool.patch
+773e2c3f0b351c10e46e88d113b4a1719a3d554749a57c1f521f5160df6ebe52318e834c420c30b89a8a934e5e6502f2ada52450f64ffa3ef3d338cc52a892c3  gnutls-3.8.8-tests-ktls-skip-tls12-chachapoly.patch
+"

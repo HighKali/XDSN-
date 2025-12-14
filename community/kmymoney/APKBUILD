@@ -1,0 +1,74 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-other
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=kmymoney
+pkgver=5.2.1
+pkgrel=0
+# armhf, x86, s390x, riscv64 and loongarch64 blocked by qt6-qtwebengine
+arch="all !armhf !x86 !s390x !riscv64 !loongarch64"
+url="https://kmymoney.org/"
+pkgdesc="Personal finance manager for KDE which operates similarly to MS-Money or Quicken"
+license="GPL-2.0-or-later"
+makedepends="
+	akonadi-dev
+	alkimia-dev
+	doxygen
+	extra-cmake-modules
+	gpgme-dev
+	karchive-dev
+	kcmutils-dev
+	kcompletion-dev
+	kconfig-dev
+	kconfigwidgets-dev
+	kcontacts-dev
+	kcoreaddons-dev
+	kdiagram-dev
+	kdoctools-dev
+	kholidays-dev
+	ki18n-dev
+	kiconthemes-dev
+	kidentitymanagement-dev
+	kio-dev
+	kitemmodels-dev
+	kitemviews-dev
+	knotifications-dev
+	kservice-dev
+	ktextwidgets-dev
+	kwallet-dev
+	kxmlgui-dev
+	qt6-qtbase-dev
+	qt6-qtsvg-dev
+	qt6-qtwebengine-dev
+	samurai
+	"
+checkdepends="xwayland-run"
+_repo_url="https://invent.kde.org/office/kmymoney.git"
+source="https://download.kde.org/stable/kmymoney/$pkgver/kmymoney-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+
+case $CARCH in
+aarch64) options="!check" ;; # Segfault / child aborted errors on 3-12 builder
+esac
+
+build() {
+	cmake -B build -G Ninja \
+		-DBUILD_WITH_QT6=ON \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	# reports-chart-test requires OpenGL
+	# csvimport-csvdate-test is broken
+	wlheadless-run -- ctest --test-dir build -E "(reports-chart|csvimport-csvdate)-test"
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+99145f8515f5cbc811185b4e375f85d8a4bf9f57eeb30927b453cd7071990484650b9b7353f25e71d632e5b2468c204905c3df85fe3ab0a8b0cd7611f4c1c3a3  kmymoney-5.2.1.tar.xz
+"

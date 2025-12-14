@@ -1,0 +1,82 @@
+# Contributor: Sean McAvoy <seanmcavoy@gmail.com>
+# Maintainer: Sean McAvoy <seanmcavoy@gmail.com>
+pkgname=partclone
+pkgver=0.3.40
+pkgrel=0
+pkgdesc="utilities to save and restore used blocks on a partition"
+url="https://partclone.org"
+arch="all"
+license="GPL-2.0-only"
+makedepends="
+	autoconf
+	automake
+	bash
+	btrfs-progs-dev
+	diffutils
+	docbook-xml
+	e2fsprogs-dev
+	f2fs-tools-dev
+	gettext-dev
+	hfsprogs
+	intltool
+	libtool
+	libxslt-dev
+	ncurses-dev
+	ntfs-3g-dev
+	openssl-dev
+	xxhash-dev
+	zstd-dev
+	"
+subpackages="
+	$pkgname-doc
+	$pkgname-lang
+	$pkgname-bash-completion
+	"
+source="https://github.com/Thomas-Tsai/partclone/archive/$pkgver/partclone-$pkgver.tar.gz
+	gcc14.patch
+	byteswap.patch
+	musl.patch
+	remove-usage-of-off64_t.patch
+	very-funny-glibc-types.patch
+	"
+
+prepare() {
+	default_prepare
+	autoreconf -fvi
+}
+
+build() {
+	# xfs seems broken right now :(
+	LIBS="-lintl" ./configure \
+		--prefix=/usr \
+		--disable-rpath \
+		--enable-ncursesw \
+		--enable-fat \
+		--enable-extfs \
+		--enable-exfat \
+		--enable-ntfs \
+		--enable-btrfs \
+		--enable-minix \
+		--enable-f2fs \
+		--enable-hfsp \
+		--enable-xfs \
+		bashcompletiondir=/usr/share/bash-completion/completions
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+4c96f912df06aa13b441493ba9a23017d7fe8c0474ade5a7f12ef209e113dea4019ab7c2e0f1634c7d9dbd21f86436b3ba15bf836112ccecd094c7361b73a2ba  partclone-0.3.40.tar.gz
+65cf12c8c39e2182156406806ed9f3eb1db4b924381b298e1f4cdac8f69d0d5459b02d8ff75abb7e43334ab7696afba9d94cea05ad588607831855a0b7d35312  gcc14.patch
+d6cf145a6044102d07345debf0859507bfd913366a7f17e44d1663c0eca2bf92fdb3205983d9c6a08f654455265178b61ddcc9fcb1d9d7793ae075abb7da47d9  byteswap.patch
+67505eda6028a772700ab776faa4f3156deec205525aa83b76b43917d4b2bf7704d6c15e44da96f19e23b856669285ff94f5bc71c9bbac75b30b0831ebc95576  musl.patch
+3c48851e3848f33bc257859febb54569dc00006af9877b706da5adca5680d61ee6291b62511ee1d50fb07d82cc04bffa5074ef5825071407570b952ff06684ef  remove-usage-of-off64_t.patch
+16877cba85c0f2505940b88bf60b146b5412e624ab48733a5c9b1094f0a3ce031f8d3b5fd9aecd82fba6787f6939ae48fb713181d54db92990ff7b83e3b961c9  very-funny-glibc-types.patch
+"

@@ -1,0 +1,43 @@
+maintainer="Michał Polański <michal@polanski.me>"
+pkgname=kind
+pkgver=0.30.0
+pkgrel=2
+pkgdesc="Kubernetes IN Docker - local clusters for testing Kubernetes"
+url="https://kind.sigs.k8s.io/"
+license="Apache-2.0"
+arch="all"
+makedepends="go"
+subpackages="
+	$pkgname-bash-completion
+	$pkgname-fish-completion
+	$pkgname-zsh-completion
+	"
+source="https://github.com/kubernetes-sigs/kind/archive/v$pkgver/kind-$pkgver.tar.gz
+	skip-version-test.patch
+	"
+options="net" # Go modules
+
+build() {
+	go build
+
+	./kind completion bash >$pkgname.bash
+	./kind completion fish >$pkgname.fish
+	./kind completion zsh >$pkgname.zsh
+}
+
+check() {
+	go test -tags=nointegration ./...
+}
+
+package() {
+	install -Dm755 $pkgname -t "$pkgdir"/usr/bin/
+
+	install -Dm644 $pkgname.bash "$pkgdir"/usr/share/bash-completion/completions/$pkgname
+	install -Dm644 $pkgname.fish "$pkgdir"/usr/share/fish/vendor_completions.d/$pkgname.fish
+	install -Dm644 $pkgname.zsh "$pkgdir"/usr/share/zsh/site-functions/_$pkgname
+}
+
+sha512sums="
+b628257d35fcf08de74b503e3d62693552f1bf250c02a4f20f9af29ffd862a66aa1bb6c64a7588b23eb6fffe3afc16b87900044b8c7b68574566de690f47399b  kind-0.30.0.tar.gz
+6993628a0a5c938b0e59b92e04b32bd7d454dc4ee7e5c445c4122dacdb786d0372836c59749c767f5921b9ac96b4452c5d696c2c7d701ea8e10ac256d6d7d67c  skip-version-test.patch
+"

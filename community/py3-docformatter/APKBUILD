@@ -1,0 +1,49 @@
+# Maintainer: Will Sinatra <wpsinatra@gmail.com>
+pkgname=py3-docformatter
+pkgver=1.7.7
+pkgrel=1
+pkgdesc="Formats docstrings to follow PEP 257"
+url="https://github.com/PyCQA/docformatter"
+arch="noarch"
+license="MIT"
+depends="
+	py3-charset-normalizer
+	py3-untokenize
+	"
+makedepends="
+	py3-gpep517
+	py3-poetry-core
+	"
+checkdepends="
+	black
+	py3-mock
+	py3-pytest
+	py3-pytest-xdist
+	"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/PyCQA/docformatter/archive/refs/tags/v$pkgver.tar.gz
+	fix-test-encoding-functions.patch
+	"
+builddir="$srcdir/docformatter-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	VIRTUAL_ENV="$builddir"/.testenv .testenv/bin/python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+0863846e5b226eb93a2e23b351328aead9ba5dd8ee578d2d1f0529c7c934a26b46086a47f5edf0efe359dd2f21c76d0f6a8ed2064048c103f537d183a667064a  py3-docformatter-1.7.7.tar.gz
+795a8398ad3864d438721968afe6e9b7e625163d74eb56079b5e4b1497990fa11c13ec43340424a93adbd7a1515eca318b2057e2e63881e4c320495ccaa72d03  fix-test-encoding-functions.patch
+"

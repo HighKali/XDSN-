@@ -1,0 +1,69 @@
+# Maintainer: Simon Zeni <simon@bl4ckb0ne.ca>
+pkgname=hwdata
+pkgver=0.401
+pkgrel=0
+pkgdesc="Hardware identification and configuration data"
+url="https://github.com/vcrhonek/hwdata"
+arch="noarch"
+license="GPL-2.0-or-later OR XFree86-1.1"
+depends_dev="$pkgname=$pkgver-r$pkgrel"
+subpackages="$pkgname-dev $pkgname-usb $pkgname-pci $pkgname-pnp $pkgname-net"
+source="$pkgname-$pkgver.tar.gz::https://github.com/vcrhonek/hwdata/archive/refs/tags/v$pkgver.tar.gz"
+options="!check" # just firmware data
+
+replaces="hwids"
+# be higher since hwids was a large date version
+provides="hwids=20220101-r$pkgrel"
+
+build() {
+	./configure \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--datadir=/usr/share \
+		--disable-blacklist
+}
+
+package() {
+	depends="
+		$pkgname-usb=$pkgver-r$pkgrel
+		$pkgname-pci=$pkgver-r$pkgrel
+		$pkgname-pnp=$pkgver-r$pkgrel
+		$pkgname-net=$pkgver-r$pkgrel
+		"
+	make DESTDIR="$pkgdir" install
+}
+
+usb() {
+	pkgdesc="$pkgdesc (usb data)"
+	provides="hwids-usb=20220101-r$pkgrel"
+	replaces="hwids-usb"
+
+	amove usr/share/hwdata/usb.ids
+}
+
+pci() {
+	pkgdesc="$pkgdesc (pci data)"
+	provides="hwids-pci=20220101-r$pkgrel"
+	replaces="hwids-pci"
+
+	amove usr/share/hwdata/pci.ids
+}
+
+net() {
+	pkgdesc="$pkgdesc (net data)"
+	provides="hwids-net=20220101-r$pkgrel"
+	replaces="hwids-net"
+
+	amove usr/share/hwdata/oui.txt
+	amove usr/share/hwdata/iab.txt
+}
+
+pnp() {
+	pkgdesc="$pkgdesc (pnp data)"
+
+	amove usr/share/hwdata/pnp.ids
+}
+
+sha512sums="
+c8015a77ff8fa835ad06112049a4f48cde26b9376b1a0b869189822aa747d3976ef5888290ce6bc17cb2d78c70388c887d85326595a47670a2788b5acae52c69  hwdata-0.401.tar.gz
+"

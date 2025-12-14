@@ -1,0 +1,60 @@
+# Contributor: Will Sinatra <wpsinatra@gmail.com>
+# Contributor: Daniel Fancsali <fancsali@gmail.com>
+# Maintainer: Will Sinatra <wpsinatra@gmail.com>
+pkgname=clojure
+pkgver=1.12.4
+_tools="$pkgver.1582"
+pkgrel=0
+pkgdesc="The Clojure Programming Language"
+url="https://clojure.org"
+arch="noarch"
+license="EPL-1.0"
+case "$CARCH" in
+	armhf|armv7|x86)	_jdkbuild=8	;;
+	*)			_jdkbuild=21	;;
+esac
+depends="bash java-jdk rlwrap"
+makedepends="maven openjdk$_jdkbuild-jdk"
+subpackages="$pkgname-doc"
+source="https://github.com/clojure/clojure/archive/clojure-$pkgver.tar.gz
+	https://download.clojure.org/install/clojure-tools-$_tools.tar.gz
+	"
+builddir="$srcdir/clojure-clojure-$pkgver"
+options="!check" # Check occurs in build
+
+# secfixes:
+#   1.11.2-r0:
+#     - CVE-2024-22871
+
+prepare() {
+	default_prepare
+
+	cd "$srcdir"/clojure-tools
+	sed -i '/^bin_dir=BINDIR$/s/BINDIR/\/usr\/bin/' clj
+	sed -i '/^install_dir=PREFIX$/s/PREFIX/\/usr\/share\/clojure/' clojure
+	echo 'export CLOJURE_HOME=/usr/share/clojure' > clojure.sh
+}
+
+build() {
+	export JAVA_HOME="/usr/lib/jvm/java-${_jdkbuild%%-*}-openjdk"
+
+	mvn -Plocal package
+}
+
+package() {
+	local sharedir="$pkgdir/usr/share/clojure"
+
+	install -Dvm644 clojure.jar -t "$sharedir"/
+
+	cd "$srcdir"/clojure-tools
+	install -Dvm644 ./*.edn -t "$sharedir"/
+	install -Dvm644 ./*.jar -t "$sharedir"/libexec/
+	install -Dvm755 clj clojure -t "$pkgdir"/usr/bin/
+	install -Dvm644 clojure.sh -t "$pkgdir"/etc/profile.d/
+	install -Dvm644 ./*.1 -t "$pkgdir"/usr/share/man/man1/
+}
+
+sha512sums="
+95bdc41876bdd8df10977bcb02207148db33981d48d2819fb58c7c2cf4b40a18ab43852c29179528a416efe9a51bdc1a223456ddaad1f152647b9f22300f041f  clojure-1.12.4.tar.gz
+69a2fc8e2c8f8916ce55960c203a013315c8e43fc04944fca36ee487e7af94fb39147ea01d25f0935d3b79fc9f27c06bb9521e61a784278856460143e5fbc29a  clojure-tools-1.12.4.1582.tar.gz
+"

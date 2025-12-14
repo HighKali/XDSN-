@@ -1,0 +1,35 @@
+# Contributor: Zach DeCook <zachdecook@librem.one>
+maintainer="Zach DeCook <zachdecook@librem.one>"
+pkgname=hyprutils
+pkgver=0.8.4
+pkgrel=0
+pkgdesc="Hyprland utilities library used across the ecosystem"
+url="https://github.com/hyprwm/hyprutils"
+arch="all"
+license="BSD-3-Clause"
+source="https://github.com/hyprwm/hyprutils/archive/v$pkgver/hyprutils-v$pkgver.tar.gz"
+makedepends="cmake samurai pixman-dev"
+subpackages="$pkgname-doc $pkgname-dev"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DCMAKE_BUILD_TYPE=None
+	cmake --build build
+}
+
+check() {
+	cd build
+	ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+	install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}
+
+
+sha512sums="
+851a1783d064eefecdfe7dd3255fd148dbaa33fdb495d2500c0b08248ae7ad0e1b74c437226ba07c5c296466f291bbf21f0a6c75f6bd35341c11deea5bb1ca52  hyprutils-v0.8.4.tar.gz
+"

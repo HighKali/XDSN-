@@ -1,0 +1,51 @@
+# Contributor: Francesco Colis_ta <fcolista@alpinelinux.org>
+# Maintainer: Francesco Colista <fcolista@alpinelinux.org>
+pkgname=rutorrent
+_pkgname=ruTorrent
+pkgver=5.2.10
+pkgrel=0
+pkgdesc="Yet another web front-end for rTorrent"
+url="https://github.com/Novik/ruTorrent"
+arch="noarch"
+license="GPL-3.0-or-later"
+depends="php83 curl"
+# we need to user gnu tar since the permissions on files in tar archive are
+# bad
+makedepends="tar"
+checkdepends="nodejs npm"
+pkggroups="rutorrent"
+install="$pkgname.pre-install $pkgname.post-install"
+source="$pkgname-$pkgver.tar.gz::https://github.com/Novik/$_pkgname/archive/v$pkgver.tar.gz
+	fix-rss-rtorrent-tests.patch
+	"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+build() {
+	chmod -R u+w "$builddir"
+}
+
+check() {
+	cd tests
+	npm install --package-lock=false
+	# js category-list test is broken upstream
+	# https://github.com/Novik/ruTorrent/issues/2931
+	npm test -- --testPathIgnorePatterns="category-list"
+	# php tests failing due charset or something - also minimal tests
+	# ./php-test.sh
+}
+
+package() {
+	install -d $pkgdir/usr/share/webapps/$pkgname
+	install -d $pkgdir/var/www/localhost/htdocs/
+	cp -r ./* $pkgdir/usr/share/webapps/$pkgname
+	rm -fr $pkgdir/usr/share/webapps/$pkgname/tests
+	chgrp -R $pkggroups $pkgdir/usr/share/webapps/$pkgname/share
+	chmod 0775 $pkgdir/usr/share/webapps/$pkgname/share/settings
+	chmod 0775 $pkgdir/usr/share/webapps/$pkgname/share/torrents
+	chmod 0775 $pkgdir/usr/share/webapps/$pkgname/share/users
+}
+
+sha512sums="
+4c6be1d2bca65f13aa4ea69cadfd5c0f0cbad8d3c14cd19aafaebce269a38169ddcee263379fb8381a3c46638d7ef652e7d4b95fe2a921952c7dff05538eeab4  rutorrent-5.2.10.tar.gz
+e05fae51bbb79202635becaad01b8b78b7311e395270dfa46b2139b98b259e18c93228f0d1a9f3fda964cf7596e625c918089865ec5da20b28857f0c3fa77623  fix-rss-rtorrent-tests.patch
+"

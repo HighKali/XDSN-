@@ -1,0 +1,88 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-frameworks
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=kwindowsystem
+pkgver=6.20.0
+pkgrel=0
+pkgdesc="Access to the windowing system"
+# armhf blocked by qt6-qtdeclarative
+arch="all !armhf"
+url="https://community.kde.org/Frameworks"
+license="MIT AND (LGPL-2.1-only OR LGPL-3.0-only"
+depends_dev="
+	libxrender-dev
+	plasma-wayland-protocols
+	qt6-qtdeclarative-dev
+	qt6-qtwayland-dev
+	xcb-util-keysyms-dev
+	xcb-util-wm-dev
+	"
+makedepends="$depends_dev
+	doxygen
+	extra-cmake-modules
+	graphviz
+	kde-qdoc-common
+	qt6-qtdeclarative-private-dev
+	qt6-qttools-dev
+	samurai
+	"
+checkdepends="xwayland-run"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+_repo_url="https://invent.kde.org/frameworks/kwindowsystem.git"
+source="https://download.kde.org/stable/frameworks/${pkgver%.*}/kwindowsystem-$pkgver.tar.xz"
+
+build() {
+	export KDE_DOCS=/usr/share/kde/documentation
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_TESTING=ON
+	cmake --build build
+
+	cmake --build build --target prepare_docs
+	cmake --build build --target generate_docs
+	cmake --build build --target generate_qch
+}
+
+check() {
+	local skipped_tests="kwindowsystem-(kwindowsystem_threadtest"
+	local tests="
+		compositingenabled_test
+		kkeyserver_x11_unittest
+		kmanagerselectiontest
+		kstartupinfo_unittest
+		kwindoweffectstest
+		kwindowinfox11test
+		kwindowsystemx11test
+		kxmessages_unittest
+		netrootinfotestwm
+		netwininfotestclient
+		netwininfotestwm
+		"
+	case "$CARCH" in
+		s390x)
+			tests="$tests
+				kwindoweffectstest
+				netwininfotestwm
+				"
+			;;
+	esac
+	for test in $tests; do
+		skipped_tests="$skipped_tests|$test"
+	done
+	skipped_tests="$skipped_tests)"
+	echo $skipped_tests
+	wlheadless-run -- ctest --test-dir build -E "$skipped_tests"
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+
+	DESTDIR="$pkgdir" cmake --build build --target install_html_docs
+	DESTDIR="$pkgdir" cmake --build build --target install_qch_docs
+}
+
+sha512sums="
+3c7c8b144e5c9779458fa4dfebe8d67611fa3cfbc7a9b46e327ef570760f13477e19f4d4a41fa8e71ab8f5643268ddd39e243e127727c11f311b60412389d91c  kwindowsystem-6.20.0.tar.xz
+"

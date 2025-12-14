@@ -1,0 +1,50 @@
+# Contributor: Andrew Panteleyev <insonifi@gmail.com>
+maintainer="Krassy Boykinov <kboykinov@teamcentrixx.com>"
+pkgname=gst-rtsp-server
+pkgver=1.26.9
+pkgrel=0
+pkgdesc="GStreamer RTSP server"
+url="https://gstreamer.freedesktop.org"
+arch="all"
+license="LGPL-2.0-or-later"
+depends_dev="gst-plugins-base-dev"
+makedepends="
+	$depends_dev
+	gobject-introspection-dev
+	gst-plugins-bad-dev
+	gstreamer-dev
+	meson
+	"
+checkdepends="gst-plugins-good"
+subpackages="$pkgname-dev"
+source="https://gstreamer.freedesktop.org/src/gst-rtsp-server/gst-rtsp-server-$pkgver.tar.xz"
+options="!check" # tests pass locally but not in ci
+
+# secfixes:
+#   1.24.9-r0:
+#     - CVE-2024-44331
+
+build() {
+	CFLAGS="$CFLAGS -O2" \
+	CXXFLAGS="$CXXFLAGS -O2" \
+	CPPFLAGS="$CPPFLAGS -O2" \
+	abuild-meson \
+		-Db_lto=true \
+		-Dpackage-origin="https://alpinelinux.org" \
+		-Dpackage-name="GStreamer RTSP server (Alpine Linux)" \
+		-Dtests="$(want_check && echo enabled || echo disabled)" \
+		. output
+	meson compile -C output
+}
+
+check() {
+	meson test --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+b9848ad939437369cd7f3b71969f980007174c54b5161f002aeda0baa1853c55018891210e8c4341509c5fa5751b336ddc7979f230afa6630582d52b8490372a  gst-rtsp-server-1.26.9.tar.xz
+"

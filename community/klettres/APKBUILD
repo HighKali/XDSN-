@@ -1,0 +1,50 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=klettres
+pkgver=25.08.3
+pkgrel=0
+# armhf blocked by extra-cmake-modules
+arch="all !armhf"
+url="https://edu.kde.org/klettres"
+pkgdesc="Learn the Alphabet"
+license="GPL-2.0-or-later AND GFDL-1.2-only"
+makedepends="
+	extra-cmake-modules
+	kcompletion-dev
+	kconfigwidgets-dev
+	kcoreaddons-dev
+	kcrash-dev
+	kdoctools-dev
+	ki18n-dev
+	knewstuff-dev
+	kwidgetsaddons-dev
+	qt6-qtbase-dev
+	qt6-qtsvg-dev
+	samurai
+	"
+subpackages="$pkgname-doc $pkgname-lang"
+_repo_url="https://invent.kde.org/education/klettres.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/klettres-$pkgver.tar.xz"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+5de7af6783fcaca7ec2821908deb9ea014fb04d65aec869d1ce55537b31542ed137b0ed492feb09b208154e60c5a56e6320bf5e72029cfec28e43615c32bd5a4  klettres-25.08.3.tar.xz
+"

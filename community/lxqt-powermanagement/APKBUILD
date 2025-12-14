@@ -1,0 +1,47 @@
+# Contributor: Zachary Lee Andrews <zcrayfish@gmail.com>
+maintainer="Antoni Aloy <aaloytorrens@gmail.com>"
+pkgname=lxqt-powermanagement
+pkgver=2.3.0
+pkgrel=0
+pkgdesc="Power management module for LXQt"
+url="https://github.com/lxqt/lxqt-powermanagement"
+# armhf blocked by extra-cmake-modules -> kwindowsystem-dev
+arch="all !armhf"
+license="LGPL-2.0-or-later"
+makedepends="
+	cmake
+	samurai
+	kidletime-dev
+	kwindowsystem-dev
+	liblxqt-dev
+	lxqt-build-tools
+	lxqt-globalkeys-dev
+	perl
+	qt6-qttools-dev
+	solid-dev
+	"
+options="!check" # No testsuite
+subpackages="$pkgname-lang"
+source="https://github.com/lxqt/lxqt-powermanagement/releases/download/$pkgver/lxqt-powermanagement-$pkgver.tar.xz"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+lang() {
+	install_if="lang $pkgname=$pkgver-r$pkgrel"
+	amove usr/share/lxqt/translations/$pkgname
+}
+
+sha512sums="
+057c8d59e959e0358956851f7dd51fc94f630761c0e70d2ab6cb5d5d38bf88f94cf191d4d2868effcd99d6ca9742659b2671428db5993f01792893bbd075c404  lxqt-powermanagement-2.3.0.tar.xz
+"

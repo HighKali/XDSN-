@@ -1,0 +1,58 @@
+maintainer="Marian Buschsieweke <marian.buschsieweke@posteo.net>"
+pkgname=py3-pytest-regtest
+pkgver=2.3.5
+pkgrel=0
+pkgdesc="pytest-regtest is a pytest-plugin for implementing regression tests"
+url="https://gitlab.com/uweschmitt/pytest-regtest"
+arch="noarch"
+license="MIT"
+depends="
+	py3-pytest
+	"
+makedepends="
+	py3-gpep517
+	py3-hatchling
+	py3-setuptools
+	py3-wheel
+	twine
+	"
+checkdepends="
+	py3-pexpect
+	py3-tox
+	py3-pandas
+	"
+subpackages="$pkgname-pyc"
+source="
+	https://gitlab.com/uweschmitt/pytest-regtest/-/archive/$pkgver/pytest-regtest-$pkgver.tar.bz2
+
+	tests-conftest.py-Make-pdbp-dependency-optional.patch
+	"
+builddir="$srcdir/pytest-regtest-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages test-env
+	test-env/bin/python3 -m installer .dist/*.whl
+	test-env/bin/python3 -m pytest tests \
+		--deselect tests/test_cli.py::test_cli \
+		--deselect tests/test_snapshot_polars.py::test_snapshot_polars_changed_entry \
+		--deselect tests/test_snapshot_polars.py::test_snapshot_polars_empty_diff \
+		--deselect tests/test_snapshot_polars.py::test_snapshot_polars_rtol_atol \
+		--deselect tests/test_snapshot_polars.py::test_snapshot_polars_diff_num_columns \
+		#
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+cbead037699fc5651453ae60dc5982e08384a8007a2de59b41fb3e92b63290b6e88dc2a61fc794deac543260ab47f5154ac85d7fa345dc37830f411292ca40e3  pytest-regtest-2.3.5.tar.bz2
+2aa47529c36b31c3a9530e30354f3ae462a7487e92f3404eeef3f44a7c722262f1d31cb6a315457b21246b4ccd6518548da611d92b645a1377c258e4998feea9  tests-conftest.py-Make-pdbp-dependency-optional.patch
+"

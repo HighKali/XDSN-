@@ -1,0 +1,51 @@
+# Contributor: Noel Kuntze <noel.kuntze@thermi.consulting>
+# Maintainer: Noel Kuntze <noel.kuntze@thermi.consulting>
+pkgname=py3-spnego
+_pkgname=pyspnego
+pkgver=0.11.2
+pkgrel=0
+pkgdesc="SPNEGO Authentication library"
+url="https://github.com/jborean93/pyspnego"
+arch="noarch"
+license="MIT"
+depends="python3 py3-cryptography"
+makedepends="
+	py3-gpep517
+	py3-setuptools
+	py3-wheel
+	python3-dev
+	"
+checkdepends="
+	cython
+	py3-krb5
+	py3-pytest
+	py3-pytest-cov
+	py3-pytest-mock
+	py3-pytest-xdist
+	py3-python-gssapi
+	py3-ruamel.yaml
+	"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/jborean93/pyspnego/archive/refs/tags/v$pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest -n auto
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+dee18915511d2f171266f55333590152d3c1f8f47c24fcd70ba20b5d6dc98d2dc0d11cbc250fbafd57684bd4157cf4a05a6294c3e8fa0f807967cf6ed4db9d94  py3-spnego-0.11.2.tar.gz
+"

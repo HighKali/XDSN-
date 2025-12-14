@@ -1,0 +1,45 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=kaccounts-providers
+pkgver=25.08.3
+pkgrel=1
+# armhf blocked by qt6-qtdeclarative
+# x86, s390x and riscv64 blocked by qt6-qtwebengine
+arch="all !armhf !x86 !s390x !riscv64"
+url="https://kde.org/applications/internet/"
+pkgdesc="Small system to administer web accounts for the sites and services across the KDE desktop"
+license="GPL-2.0-or-later"
+depends="signon-plugin-oauth2"
+makedepends="
+	extra-cmake-modules
+	kaccounts-integration-dev
+	kdeclarative-dev
+	ki18n-dev
+	kio-dev
+	kpackage-dev
+	qt6-qtbase-dev
+	qt6-qtdeclarative-dev
+	qt6-qtwebengine-dev
+	samurai
+	"
+subpackages="$pkgname-lang"
+_repo_url="https://invent.kde.org/network/kaccounts-providers.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kaccounts-providers-$pkgver.tar.xz"
+options="!check" # No tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+5f9bfe62c7e6145d5e36fa45326b409f6a1dbbb7073ae2135da2039410c63b688864c43450b9d5c3c68ca95a26ced72e19aeba2ab61ae9ba9f75c2b32331de51  kaccounts-providers-25.08.3.tar.xz
+"

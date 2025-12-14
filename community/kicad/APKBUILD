@@ -1,0 +1,96 @@
+# Contributor: Marian Buschsieweke <marian.buschsieweke@posteo.net>
+# Maintainer: Marian Buschsieweke <marian.buschsieweke@posteo.net>
+pkgname=kicad
+pkgver=9.0.6
+pkgrel=0
+pkgdesc="Cross Platform and Open Source Electronics Design Automation Suite"
+url="https://www.kicad.org/"
+# No support for s390x/riscv64 in libcontext (shipped with kicad)
+# 32-bit arm: memory alignment access error in tests
+arch="all !armhf !armv7 !riscv64 !s390x"
+license="GPL-3.0-or-later"
+makedepends="
+	boost-dev
+	cairo-dev
+	chrpath
+	cmake
+	curl-dev
+	glew-dev
+	glm-dev
+	glu-dev
+	libgit2-dev
+	mesa-dev
+	ngspice-dev
+	nng-dev
+	opencascade-dev
+	protobuf-dev
+	py3-wxpython
+	python3-dev
+	samurai
+	swig
+	unixodbc-dev
+	wxwidgets-dev
+	zlib-dev
+	"
+checkdepends="
+	py3-pytest
+	"
+depends="
+	python3
+	py3-cairosvg
+	"
+subpackages="
+	$pkgname-demos
+	"
+source="
+	https://gitlab.com/kicad/code/kicad/-/archive/$pkgver/kicad-$pkgver.tar.gz
+	"
+
+provides="$pkgname-opencascade=$pkgver-r$pkgrel"
+replaces="$pkgname-opencascade"
+
+build() {
+	# XXX: GLIBCXX_ASSERTIONS causes link errors and symbols are missing
+	# -DKICAD_STDLIB_LIGHT_DEBUG also enables this, maybe that works instead
+	CFLAGS="$CFLAGS -O2" \
+	CXXFLAGS="$CXXFLAGS -U_GLIBCXX_ASSERTIONS -O2" \
+	cmake -B build -G Ninja -Wno-dev \
+		-DCMAKE_BUILD_TYPE=None \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DKICAD_USE_EGL=ON \
+		-DKICAD_SCRIPTING_WXPYTHON=OFF \
+		-DOPENGL_opengl_LIBRARY=/usr/lib/libGL.so
+	# build order workaround
+	cmake --build build --target common/pcb_lexer.h
+	cmake --build build
+}
+
+check() {
+	case "$CARCH" in
+	x86)
+		# MemoryError on x86 in qa_cli
+		ctest --test-dir build -E '(qa_cli|qa_spice)'
+		;;
+	*)
+		ctest --test-dir build -E "qa_spice"
+		;;
+	esac
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+
+	local sitedir=$(python3 -c "import site; print(site.getsitepackages()[0])")
+	chrpath -d "$pkgdir/$sitedir"/_pcbnew.so
+}
+
+demos() {
+	pkgdesc="Demos for KiCad"
+
+	amove usr/share/kicad/demos
+}
+
+sha512sums="
+828eb07786673a770de47298108bdb248561d10bab00908ba0415afebe0fc0f6595d5ee7ad2f0d6afe8dc30228d4a8f72223b6999b2534e69c556cb84f702f36  kicad-9.0.6.tar.gz
+"

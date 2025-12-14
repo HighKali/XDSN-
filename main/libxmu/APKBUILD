@@ -1,0 +1,44 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=libxmu
+pkgver=1.2.1
+pkgrel=0
+pkgdesc="X11 miscellaneous micro-utility library"
+url="https://xorg.freedesktop.org/"
+arch="all"
+license="MIT"
+subpackages="$pkgname-dev $pkgname-doc"
+depends_dev="util-linux-dev"
+makedepends="
+	libsm-dev
+	libx11-dev
+	libxext-dev
+	libxt-dev
+	util-linux-dev
+	util-macros
+	xmlto
+	"
+source="https://www.x.org/releases/individual/lib/libXmu-$pkgver.tar.xz"
+builddir="$srcdir"/libXmu-$pkgver
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--without-fop
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+	install -Dm644 COPYING "$pkgdir"/usr/share/licenses/$pkgname/COPYING
+}
+
+sha512sums="
+05a30e5961e00e940ad7ec4eb94ec482b5cbe808585972bf70c849333af3fddf4ae4bd87895d706507fb3a94ed0fb73ea161e0e27dc2840323a1a1af49c0e8a3  libXmu-1.2.1.tar.xz
+"

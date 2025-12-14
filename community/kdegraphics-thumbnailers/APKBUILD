@@ -1,0 +1,42 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=kdegraphics-thumbnailers
+pkgver=25.08.3
+pkgrel=0
+# armhf blocked by qt6-qtdeclarative -> kio
+arch="all !armhf"
+pkgdesc="Thumbnailers for various graphics file formats"
+url="https://www.kde.org/applications/graphics/"
+license="GPL-2.0-or-later AND LGPL-2.0-or-later"
+makedepends="
+	extra-cmake-modules
+	karchive-dev
+	kdegraphics-mobipocket-dev
+	kio-dev
+	libkdcraw-dev
+	libkexiv2-dev
+	qt6-qtbase-dev
+	samurai
+	"
+_repo_url="https://invent.kde.org/graphics/kdegraphics-thumbnailers.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kdegraphics-thumbnailers-$pkgver.tar.xz"
+# No tests
+options="!check"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DDISABLE_MOBIPOCKET=ON # Fails to find kdegraphics-mobipocket
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+71ab9159bd2b07f76959c00c7057f9b6edbdd5afac3ffbc155ea54bf16fd8c0fb57aaa37afe476fa5c348449bb52da0acd855bd9a9f4d36cfe4e3fb4078de1c5  kdegraphics-thumbnailers-25.08.3.tar.xz
+"

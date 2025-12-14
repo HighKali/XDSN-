@@ -1,0 +1,42 @@
+maintainer="Achill Gilgenast <achill@achill.org>"
+pkgname=showtime
+pkgver=49.1
+pkgrel=0
+pkgdesc="Watch without distraction"
+url="https://gitlab.gnome.org/GNOME/showtime"
+arch="noarch"
+license="GPL-3.0-or-later"
+depends="
+	gst-plugins-rs-gtk4
+	py3-cryptography
+	py3-gettext
+	py3-gobject3
+	python3
+	"
+makedepends="
+	blueprint-compiler-dev
+	desktop-file-utils
+	gtk4.0-dev
+	libadwaita-dev
+	meson
+	"
+subpackages="$pkgname-lang"
+source="https://download.gnome.org/sources/showtime/${pkgver%.*}/showtime-$pkgver.tar.xz"
+
+build() {
+	abuild-meson \
+		output .
+	meson compile -C output
+}
+
+check() {
+	meson test --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+3af938b6ee8a966bb877692acc8a13c699d17db3b48a2985553806c9523c07910b52b48499b9b2e1c59877e817c5450af35a75c290a9efc80400b83d85a735b7  showtime-49.1.tar.xz
+"

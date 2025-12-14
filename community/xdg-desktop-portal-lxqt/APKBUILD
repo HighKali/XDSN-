@@ -1,0 +1,49 @@
+# Contributor: Zachary Lee Andrews <zcrayfish@gmail.com>
+maintainer="Antoni Aloy <aaloytorrens@gmail.com>"
+pkgname=xdg-desktop-portal-lxqt
+pkgver=1.3.0
+pkgrel=0
+pkgdesc="LXQT xdg desktop portal"
+url="https://github.com/lxqt/xdg-desktop-portal-lxqt"
+arch="all !armhf" # kwindowsystem
+license="LGPL-2.1-or-later"
+depends="
+	xdg-desktop-portal
+	"
+makedepends="
+	cmake
+	kwindowsystem-dev
+	libfm-qt-dev
+	qt6-qtbase-dev
+	samurai
+	xdg-desktop-portal-dev
+	"
+subpackages="$pkgname-systemd"
+source="https://github.com/lxqt/xdg-desktop-portal-lxqt/releases/download/$pkgver/xdg-desktop-portal-lxqt-$pkgver.tar.xz"
+options="!check" # no tests
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		CMAKE_CROSSOPTS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=None \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		$CMAKE_CROSSOPTS .
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --build build --target install
+}
+
+lang() {
+	install_if="lang $pkgname=$pkgver-r$pkgrel"
+	amove usr/share/lxqt/translations/$pkgname
+}
+
+sha512sums="
+ee949758c62077cb19d48763702100456543d006d0fc7bb29573e5596cebe4ffc66a504d23a472b911cbaf708941c4ad3f875d0741940c99621628e2ea0c292f  xdg-desktop-portal-lxqt-1.3.0.tar.xz
+"

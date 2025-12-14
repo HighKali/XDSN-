@@ -1,0 +1,37 @@
+# Contributor: Guy Godfroy <guy.godfroy@gugod.fr>
+# Maintainer: Guy Godfroy <guy.godfroy@gugod.fr>
+pkgname=edit
+pkgver=1.2.1
+pkgrel=0
+pkgdesc="Simple editor for simple needs"
+url="https://github.com/microsoft/edit"
+arch="all"
+license="MIT"
+makedepends="cargo cargo-auditable"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/microsoft/edit/archive/refs/tags/v$pkgver.tar.gz"
+options="net"
+
+prepare() {
+	default_prepare
+
+	cargo fetch --target="$CHOST" --locked
+}
+
+build() {
+	export RUSTC_BOOTSTRAP=1
+	cargo auditable build --frozen --release
+}
+
+check() {
+	cargo test --frozen
+}
+
+package() {
+	install -Dm755 target/release/edit "$pkgdir"/usr/bin/edit
+	install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
+}
+
+sha512sums="
+54e623a712828c4f9d94ffab98ba1f45ec74f610e2817bfca2be101fb53a62c43861abe988c7d8274554820d187928407b486b67f741eb742f155c7ed185a051  edit-1.2.1.tar.gz
+"

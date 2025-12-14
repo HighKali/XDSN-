@@ -1,0 +1,41 @@
+# Contributor: Guy Godfroy <guy.godfroy@gugod.fr>
+# Maintainer: Guy Godfroy <guy.godfroy@gugod.fr>
+pkgname=go-tools
+pkgver=0.40.0
+pkgrel=0
+pkgdesc="Go tools"
+url="https://pkg.go.dev/golang.org/x/tools"
+arch="all"
+license="BSD-3-Clause"
+makedepends="go"
+source="$pkgname-$pkgver.tar.gz::https://github.com/golang/tools/archive/refs/tags/v$pkgver.tar.gz"
+# net: go deps
+# !check: tests are failing, and community/gopls which is based on the same
+# repo has the checks disabled too, so no further investigation was done.
+options="net !check"
+builddir="$srcdir/tools-$pkgver"
+
+prepare() {
+	default_prepare
+	mkdir -p bin
+}
+
+build() {
+	go build -v -o bin ./cmd/...
+}
+
+check() {
+	go test ./...
+}
+
+package() {
+	install -m755 -d "$pkgdir"/usr/bin
+	for bin in bin/*
+	do
+		install -m755 $bin "$pkgdir"/usr/bin
+	done
+}
+
+sha512sums="
+defa6be4cfc599b7d14116f146061384bb500f9faffea52ce0d5b90d2a25768461a05f7fc5681bcdcebeb90a9f5c65e71ca70ca1a2372b5b318aee7745d7f72b  go-tools-0.40.0.tar.gz
+"

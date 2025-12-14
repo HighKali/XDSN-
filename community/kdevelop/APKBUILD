@@ -1,0 +1,86 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=kdevelop
+pkgver=25.08.3
+pkgrel=1
+# armhf, x86, s390x and riscv64 blocked by qt6-qtwebengine
+arch="all !armhf !x86 !riscv64 !s390x"
+url="https://www.kdevelop.org/"
+pkgdesc="A featureful, plugin-extensible IDE for C/C++ and other programming languages"
+license="GPL-2.0-or-later AND LGPL-2.0-or-later AND GFDL-1.2-only"
+_llvmver=21
+depends="$pkgname-gdb=$pkgver-r$pkgrel indent"
+makedepends="
+	astyle-dev
+	boost-dev
+	clang
+	clang$_llvmver-dev
+	clang$_llvmver-static
+	clang$_llvmver-libclang
+	clang$_llvmver-extra-tools
+	extra-cmake-modules
+	karchive-dev
+	kcmutils-dev
+	kconfig-dev
+	kcrash-dev
+	kdeclarative-dev
+	kdoctools-dev
+	kguiaddons-dev
+	kiconthemes-dev
+	kio-dev
+	kitemmodels-dev
+	kitemviews-dev
+	kjobwidgets-dev
+	knewstuff-dev
+	knotifications-dev
+	knotifyconfig-dev
+	kparts-dev
+	kservice-dev
+	ktexteditor-dev
+	ktexttemplate-dev
+	kwindowsystem-dev
+	kxmlgui-dev
+	libkomparediff2-dev
+	libksysguard-dev
+	llvm$_llvmver-dev
+	llvm$_llvmver-gtest
+	llvm$_llvmver-static
+	qt6-qtbase-dev
+	qt6-qtwebengine-dev
+	samurai
+	shared-mime-info
+	threadweaver-dev
+	"
+checkdepends="xvfb-run"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang $pkgname-gdb:_gdb:noarch"
+_repo_url="https://invent.kde.org/kdevelop/kdevelop.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kdevelop-$pkgver.tar.xz"
+options="!check" # Broken
+
+build() {
+	# FIXME ninja: bad depfile: expected ':', saw 'w'
+	CFLAGS="$CFLAGS -D_GNU_SOURCE" \
+	CXXFLAGS="$CXXFLAGS -I/usr/lib/llvm$_llvmver/include" \
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DCMAKE_C_STANDARD=11 \
+		-DCMAKE_PREFIX_PATH=/usr/lib/llvm$_llvmver/lib/cmake
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+_gdb() {
+	pkgdesc="gdb printers for Qt/KDE code"
+
+	amove usr/share/kdevgdb
+}
+
+sha512sums="
+0fdb1947889a525b2ad54e62154ab977c728fdd04a908afe05d6fdc44953d5e598dbd4dce8aa179c2121d04dd73e55ce770ce52a8a502553830ee856f7e74a9d  kdevelop-25.08.3.tar.xz
+"

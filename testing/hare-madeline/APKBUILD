@@ -1,0 +1,31 @@
+maintainer="Hugo Osvaldo Barrera <hugo@whynothugo.nl>"
+pkgname=hare-madeline
+pkgver=0.1_git20240505
+_commit=c693a0a797849cff0ac629c83e21f028fa60bff6
+pkgrel=1
+pkgdesc="tiny readline-alike with some batteries included"
+url="https://git.sr.ht/~ecs/madeline"
+arch="noarch !armhf !armv7 !ppc64le !s390x !x86 !loongarch64" # blocked by hare
+license="WTFPL"
+checkdepends="hare"
+source="$pkgname-$_commit.tar.gz::https://git.sr.ht/~ecs/madeline/archive/$_commit.tar.gz"
+subpackages="$pkgname-doc"
+builddir="$srcdir/madeline-$_commit"
+
+export HARECACHE="${HARECACHE:-"$srcdir/hare-cache"}"
+
+check() {
+	hare test
+}
+
+package() {
+	install -dm755 "$pkgdir/usr/src/hare/third-party"
+	cp -Rd "graph" "made" "$pkgdir/usr/src/hare/third-party"
+
+	install -Dm644 -t "$pkgdir/usr/share/licenses/$pkgname" "LICENSE"
+	install -Dm644 -t "$pkgdir/usr/share/doc/$pkgname" "README"
+}
+
+sha512sums="
+ff7f3c51afd5d11f32ff2ac1020e496c724dd17ce2ace82b694ffa111abc2a3c9c020d36376eb794098aeaa565549d42c2e262a0992a623888b472e3979ed493  hare-madeline-c693a0a797849cff0ac629c83e21f028fa60bff6.tar.gz
+"

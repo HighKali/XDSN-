@@ -1,0 +1,35 @@
+# Contributor: Guy Godfroy <guy.godfroy@gugod.fr>
+# Maintainer: Guy Godfroy <guy.godfroy@gugod.fr>
+pkgname=plakar
+pkgver=1.0.6
+pkgrel=1
+pkgdesc="backup solution powered by Kloset and ptar"
+url="https://plakar.io/"
+arch="all"
+license="ISC"
+makedepends="go"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/PlakarKorp/plakar/archive/refs/tags/v$pkgver.tar.gz"
+options="net" #go deps
+
+build() {
+	go build -v .
+}
+
+check() {
+	# TestExecuteCmdMountDefault needs fuse kernel module
+	# TestExecuteCmd(Check*|DiagLocks|MaintenanceDefault): failed with go 1.25
+	go test -skip 'TestExecuteCmd(MountDefault|CheckDefault|CheckSpecificSnapshot|DiagLocks|MaintenanceDefault)' \
+		./...
+}
+
+package() {
+	install -m755 -D plakar "$pkgdir"/usr/bin/plakar
+	find plakar -iname "*.1" -exec install -m644 -D {} -t "$pkgdir"/usr/share/man/man1/ \;
+	find plakar -iname "*.7" -exec install -m644 -D {} -t "$pkgdir"/usr/share/man/man7/ \;
+	install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
+}
+
+sha512sums="
+01e61251af8d829c01495d9854d525ab2b2941fe3de5acfae54d642fede60bea381050167b46c7c79f1db8698bd585b98b8718445485c1d18d6273bd0b29f085  plakar-1.0.6.tar.gz
+"

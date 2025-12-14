@@ -1,0 +1,120 @@
+# Contributor: Guy Godfroy <guy.godfroy@gugod.fr>
+# Contributor: Michael Pirogov <vbnet.ru@gmail.com>
+# Maintainer: Guy Godfroy <guy.godfroy@gugod.fr>
+pkgname=loki
+pkgver=3.5.8
+pkgrel=1
+pkgdesc="Like Prometheus, but for logs"
+options="net"
+url="https://github.com/grafana/loki"
+license="AGPL-3.0-or-later"
+# riscv64: invalid memory address or nil pointer dereference
+# others: needs 64 bits
+arch="x86_64 aarch64 ppc64le loongarch64"
+makedepends="go bash"
+checkdepends="tzdata"
+subpackages="$pkgname-logcli $pkgname-canary $pkgname-promtail-openrc:promtail_openrc $pkgname-promtail $pkgname-openrc"
+install="$pkgname.pre-install"
+source="$pkgname-$pkgver.tar.gz::https://github.com/grafana/loki/archive/refs/tags/v$pkgver.tar.gz
+	$pkgname.initd
+	$pkgname.confd
+	$pkgname-promtail.confd
+	$pkgname-promtail.initd
+	"
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+prepare() {
+	default_prepare
+	mkdir build
+}
+
+build() {
+	ldflags="-X github.com/grafana/loki/v3/pkg/util/build.Version=$pkgver \
+		 -X github.com/grafana/loki/v3/pkg/util/build.BuildUser=$(whoami)@$(hostname) \
+		 -X github.com/grafana/loki/v3/pkg/util/build.BuildDate=$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
+	go build -v \
+		-ldflags "-s -w $ldflags" \
+		-tags netgo \
+		-o clients/cmd/promtail/promtail \
+		./clients/cmd/promtail
+	go build -v \
+		-ldflags "-extldflags \"-static\" -s -w $ldflags" \
+		-tags netgo \
+		-o cmd/logcli/logcli \
+		./cmd/logcli
+	go build -v \
+		-ldflags "-extldflags \"-static\" -s -w $ldflags" \
+		-tags netgo \
+		-o cmd/loki/loki \
+		./cmd/loki
+	go build -v \
+		-ldflags "-extldflags \"-static\" -s -w $ldflags" \
+		-tags netgo -o cmd/loki-canary/loki-canary \
+		./cmd/loki-canary
+
+}
+
+
+check() {
+	# test fails with: too many open files
+	ulimit -n 4096
+	# skipping some tests because of timeouts
+	# shellcheck disable=SC2046
+	go test -timeout 60m -skip TestIdleFlushWithActiveProcessing $(go list ./... | grep -Ev 'boltdb|gcp|compactor$|bloombuild|queue|generationnumber|retention|ingester$')
+}
+
+package() {
+	mkdir -p "$pkgdir"/etc/$pkgname
+	install -Dm644 cmd/loki/loki-local-config.yaml "$pkgdir"/etc/$pkgname
+	install -Dm0755 cmd/loki/loki -t "$pkgdir"/usr/bin
+	install -Dm0755 cmd/loki-canary/loki-canary -t "$pkgdir"/usr/bin
+	install -Dm0755 cmd/logcli/logcli -t "$pkgdir"/usr/bin
+
+	install -Dm644 "$srcdir"/$pkgname.confd "$pkgdir"/etc/conf.d/$pkgname
+	install -Dm755 "$srcdir"/$pkgname.initd "$pkgdir"/etc/init.d/$pkgname
+
+	install -Dm755 "$srcdir"/$pkgname-promtail.initd "$pkgdir"/etc/init.d/$pkgname-promtail
+	install -Dm644 "$srcdir"/$pkgname-promtail.confd "$pkgdir"/etc/conf.d/$pkgname-promtail
+
+	install -D clients/cmd/promtail/promtail-local-config.yaml -t "$pkgdir"/etc/$pkgname/
+	install -Dm0755 clients/cmd/promtail/promtail -t "$pkgdir"/usr/bin/
+}
+
+canary() {
+	pkgdesc="Loki auditing program"
+
+	amove usr/bin/loki-canary
+}
+
+logcli() {
+	pkgdesc="Loki log client"
+
+	amove usr/bin/logcli
+}
+
+promtail() {
+	pkgdesc="Promtail client"
+
+	amove etc/$pkgname/promtail-local-config.yaml
+	amove usr/bin/promtail
+}
+
+promtail_openrc() {
+	pkgdesc="Promtail client (Open RC init scripts)"
+	install_if="openrc loki-promtail=$pkgver-r$pkgrel"
+
+	amove etc/init.d/$pkgname-promtail
+	amove etc/conf.d/$pkgname-promtail
+}
+
+sha512sums="
+fe925452b441bd5b46c314b99ead6cabb250599c2c67b5f92aeea5a72719ef62ac823392a48b0ded4b5b43be2dc2154347a15d2ef9645ff430b5364cdf115e3b  loki-3.5.8.tar.gz
+469920d90daebf142db5dc5d3f2e972f59f5f5dc86684c4dcd5924a33ac7db305561006050ad42393296977ea27f1ce1cd78f78c71de351335167b41e4631a85  loki.initd
+b4c281e191e7620ffe19d3fcc0b5669f54051a8108f0abc5b1aec2f2026452e02e3c26c3885e1e857cb6007bbc41c1f964e6d25d73bdfe170b67b63ecd9f14fd  loki.confd
+f7d33f03d51c3cc5cda082e72f56ec821c60f70f42923a215652517835b66a68d7db3b246cd1a53ce0b2c003fe31f7e6cca06965ba792e92117d7e91abce829f  loki-promtail.confd
+ff72431ba978880cc58914302b2ec1e48ef3d16b2a667dc82deaa3d2d890331170757dcac48ba0b145c988e70e85c240c94da335894d2c9d114fa811007f1111  loki-promtail.initd
+"

@@ -1,0 +1,43 @@
+# Maintainer: team/gnome <achill@achill.org>
+pkgname=libspelling
+pkgver=0.4.9
+pkgrel=0
+# NOTE: Upgrade only to even-numbered versions (e.g. 1.18.x, 1.20.x)!
+pkgdesc="Spellcheck library for GTK 4"
+url="https://gitlab.gnome.org/GNOME/libspelling"
+arch="all"
+license="LGPL-2.1-or-later"
+makedepends="
+	enchant2-dev
+	gi-docgen
+	glib-dev
+	gobject-introspection-dev
+	gtk4.0-dev
+	gtksourceview5-dev
+	meson
+	vala
+	"
+checkdepends="enchant2-data"
+subpackages="$pkgname-doc $pkgname-dev $pkgname-lang"
+source="https://download.gnome.org/sources/libspelling/${pkgver%.*}/libspelling-$pkgver.tar.xz"
+options="!check" # tests fail
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		-Dsysprof=false \
+		. output
+	meson compile -C output
+}
+
+check() {
+	meson test --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+c31420c0fcf267d7cf06341551a08cdef65a5b2dbc92e381c0d258620008aface63079427c2f7aca265d189ed1fef57c8ba9026eff97db92cc534fcac3edc220  libspelling-0.4.9.tar.xz
+"

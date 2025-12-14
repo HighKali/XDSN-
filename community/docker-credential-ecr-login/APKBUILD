@@ -1,0 +1,40 @@
+# Contributor: Jesse Mandel <jesse.mandel@gmail.com>
+# Maintainer: Jesse Mandel <jesse.mandel@gmail.com>
+pkgname=docker-credential-ecr-login
+pkgver=0.11.0
+pkgrel=1
+pkgdesc="Credential helper for Docker to use the AWS Elastic Container Registry"
+url="https://github.com/awslabs/amazon-ecr-credential-helper"
+arch="x86_64 aarch64"
+license="Apache-2.0"
+makedepends="go"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/$pkgver/release.tar.gz"
+builddir="$srcdir/ecr-login"
+options="net"
+
+export GOFLAGS="$GOFLAGS -trimpath -mod=readonly -modcacherw"
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	go build -v -o bin/$pkgname \
+		-ldflags "-X github.com/awslabs/amazon-ecr-credential-helper/ecr-login/version.Version=$pkgver"	\
+		./cli/docker-credential-ecr-login
+}
+
+check() {
+	go test -v -timeout 30s -short
+}
+
+package() {
+	install -Dm755 bin/$pkgname \
+		-t "$pkgdir"/usr/bin
+	install -Dm644 "$builddir"/../docs/$pkgname.1 \
+		"$pkgdir"/usr/share/man/man1/$pkgname.1
+}
+
+sha512sums="
+f2d087c16b4c3be9bb37e4064c509e5571a02cb31b9d0f31a9f0fe70ba537b9249d106866af0af9e382cee340d09424be7e9b210fd8cb53241c8f88b4483fff5  docker-credential-ecr-login-0.11.0.tar.gz
+"

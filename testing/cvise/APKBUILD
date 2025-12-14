@@ -1,0 +1,75 @@
+# Maintainer:
+pkgname=cvise
+pkgver=2.11.0
+pkgrel=0
+_llvmver=19
+pkgdesc="Python port of C-Reduce, for program testcase minimisation"
+url="https://github.com/marxin/cvise"
+arch="all"
+license="NCSA"
+depends="
+	cmd:clang-format
+	py3-chardet
+	py3-pebble
+	py3-psutil
+	unifdef
+	"
+makedepends="
+	clang$_llvmver-dev
+	clang$_llvmver-extra-tools
+	clang$_llvmver-static
+	cmake
+	flex
+	llvm$_llvmver-dev
+	llvm$_llvmver-gtest
+	llvm$_llvmver-static
+	samurai
+	"
+checkdepends="
+	py3-pytest-forked
+	py3-pytest-xdist
+	"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/marxin/cvise/archive/refs/tags/v$pkgver.tar.gz"
+
+export PATH="/usr/lib/llvm$_llvmver/bin:$PATH"
+
+build() {
+	export CC=clang-$_llvmver
+	export CXX=clang++-$_llvmver
+	export CFLAGS="${CFLAGS/-fstack-clash-protection} -O2 -DNDEBUG"
+	export CXXFLAGS="${CXXFLAGS/-fstack-clash-protection} -O2 -DNDEBUG"
+
+	cmake -B build -G Ninja -Wno-dev \
+		-DCMAKE_BUILD_TYPE=None \
+		-DCMAKE_INSTALL_PREFIX=/usr
+	cmake --build build
+}
+
+check() {
+	cd build
+	# simple_deduction: for some reason it checks for a short string but gets a wall of text in a reduced case
+	pytest -c /dev/null -n auto --forked -k 'not test_simple_reduction'
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+	# remove tests
+	rm -r "$pkgdir"/usr/share/cvise/tests
+	python3 -m compileall -fq "$pkgdir"/usr/share/cvise
+}
+
+pyc() {
+	pkgdesc="Precompiled Python bytecode for ${subpkgname%-pyc}"
+	install_if="${subpkgname%-pyc}=$pkgver-r$pkgrel pyc"
+
+	cd "$pkgdir"
+	local IFS='
+'
+	# shellcheck disable=2046
+	amove $(find usr/share/cvise -type d -name __pycache__)
+}
+
+sha512sums="
+4c0844f1ce0596a7aed84018ecf63fbed31e7fb474d341f9947e99ee61274713ad8ae5dce619fcbc7b2acdddb950b1418989e9cd6cd6d7a2031e56226ccf9f57  cvise-2.11.0.tar.gz
+"

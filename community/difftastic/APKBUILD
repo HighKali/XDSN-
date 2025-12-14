@@ -1,0 +1,34 @@
+maintainer="Michał Polański <michal@polanski.me>"
+pkgname=difftastic
+pkgver=0.65.0
+pkgrel=0
+pkgdesc="Diff tool that understands syntax"
+url="https://difftastic.wilfred.me.uk/"
+license="MIT"
+arch="all"
+makedepends="cargo cargo-auditable openssl-dev"
+subpackages="$pkgname-doc"
+options="net"
+source="https://github.com/Wilfred/difftastic/archive/$pkgver/difftastic-$pkgver.tar.gz"
+
+prepare() {
+	default_prepare
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build --frozen --release
+}
+
+check() {
+	cargo test --frozen
+}
+
+package() {
+	install -Dm755 target/release/difft -t "$pkgdir"/usr/bin/
+	install -Dm644 difft.1 -t "$pkgdir"/usr/share/man/man1/
+}
+
+sha512sums="
+75669bbf5e68a57d6d81ccfc2d803f2a878cf8aaf7217f9cca65e3d1dc6ddb482c947b6e4b6c74bef428e168c1d6cda7de03b71344205c1b2a9b3b5172efee31  difftastic-0.65.0.tar.gz
+"

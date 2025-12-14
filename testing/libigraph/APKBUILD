@@ -1,0 +1,45 @@
+# Contributor: Grigory Kirillov <txgk@bk.ru>
+# Maintainer: Jonas <spameier+alpine@proton.me>
+pkgname=libigraph
+pkgver=1.0.0
+pkgrel=0
+pkgdesc="Library for creating and manipulating graphs"
+url="https://igraph.org"
+arch="all"
+license="GPL-2.0-or-later"
+# bison and flex are needed when building from commit
+makedepends="
+	arpack-dev
+	cmake
+	glpk-dev
+	libxml2-dev
+	openblas-dev
+	plfit-dev
+	samurai
+	"
+subpackages="$pkgname-dev"
+source="https://github.com/igraph/igraph/releases/download/$pkgver/igraph-$pkgver.tar.gz"
+builddir="$srcdir/igraph-$pkgver"
+
+build() {
+	# For building against master branch:
+	#echo "$pkgver" > IGRAPH_VERSION
+
+	cmake -B builddir -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DBUILD_SHARED_LIBS=ON
+	cmake --build builddir
+}
+
+check() {
+	cmake --build builddir --target check
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install builddir
+}
+
+sha512sums="
+2a2b7930adf9cf9de550e1a1348260e0c58e4d8b387cb7b6805aad2d501272cd846d1948bde9f6cc0432d904e6b1fb1f17e5e8c81f5bd146aef2560b7a7042c8  igraph-1.0.0.tar.gz
+"

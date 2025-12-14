@@ -1,0 +1,54 @@
+maintainer="Hoang Nguyen <folliekazetani@protonmail.com>"
+pkgname=pulumi-language-java
+pkgver=1.17.0
+pkgrel=1
+pkgdesc="Infrastructure as Code SDK (Java language provider)"
+url="https://pulumi.com/"
+# blocked by pulumi
+arch="x86_64 aarch64 loongarch64"
+license="Apache-2.0"
+makedepends="go"
+subpackages="
+	$pkgname-bash-completion
+	$pkgname-fish-completion
+	$pkgname-zsh-completion
+	"
+source="$pkgname-$pkgver.tar.gz::https://github.com/pulumi/pulumi-java/archive/refs/tags/v$pkgver.tar.gz"
+builddir="$srcdir/pulumi-java-$pkgver/pkg"
+options="net" # download Go modules
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	mkdir bin
+	go build -v \
+		-o bin/ \
+		-ldflags "-X github.com/pulumi/pulumi-java/pkg/version.Version=v$pkgver" \
+		./cmd/...
+
+	for shell in bash fish zsh; do
+		./bin/pulumi-java-gen completion $shell > pulumi-java-gen.$shell
+	done
+}
+
+check() {
+	# Skipped tests require gradle installed and external schema files from the main pulumi repo
+	go test -skip 'TestGenerate(JavaProgram|Package)|TestLanguage' ./...
+}
+
+package() {
+	install -Dm755 bin/pulumi-language-java bin/pulumi-java-gen -t "$pkgdir"/usr/bin/
+
+	install -Dm644 pulumi-java-gen.bash \
+		"$pkgdir"/usr/share/bash-completion/completions/pulumi-java-gen
+	install -Dm644 pulumi-java-gen.fish \
+		"$pkgdir"/usr/share/fish/vendor_completions.d/pulumi-java-gen.fish
+	install -Dm644 pulumi-java-gen.zsh \
+		"$pkgdir"/usr/share/zsh/site-functions/_pulumi-java-gen
+}
+
+sha512sums="
+8bee41042171ffee0b411feac015cf5b8362d2ee9c05fad3fd3a56bb56c5029dccf52ef7b510673db3d72f9c8e2b046cba4ed77a97d734dc9ed4321c3f2607dd  pulumi-language-java-1.17.0.tar.gz
+"

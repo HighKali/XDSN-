@@ -1,0 +1,64 @@
+# Contributor: Valery Kartel <valery.kartel@gmail.com>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=xfsprogs
+pkgver=6.17.0
+pkgrel=0
+pkgdesc="XFS filesystem utilities"
+url="https://xfs.org/index.php/Main_Page"
+arch="all"
+license="LGPL-2.1-or-later"
+makedepends="
+	bash
+	inih-dev
+	libedit-dev
+	linux-headers
+	lvm2-dev
+	python3
+	userspace-rcu-dev
+	util-linux-dev
+	"
+options="!check"  # no test suite
+subpackages="$pkgname-dev $pkgname-doc $pkgname-libs $pkgname-extra"
+source="https://mirrors.edge.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-$pkgver.tar.xz"
+
+build() {
+	export DEBUG=-DNDEBUG
+	export OPTIMIZER="-flto=auto"
+	export CFLAGS="$CFLAGS -DOVERRIDE_SYSTEM_STATX -DSTATX__RESERVED=0x80000000U"
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sbindir=/sbin \
+		--libexecdir=/usr/lib \
+		--localstatedir=/var \
+		--enable-gettext=no \
+		--enable-editline=yes
+	# work around parallel build problem
+	make V=1 headers libhandle
+	make V=1
+}
+
+package() {
+	make -j1 DIST_ROOT="$pkgdir" install install-dev
+	rm -v "$pkgdir"/usr/lib/libhandle.la
+	mv "$pkgdir"/sbin "$pkgdir"/usr
+	mkdir -p "$pkgdir"/sbin
+	for i in mkfs.xfs fsck.xfs xfs_repair; do
+		mv "$pkgdir"/usr/sbin/$i "$pkgdir"/sbin/
+	done
+	chown -R root:root "$pkgdir"/*
+}
+
+extra() {
+	depends="$pkgname python3" # python3 for xfs_scrub_all
+	pkgdesc="XFS filesystem extra utilities"
+
+	# shellcheck disable=2115
+	rm -rf "$pkgdir"/lib "$pkgdir"/usr/lib
+	amove usr/
+}
+
+sha512sums="
+bcdd5a632ac1eae4ad68ac1b18a0289820fcef997da2b3b132e97f035f21e951f20f19de9d09e0babd7d7feb8ad14c0782aa81c698b39c19e4349e603892287e  xfsprogs-6.17.0.tar.xz
+"

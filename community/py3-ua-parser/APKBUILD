@@ -1,0 +1,74 @@
+# Contributor: Antoine Martin (ayakael) <dev@ayakael.net>
+# Maintainer: Antoine Martin (ayakael) <dev@ayakael.net>
+pkgname=py3-ua-parser
+_pyname=ua-parser
+pkgver=1.0.1
+_uapcorever=0.18.0
+pkgrel=0
+arch="noarch"
+pkgdesc="Python port of Browserscope's user agent parser"
+url="https://pypi.python.org/project/ua-parser"
+license="Apache-2.0"
+depends="
+	py3-pyaml
+	"
+makedepends="
+	py3-setuptools
+	py3-gpep517
+	py3-wheel
+	py3-hatchling
+	"
+checkdepends="
+	py3-pytest
+	"
+source="
+	$pkgname-$pkgver.tar.gz::https://github.com/ua-parser/uap-python/archive/refs/tags/$pkgver.tar.gz
+	$pkgname-core-$_uapcorever.tar.gz::https://github.com/ua-parser/uap-core/archive/refs/tags/v$_uapcorever.tar.gz
+	builtins_version.patch
+	"
+builddir="$srcdir"/uap-python-$pkgver
+subpackages="$pkgname-pyc"
+
+prepare() {
+	default_prepare
+	rmdir "$builddir"/uap-core
+	ln -s "$srcdir"/uap-core-$_uapcorever "$builddir"/uap-core
+	sed -i "s|@@UAP_VERSION@@|$_uapcorever|" "$builddir"/ua-parser-builtins/hatch_build.py
+}
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+
+	(
+		cd ua-parser-builtins
+		gpep517 build-wheel \
+			--wheel-dir .dist \
+			--output-fd 3 3>&1 >&2
+	)
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	(
+		cd ua-parser-builtins
+		../.testenv/bin/python3 -m installer .dist/*.whl
+	)
+	.testenv/bin/python3 -m pytest -v
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" .dist/*.whl
+	(
+		cd ua-parser-builtins
+		python3 -m installer -d "$pkgdir" .dist/*.whl
+	)
+}
+
+sha512sums="
+568776f4aaba2e29e6866fb071a8e5bccb9334633740aabe4f4065c45b11e767341a1229b767fd83a83b826e57c95b45498d50769e778cb9ae32e183733be208  py3-ua-parser-1.0.1.tar.gz
+78cf77d38e5738651060d194c94cd5c6e514e4fd01da121250d016bbe6a8967e0c56a91ae26117832c11aa50d9afec8ac06fe7a7568a55bf7098ff21bc279567  py3-ua-parser-core-0.18.0.tar.gz
+a2eab7ea10239e478440ebe980e900833bac53f8cadb55aab0c2dc9ddfb2825d4dcf37335bb8369770a07f2c9cb0806dce819b86db3490419175fb7012be1707  builtins_version.patch
+"

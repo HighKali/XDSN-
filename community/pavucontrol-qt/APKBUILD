@@ -1,0 +1,42 @@
+# Contributor: Zachary Lee Andrews <zcrayfish@gmail.com>
+maintainer="Antoni Aloy <aaloytorrens@gmail.com>"
+pkgname=pavucontrol-qt
+pkgver=2.3.0
+pkgrel=0
+pkgdesc="Pulseaudio mixer in Qt (port of pavucontrol)"
+url="https://github.com/lxqt/pavucontrol-qt"
+arch="all !armhf" # blocked by liblxqt-dev
+license="LGPL-2.0-or-later"
+makedepends="
+	cmake samurai lxqt-build-tools liblxqt-dev
+	qt6-qttools-dev perl pulseaudio-dev
+	"
+options="!check" # No testsuite
+subpackages="$pkgname-lang"
+source="https://github.com/lxqt/pavucontrol-qt/releases/download/$pkgver/pavucontrol-qt-$pkgver.tar.xz"
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		CMAKE_CROSSOPTS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		$CMAKE_CROSSOPTS .
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --build build --target install
+}
+
+lang() {
+	install_if="lang $pkgname=$pkgver-r$pkgrel"
+	amove usr/share/$pkgname/translations
+}
+
+sha512sums="
+49f61a5663764b4cf75125a936908b69c87fdee347ffca22a76a54ab1450e278b5addc370c3862aba7d97e6d0668a44ca1072ffe8b566dee561902e7ceeceab3  pavucontrol-qt-2.3.0.tar.xz
+"

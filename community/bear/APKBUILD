@@ -1,0 +1,58 @@
+# Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
+# Maintainer:
+pkgname=bear
+pkgver=3.1.6
+pkgrel=7
+pkgdesc="Tool which generates a compilation database for clang tooling"
+url="https://github.com/rizsotto/Bear"
+# s390x: segfaults in check - bear::exec_unit_test (SEGFAULT)
+# armhf: compilation output tests fail with "no such file or directory"
+arch="all !s390x !armhf"
+license="GPL-3.0-or-later"
+makedepends="
+	abseil-cpp-dev
+	c-ares-dev
+	cmake
+	fmt-dev
+	grpc-dev
+	gtest-dev
+	nlohmann-json
+	protobuf-dev
+	re2-dev
+	samurai
+	spdlog-dev
+	sqlite-dev
+	"
+checkdepends="llvm-test-utils"
+subpackages="$pkgname-doc"
+source="https://github.com/rizsotto/Bear/archive/$pkgver/bear-$pkgver.tar.gz"
+builddir="$srcdir/Bear-$pkgver"
+# tests broken on arm
+case "$CARCH" in
+aarch64|arm*) options="!check" ;;
+esac
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		-DCMAKE_INSTALL_LIBEXECDIR=libexec/bear \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DENABLE_UNIT_TESTS="$(want_check && echo ON || echo OFF)" \
+		-DENABLE_FUNC_TESTS="$(want_check && echo ON || echo OFF)"
+
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --verbose --no-tests=ignore
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+5852ca8d93459a9e1a6d2e030cc3963c213bf1638241825ec5df4eea7e3460faca9436ca2e36b8e5da40222306a0ecc8ed80d1f5e518ddd97dc5e200d42a75bb  bear-3.1.6.tar.gz
+"

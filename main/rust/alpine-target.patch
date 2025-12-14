@@ -1,0 +1,334 @@
+From 8b3f1db128877a6a3613dcb28bf054aafe528e19 Mon Sep 17 00:00:00 2001
+From: Shiz <hi@shiz.me>
+Date: Sun, 20 Aug 2017 01:52:36 +0200
+Subject: [PATCH 02/10] Add Alpine targets
+
+Add `$arch-alpine-linux-musl` targets to Rust to encode our toolchain
+and distribution-specific quirks instead of polluting the main musl target of
+`$arch-unknown-linux-musl`.
+
+Co-Authored-By: Rasmus Thomsen <oss@cogitri.dev>
+Co-Authored-By: Ariadne Conill <ariadne@dereferenced.org>
+Co-Authored-By: Jakub Jirutka <jakub@jirutka.cz>
+Co-Authored-By: Hugo Osvaldo Barrera <hugo@whynothugo.nl>
+Signed-off-by: Achill Gilgenast <achill@achill.org>
+---
+ compiler/rustc_target/src/spec/mod.rs          | 12 ++++++++++++
+ .../spec/targets/aarch64_alpine_linux_musl.rs  | 17 +++++++++++++++++
+ .../targets/armv6_alpine_linux_musleabihf.rs   | 17 +++++++++++++++++
+ .../targets/armv7_alpine_linux_musleabihf.rs   | 18 ++++++++++++++++++
+ .../src/spec/targets/i586_alpine_linux_musl.rs | 18 ++++++++++++++++++
+ .../targets/loongarch64_alpine_linux_musl.rs   | 17 +++++++++++++++++
+ .../spec/targets/mips64_alpine_linux_musl.rs   | 17 +++++++++++++++++
+ .../targets/powerpc64_alpine_linux_musl.rs     | 17 +++++++++++++++++
+ .../targets/powerpc64le_alpine_linux_musl.rs   | 17 +++++++++++++++++
+ .../spec/targets/powerpc_alpine_linux_musl.rs  | 17 +++++++++++++++++
+ .../spec/targets/riscv64_alpine_linux_musl.rs  | 17 +++++++++++++++++
+ .../spec/targets/s390x_alpine_linux_musl.rs    | 17 +++++++++++++++++
+ .../spec/targets/x86_64_alpine_linux_musl.rs   | 17 +++++++++++++++++
+ 13 files changed, 218 insertions(+)
+ create mode 100644 compiler/rustc_target/src/spec/targets/aarch64_alpine_linux_musl.rs
+ create mode 100644 compiler/rustc_target/src/spec/targets/armv6_alpine_linux_musleabihf.rs
+ create mode 100644 compiler/rustc_target/src/spec/targets/armv7_alpine_linux_musleabihf.rs
+ create mode 100644 compiler/rustc_target/src/spec/targets/i586_alpine_linux_musl.rs
+ create mode 100644 compiler/rustc_target/src/spec/targets/loongarch64_alpine_linux_musl.rs
+ create mode 100644 compiler/rustc_target/src/spec/targets/mips64_alpine_linux_musl.rs
+ create mode 100644 compiler/rustc_target/src/spec/targets/powerpc64_alpine_linux_musl.rs
+ create mode 100644 compiler/rustc_target/src/spec/targets/powerpc64le_alpine_linux_musl.rs
+ create mode 100644 compiler/rustc_target/src/spec/targets/powerpc_alpine_linux_musl.rs
+ create mode 100644 compiler/rustc_target/src/spec/targets/riscv64_alpine_linux_musl.rs
+ create mode 100644 compiler/rustc_target/src/spec/targets/s390x_alpine_linux_musl.rs
+ create mode 100644 compiler/rustc_target/src/spec/targets/x86_64_alpine_linux_musl.rs
+
+diff --git a/compiler/rustc_target/src/spec/mod.rs b/compiler/rustc_target/src/spec/mod.rs
+index 033590e01a67..ab8437d73565 100644
+--- a/compiler/rustc_target/src/spec/mod.rs
++++ b/compiler/rustc_target/src/spec/mod.rs
+@@ -1439,6 +1439,18 @@ fn $module() {
+ }
+ 
+ supported_targets! {
++    ("i586-alpine-linux-musl", i586_alpine_linux_musl),
++    ("x86_64-alpine-linux-musl", x86_64_alpine_linux_musl),
++    ("aarch64-alpine-linux-musl", aarch64_alpine_linux_musl),
++    ("armv6-alpine-linux-musleabihf", armv6_alpine_linux_musleabihf),
++    ("armv7-alpine-linux-musleabihf", armv7_alpine_linux_musleabihf),
++    ("powerpc-alpine-linux-musl", powerpc_alpine_linux_musl),
++    ("powerpc64-alpine-linux-musl", powerpc64_alpine_linux_musl),
++    ("powerpc64le-alpine-linux-musl", powerpc64le_alpine_linux_musl),
++    ("s390x-alpine-linux-musl", s390x_alpine_linux_musl),
++    ("riscv64-alpine-linux-musl", riscv64_alpine_linux_musl),
++    ("loongarch64-alpine-linux-musl", loongarch64_alpine_linux_musl),
++    ("mips64-alpine-linux-musl", mips64_alpine_linux_musl),
+     ("x86_64-unknown-linux-gnu", x86_64_unknown_linux_gnu),
+     ("x86_64-unknown-linux-gnux32", x86_64_unknown_linux_gnux32),
+     ("i686-unknown-linux-gnu", i686_unknown_linux_gnu),
+diff --git a/compiler/rustc_target/src/spec/targets/aarch64_alpine_linux_musl.rs b/compiler/rustc_target/src/spec/targets/aarch64_alpine_linux_musl.rs
+new file mode 100644
+index 000000000000..dfc4ece793f1
+--- /dev/null
++++ b/compiler/rustc_target/src/spec/targets/aarch64_alpine_linux_musl.rs
+@@ -0,0 +1,16 @@
++use crate::spec::{LinkSelfContainedDefault, Target};
++
++pub(crate) fn target() -> Target {
++    let mut base = super::aarch64_unknown_linux_musl::target();
++
++    base.pre_link_objects_self_contained = Default::default();
++    base.post_link_objects_self_contained = Default::default();
++    base.link_self_contained = LinkSelfContainedDefault::False;
++
++    base.llvm_target = "aarch64-alpine-linux-musl".into();
++    base.options.vendor = "alpine".into();
++    base.options.crt_static_default = false;
++    base.options.static_position_independent_executables = true;
++
++    base
++}
+diff --git a/compiler/rustc_target/src/spec/targets/armv6_alpine_linux_musleabihf.rs b/compiler/rustc_target/src/spec/targets/armv6_alpine_linux_musleabihf.rs
+new file mode 100644
+index 000000000000..5bd41f17287b
+--- /dev/null
++++ b/compiler/rustc_target/src/spec/targets/armv6_alpine_linux_musleabihf.rs
+@@ -0,0 +1,16 @@
++use crate::spec::{LinkSelfContainedDefault, Target};
++
++pub(crate) fn target() -> Target {
++    let mut base = super::arm_unknown_linux_musleabihf::target();
++
++    base.pre_link_objects_self_contained = Default::default();
++    base.post_link_objects_self_contained = Default::default();
++    base.link_self_contained = LinkSelfContainedDefault::False;
++
++    base.llvm_target = "armv6-alpine-linux-musleabihf".into();
++    base.options.vendor = "alpine".into();
++    base.options.crt_static_default = false;
++    base.options.static_position_independent_executables = true;
++
++    base
++}
+diff --git a/compiler/rustc_target/src/spec/targets/armv7_alpine_linux_musleabihf.rs b/compiler/rustc_target/src/spec/targets/armv7_alpine_linux_musleabihf.rs
+new file mode 100644
+index 000000000000..e38452fb916a
+--- /dev/null
++++ b/compiler/rustc_target/src/spec/targets/armv7_alpine_linux_musleabihf.rs
+@@ -0,0 +1,17 @@
++use crate::spec::{LinkSelfContainedDefault, Target};
++
++pub(crate) fn target() -> Target {
++    let mut base = super::armv7_unknown_linux_musleabihf::target();
++
++    base.pre_link_objects_self_contained = Default::default();
++    base.post_link_objects_self_contained = Default::default();
++    base.link_self_contained = LinkSelfContainedDefault::False;
++
++    base.llvm_target = "armv7-alpine-linux-musleabihf".into();
++    base.options.vendor = "alpine".into();
++    base.options.crt_static_default = false;
++    base.options.static_position_independent_executables = true;
++    base.options.features = "+v7,+vfp3,-d32,+thumb-mode,+thumb2".into();
++
++    base
++}
+diff --git a/compiler/rustc_target/src/spec/targets/i586_alpine_linux_musl.rs b/compiler/rustc_target/src/spec/targets/i586_alpine_linux_musl.rs
+new file mode 100644
+index 000000000000..52df08a8500f
+--- /dev/null
++++ b/compiler/rustc_target/src/spec/targets/i586_alpine_linux_musl.rs
+@@ -0,0 +1,17 @@
++use crate::spec::{LinkSelfContainedDefault, Target};
++
++pub(crate) fn target() -> Target {
++    let mut base = super::i686_unknown_linux_musl::target();
++
++    base.pre_link_objects_self_contained = Default::default();
++    base.post_link_objects_self_contained = Default::default();
++    base.link_self_contained = LinkSelfContainedDefault::False;
++
++    base.options.cpu = "pentium4".into();
++    base.llvm_target = "i586-alpine-linux-musl".into();
++    base.options.vendor = "alpine".into();
++    base.options.crt_static_default = false;
++    base.options.static_position_independent_executables = true;
++
++    base
++}
+diff --git a/compiler/rustc_target/src/spec/targets/loongarch64_alpine_linux_musl.rs b/compiler/rustc_target/src/spec/targets/loongarch64_alpine_linux_musl.rs
+new file mode 100644
+index 000000000000..826b81ee8f5f
+--- /dev/null
++++ b/compiler/rustc_target/src/spec/targets/loongarch64_alpine_linux_musl.rs
+@@ -0,0 +1,16 @@
++use crate::spec::{LinkSelfContainedDefault, Target};
++
++pub(crate) fn target() -> Target {
++    let mut base = super::loongarch64_unknown_linux_musl::target();
++
++    base.pre_link_objects_self_contained = Default::default();
++    base.post_link_objects_self_contained = Default::default();
++    base.link_self_contained = LinkSelfContainedDefault::False;
++
++    base.llvm_target = "loongarch64-alpine-linux-musl".into();
++    base.options.vendor = "alpine".into();
++    base.options.crt_static_default = false;
++    base.options.static_position_independent_executables = true;
++
++    base
++}
+diff --git a/compiler/rustc_target/src/spec/targets/mips64_alpine_linux_musl.rs b/compiler/rustc_target/src/spec/targets/mips64_alpine_linux_musl.rs
+new file mode 100644
+index 000000000000..d12a6a075f9a
+--- /dev/null
++++ b/compiler/rustc_target/src/spec/targets/mips64_alpine_linux_musl.rs
+@@ -0,0 +1,16 @@
++use crate::spec::{LinkSelfContainedDefault, Target};
++
++pub(crate) fn target() -> Target {
++    let mut base = super::mips64_unknown_linux_muslabi64::target();
++
++    base.pre_link_objects_self_contained = Default::default();
++    base.post_link_objects_self_contained = Default::default();
++    base.link_self_contained = LinkSelfContainedDefault::False;
++
++    base.llvm_target = "mips64-alpine-linux-musl".into();
++    base.options.vendor = "alpine".into();
++    base.options.crt_static_default = false;
++    base.options.static_position_independent_executables = true;
++
++    base
++}
+diff --git a/compiler/rustc_target/src/spec/targets/powerpc64_alpine_linux_musl.rs b/compiler/rustc_target/src/spec/targets/powerpc64_alpine_linux_musl.rs
+new file mode 100644
+index 000000000000..7b0e7e69fece
+--- /dev/null
++++ b/compiler/rustc_target/src/spec/targets/powerpc64_alpine_linux_musl.rs
+@@ -0,0 +1,16 @@
++use crate::spec::{LinkSelfContainedDefault, Target};
++
++pub(crate) fn target() -> Target {
++    let mut base = super::powerpc64_unknown_linux_musl::target();
++
++    base.pre_link_objects_self_contained = Default::default();
++    base.post_link_objects_self_contained = Default::default();
++    base.link_self_contained = LinkSelfContainedDefault::False;
++
++    base.llvm_target = "powerpc64-alpine-linux-musl".into();
++    base.options.vendor = "alpine".into();
++    base.options.crt_static_default = false;
++    base.options.static_position_independent_executables = true;
++
++    base
++}
+diff --git a/compiler/rustc_target/src/spec/targets/powerpc64le_alpine_linux_musl.rs b/compiler/rustc_target/src/spec/targets/powerpc64le_alpine_linux_musl.rs
+new file mode 100644
+index 000000000000..a365f16a6fb9
+--- /dev/null
++++ b/compiler/rustc_target/src/spec/targets/powerpc64le_alpine_linux_musl.rs
+@@ -0,0 +1,16 @@
++use crate::spec::{LinkSelfContainedDefault, Target};
++
++pub(crate) fn target() -> Target {
++    let mut base = super::powerpc64le_unknown_linux_musl::target();
++
++    base.pre_link_objects_self_contained = Default::default();
++    base.post_link_objects_self_contained = Default::default();
++    base.link_self_contained = LinkSelfContainedDefault::False;
++
++    base.llvm_target = "powerpc64le-alpine-linux-musl".into();
++    base.options.vendor = "alpine".into();
++    base.options.crt_static_default = false;
++    base.options.static_position_independent_executables = true;
++
++    base
++}
+diff --git a/compiler/rustc_target/src/spec/targets/powerpc_alpine_linux_musl.rs b/compiler/rustc_target/src/spec/targets/powerpc_alpine_linux_musl.rs
+new file mode 100644
+index 000000000000..334707cd9f63
+--- /dev/null
++++ b/compiler/rustc_target/src/spec/targets/powerpc_alpine_linux_musl.rs
+@@ -0,0 +1,16 @@
++use crate::spec::{LinkSelfContainedDefault, Target};
++
++pub(crate) fn target() -> Target {
++    let mut base = super::powerpc_unknown_linux_musl::target();
++
++    base.pre_link_objects_self_contained = Default::default();
++    base.post_link_objects_self_contained = Default::default();
++    base.link_self_contained = LinkSelfContainedDefault::False;
++
++    base.llvm_target = "powerpc-alpine-linux-musl".into();
++    base.options.vendor = "alpine".into();
++    base.options.crt_static_default = false;
++    base.options.static_position_independent_executables = true;
++
++    base
++}
+diff --git a/compiler/rustc_target/src/spec/targets/riscv64_alpine_linux_musl.rs b/compiler/rustc_target/src/spec/targets/riscv64_alpine_linux_musl.rs
+new file mode 100644
+index 000000000000..405c0a43a49d
+--- /dev/null
++++ b/compiler/rustc_target/src/spec/targets/riscv64_alpine_linux_musl.rs
+@@ -0,0 +1,16 @@
++use crate::spec::{LinkSelfContainedDefault, Target};
++
++pub(crate) fn target() -> Target {
++    let mut base = super::riscv64gc_unknown_linux_musl::target();
++
++    base.pre_link_objects_self_contained = Default::default();
++    base.post_link_objects_self_contained = Default::default();
++    base.link_self_contained = LinkSelfContainedDefault::False;
++
++    base.llvm_target = "riscv64-alpine-linux-musl".into();
++    base.options.vendor = "alpine".into();
++    base.options.crt_static_default = false;
++    base.options.static_position_independent_executables = true;
++
++    base
++}
+diff --git a/compiler/rustc_target/src/spec/targets/s390x_alpine_linux_musl.rs b/compiler/rustc_target/src/spec/targets/s390x_alpine_linux_musl.rs
+new file mode 100644
+index 000000000000..bd006886e8af
+--- /dev/null
++++ b/compiler/rustc_target/src/spec/targets/s390x_alpine_linux_musl.rs
+@@ -0,0 +1,16 @@
++use crate::spec::{LinkSelfContainedDefault, Target};
++
++pub(crate) fn target() -> Target {
++    let mut base = super::s390x_unknown_linux_musl::target();
++
++    base.pre_link_objects_self_contained = Default::default();
++    base.post_link_objects_self_contained = Default::default();
++    base.link_self_contained = LinkSelfContainedDefault::False;
++
++    base.llvm_target = "s390x-alpine-linux-musl".into();
++    base.options.vendor = "alpine".into();
++    base.options.crt_static_default = false;
++    base.options.static_position_independent_executables = true;
++
++    base
++}
+diff --git a/compiler/rustc_target/src/spec/targets/x86_64_alpine_linux_musl.rs b/compiler/rustc_target/src/spec/targets/x86_64_alpine_linux_musl.rs
+new file mode 100644
+index 000000000000..75ff25929f1c
+--- /dev/null
++++ b/compiler/rustc_target/src/spec/targets/x86_64_alpine_linux_musl.rs
+@@ -0,0 +1,16 @@
++use crate::spec::{LinkSelfContainedDefault, Target};
++
++pub(crate) fn target() -> Target {
++    let mut base = super::x86_64_unknown_linux_musl::target();
++
++    base.pre_link_objects_self_contained = Default::default();
++    base.post_link_objects_self_contained = Default::default();
++    base.link_self_contained = LinkSelfContainedDefault::False;
++
++    base.llvm_target = "x86_64-alpine-linux-musl".into();
++    base.options.vendor = "alpine".into();
++    base.options.crt_static_default = false;
++    base.options.static_position_independent_executables = true;
++
++    base
++}
+-- 
+2.51.0
+

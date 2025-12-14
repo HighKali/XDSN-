@@ -1,0 +1,50 @@
+# Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
+# Maintainer: Sören Tempel <soeren+alpine@soeren-tempel.net>
+pkgname=cloc
+pkgver=2.06
+pkgrel=0
+pkgdesc="Count lines of code"
+url="https://github.com/AlDanial/cloc"
+arch="noarch"
+license="GPL-2.0-or-later Artistic-2.0"
+makedepends="git"
+checkdepends="gzip"
+depends="perl perl-algorithm-diff perl-regexp-common
+	perl-parallel-forkmanager"
+subpackages="$pkgname-doc"
+source="https://github.com/AlDanial/cloc/releases/download/v$pkgver/cloc-$pkgver.tar.gz
+	skip-submodule-tests.patch
+	"
+builddir="$srcdir/$pkgname-$pkgver/Unix"
+
+prepare() {
+	default_prepare
+
+	# Some tests expect the tests/ directory to be a Git repository.
+	# We do some basic Git configuration here to make them pass.
+	git init -q ..
+	git config --local user.name "example"
+	git config --local user.email "example@example.com"
+	git add ../tests
+	git commit -m "tests"
+}
+
+build() {
+	make
+}
+
+check() {
+	make test
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+
+	install -Dm644 NEWS README AUTHORS \
+		-t "$pkgdir"/usr/share/doc/$pkgname/
+}
+
+sha512sums="
+00b210bb6197f991a184fb810fa9ebaaed2cd027c7491541945dca5120c7413849daf114bd439637e37e094a8f0fc86ffc358522ae7e76390857ff6090634a8b  cloc-2.06.tar.gz
+0e9f976279721f7e40ad834c2fe70adf50f34f155915626ceb95dc43426a437eb4239b71e2318d0b3da98b36d69280d2d673e0884c4e3ca915f2f4e98f98f151  skip-submodule-tests.patch
+"

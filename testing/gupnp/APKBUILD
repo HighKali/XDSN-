@@ -1,0 +1,36 @@
+maintainer="Achill Gilgenast <achill@achill.org>"
+pkgname=gupnp
+pkgver=1.6.9
+pkgrel=1
+pkgdesc="GObject-based UPNP framework"
+url="https://gitlab.gnome.org/GNOME/gupnp"
+arch="all"
+license="LGPL-2.1-or-later"
+depends="gsettings-desktop-schemas"
+makedepends="
+	meson
+	gssdp-dev
+	libxml2-dev
+	gobject-introspection-dev
+	vala
+	"
+subpackages="$pkgname-dev $pkgname-doc"
+source="https://download.gnome.org/sources/gupnp/${pkgver%.*}/gupnp-$pkgver.tar.xz"
+
+build() {
+	abuild-meson \
+		output .
+	meson compile -C output
+}
+
+check() {
+	meson test --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+016c946f6fff47f65abd2761afc7ac3b7b42d7f48626472c28badaa6ec8a1d656e3860fd780ad4c189b1673c2b32486e113bd8b2d7c09c00aefd9486888dc029  gupnp-1.6.9.tar.xz
+"

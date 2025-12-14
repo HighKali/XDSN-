@@ -1,0 +1,48 @@
+# Contributor: Maxim Karasev <mxkrsv@disroot.org>
+# Maintainer: Willow Barraco <contact@willowbarraco.fr>
+pkgname=wlvncc
+pkgver=0.0.0_git20250727
+_commit=860232f34a77837915a94078efe8cd527fa582e3
+pkgrel=0
+pkgdesc="Wayland native VNC client"
+url="https://github.com/any1/wlvncc"
+arch="all"
+license="ISC AND GPL-2.0-or-later"
+makedepends="
+	aml-dev
+	cyrus-sasl-dev
+	ffmpeg-dev
+	gnutls-dev
+	libdrm-dev
+	libgcrypt-dev
+	libjpeg-turbo-dev
+	libpng-dev
+	libxkbcommon-dev
+	lzo-dev
+	mesa-dev
+	meson
+	openssl-dev
+	pixman-dev
+	wayland-dev
+	zlib-dev
+	"
+source="https://github.com/any1/wlvncc/archive/$_commit/wlvncc-$pkgver.tar.gz"
+builddir="$srcdir/wlvncc-$_commit"
+
+build() {
+	abuild-meson \
+		. output
+	meson compile -C output
+}
+
+check() {
+	meson test --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+49cd1596e45d0abeb8df65a3458ea6b591b11403a4c5c46e894ee19f11267b6c82d8f9929b6f8a8ce5e927f2ca72f3085a6aa9cacca0e2f0e50232b64120c0d0  wlvncc-0.0.0_git20250727.tar.gz
+"

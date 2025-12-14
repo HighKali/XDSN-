@@ -1,0 +1,122 @@
+# Contributor: Luca Weiss <luca@lucaweiss.eu>
+# Maintainer:
+pkgname=pyside6
+pkgver=6.9.1
+pkgrel=7
+_llvmver=21
+pkgdesc="Enables the use of Qt6 APIs in Python applications"
+url="https://doc.qt.io/qtforpython-6/"
+# armhf blocked by qt6-qtdeclarative
+arch="all !armhf"
+license="LGPL-3.0-only AND GPL-2.0-only"
+depends_dev="py3-pyside6"
+makedepends="
+	bash
+	clang$_llvmver-dev
+	clang$_llvmver-extra-tools
+	clang$_llvmver-static
+	cmake
+	graphviz
+	llvm$_llvmver-dev
+	llvm$_llvmver-gtest
+	llvm$_llvmver-static
+	py3-numpy-dev
+	py3-setuptools
+	py3-sphinx
+	py3-wheel
+	python3-dev
+	qt6-qtbase-dev
+	qt6-qtcharts-dev
+	qt6-qtconnectivity-dev
+	qt6-qtdatavis3d-dev
+	qt6-qtdeclarative-dev
+	qt6-qtdeclarative-private-dev
+	qt6-qthttpserver-dev
+	qt6-qtlocation-dev
+	qt6-qtmultimedia-dev
+	qt6-qtnetworkauth-dev
+	qt6-qtpositioning-dev
+	qt6-qtquick3d-dev
+	qt6-qtremoteobjects-dev
+	qt6-qtscxml-dev
+	qt6-qtsensors-dev
+	qt6-qtserialbus-dev
+	qt6-qtserialport-dev
+	qt6-qtspeech-dev
+	qt6-qtsvg-dev
+	qt6-qttools-dev
+	qt6-qtwebchannel-dev
+	qt6-qtwebsockets-dev
+	samurai
+	"
+subpackages="
+	py3-pyside6:pyside
+	py3-shiboken6:pyshiboken
+	$pkgname-dev
+	"
+source="$pkgver-$pkgname.tar.xz::https://download.qt.io/official_releases/QtForPython/pyside6/PySide6-$pkgver-src/pyside-setup-everywhere-src-$pkgver.tar.xz
+	0001-pyside6-Fix-PySide-build-for-6.10.patch
+	0002-pyside6-Qt6.10.patch
+	0003-pyside6-QUiLoader-Move-Q_IMPORT_PLUGIN.patch
+	"
+builddir="$srcdir/pyside-setup-everywhere-src-$pkgver"
+options="!check" # Tests fail
+
+case "$CARCH" in
+	armhf|s390x|riscv64) makedepends="$makedepends qt6-qt3d-dev" ;;
+	x86) ;;
+	*) makedepends="$makedepends qt6-qt3d-dev qt6-qtwebview-dev" ;;
+esac
+
+build() {
+	export LLVM_INSTALL_DIR=/usr/lib/llvm$_llvmver
+	CFLAGS="$CFLAGS $(pkg-config --cflags python3-embed) -flto=auto" \
+	CXXFLAGS="$CXXFLAGS -I/usr/lib/llvm$_llvmver/include -flto=auto" \
+	cmake -B build -G Ninja -Wno-dev \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_SKIP_RPATH=ON \
+		-DBUILD_SHARED_LIBS=True \
+		-DSHIBOKEN_PYTHON_LIBRARIES="$(pkg-config --libs python3-embed)" \
+		-DBUILD_TESTS="$(want_check && echo ON || echo OFF)"
+
+	PYTHONPATH="$PWD/build/sources" \
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build/sources/pyside6
+	DESTDIR="$pkgdir" cmake --install build/sources/shiboken6
+
+	# Install egg info
+	export PATH="/usr/lib/qt6/bin:$PATH"
+	local pythonpath="$(python3 -c "from sysconfig import get_path; print(get_path('platlib'))")"
+	python3 setup.py egg_info --build-type=pyside6
+	python3 setup.py egg_info --build-type=shiboken6
+	python3 setup.py egg_info --build-type=shiboken6-generator
+	cp -r PySide6.egg-info "$pkgdir/$pythonpath"
+	cp -r shiboken6*.egg-info "$pkgdir/$pythonpath"
+}
+
+pyshiboken() {
+	pkgdesc="qt shiboken6 python module"
+
+	amove usr/bin # shiboken6 build tool
+	amove usr/lib/libshiboken6* # python object
+	amove usr/lib/python3.*/site-packages/shiboken6*
+}
+
+pyside() {
+	pkgdesc="qt pyside6 python module"
+
+	amove usr/lib/libpyside6* # python object
+	amove usr/lib/python3.*/site-packages/PySide6*
+	amove usr/share/PySide6
+}
+
+sha512sums="
+2069b2154618e49aeeae4ed53e377bf08f7d519aa955dfec0e10603cc5a58abbb32a502b3b4066d0a7cd3bf24b288130c9578d909734a064413578cd6aef7d33  6.9.1-pyside6.tar.xz
+91bde99c817e63f3498ec74dc17af0c81fe2d8e3301d68a3a06dada19e2d69f14659bc2b1b30e30e2fe6455d8f61fd4c126328dcc76e330a15f9d0a59dd3243c  0001-pyside6-Fix-PySide-build-for-6.10.patch
+d88907eec37ba93f4f16e4742d9d1718ed29c5ebdb6d9d04b78f4d9aa08a7ae8d3b9e5859b35c62c7d9734472e66bd5c85800827fcd75a7f821d0c9ba6112889  0002-pyside6-Qt6.10.patch
+bbee4843bf4ea6e515997dda0cd9f9f20345d037c968bf25bf4d79be891a33a81fb6ad383f9bed187ac7cadf6f807f7dd62f5399b898bdc3f1feee52b3191bb8  0003-pyside6-QUiLoader-Move-Q_IMPORT_PLUGIN.patch
+"

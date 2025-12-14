@@ -1,0 +1,52 @@
+maintainer="Michał Polański <michal@polanski.me>"
+pkgname=grype
+pkgver=0.104.2
+pkgrel=0
+pkgdesc="Vulnerability scanner for container images, filesystems, and SBOMs"
+url="https://github.com/anchore/grype"
+license="Apache-2.0"
+arch="all !armhf !armv7 !x86" # FTBFS on 32-bit arches
+arch="$arch !ppc64le" # ppc64le: build constraints exclude all Go files in /home/buildozer/aports/testing/grype/src/pkg/mod/modernc.org/libc@v1.14.12/uuid/uuid
+makedepends="go"
+subpackages="
+	$pkgname-bash-completion
+	$pkgname-fish-completion
+	$pkgname-zsh-completion
+	"
+source="https://github.com/anchore/grype/archive/v$pkgver/grype-$pkgver.tar.gz"
+options="!check" # tests need docker
+
+# secfixes:
+#   0.104.1-r0:
+#     - CVE-2025-65965
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	go build -ldflags "
+		-X main.version=$pkgver
+		" \
+		-o bin/grype ./cmd/grype
+
+	./bin/grype completion bash > $pkgname.bash
+	./bin/grype completion fish > $pkgname.fish
+	./bin/grype completion zsh > $pkgname.zsh
+}
+
+check() {
+	go test ./...
+}
+
+package() {
+	install -Dm755 bin/grype -t "$pkgdir"/usr/bin/
+
+	install -Dm644 $pkgname.bash "$pkgdir"/usr/share/bash-completion/completions/$pkgname
+	install -Dm644 $pkgname.fish "$pkgdir"/usr/share/fish/vendor_completions.d/$pkgname.fish
+	install -Dm644 $pkgname.zsh "$pkgdir"/usr/share/zsh/site-functions/_$pkgname
+}
+
+sha512sums="
+dc595cedbfff3d6fc451230f9e3ad9365809cd05f9df2b094f8fbc8e66da872701708d531a767552cb43b2515439a92c70afc533fd9a9121b14297553ef47d4d  grype-0.104.2.tar.gz
+"

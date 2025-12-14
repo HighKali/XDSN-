@@ -1,0 +1,39 @@
+# Contributor: Michał Polański <michal@polanski.me>
+# Maintainer: Michał Polański <michal@polanski.me>
+pkgname=aardvark-dns
+pkgver=1.16.0
+pkgrel=0
+pkgdesc="Authoritative DNS server for A/AAAA container records"
+url="https://github.com/containers/aardvark-dns"
+license="Apache-2.0"
+arch="all"
+makedepends="cargo cargo-auditable"
+source="https://github.com/containers/aardvark-dns/archive/v$pkgver/aardvark-dns-$pkgver.tar.gz"
+options="net"
+
+# secfixes:
+#   1.12.2-r0:
+#     - CVE-2024-8418
+
+prepare() {
+	default_prepare
+
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build --release --frozen
+}
+
+check() {
+	cargo test --frozen
+}
+
+package() {
+	install -Dm755 target/release/aardvark-dns \
+		-t "$pkgdir"/usr/libexec/podman/
+}
+
+sha512sums="
+6acdc06856e88f582f3eb651463dc627b4f33fe78605725f500ba21bd74385fe76bf2cb29adec356618a15b2f288b844e38cbd18c4522f7748b29c6d0ab7f59a  aardvark-dns-1.16.0.tar.gz
+"

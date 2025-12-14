@@ -1,0 +1,41 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Pablo Correa Gómez <pcg@pcorreag.tk>
+pkgname=gnome-firmware
+pkgver=47.0
+pkgrel=1
+pkgdesc="Install firmware on devices"
+url="https://gitlab.gnome.org/World/gnome-firmware"
+arch="all"
+license="GPL-2.0-only"
+makedepends="
+	desktop-file-utils
+	elogind-dev
+	fwupd-dev
+	gtk4.0-dev
+	help2man
+	libadwaita-dev
+	libxmlb-dev
+	meson
+	"
+options="!check" # no tests
+subpackages="$pkgname-doc $pkgname-lang"
+source="https://gitlab.gnome.org/World/gnome-firmware/-/archive/$pkgver/gnome-firmware-$pkgver.tar.gz"
+provides="gnome-firmware-updater=$pkgver-r$pkgrel"
+replaces="gnome-firmware-updater"
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		-Dsystemd=false \
+		-Delogind=true \
+		. output
+	meson compile -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+0b6fc4fe761f39f5fe01074c3abc09f4cb1936892ffd49f24d094ef5139994db790c1bdf1c7d1d13d87b2fb268f821c331efdd8448ef99ea21c96fa235366cca  gnome-firmware-47.0.tar.gz
+"

@@ -1,0 +1,44 @@
+# Contributor: Galen Abell <galen@galenabell.com>
+# Maintainer: Galen Abell <galen@galenabell.com>
+pkgname=actionlint
+pkgver=1.7.9
+pkgrel=1
+pkgdesc="Static checker for GitHub Actions workflow files"
+url="https://github.com/rhysd/actionlint"
+arch="all"
+license="MIT"
+makedepends="go ronn"
+options="chmod-clean net"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/rhysd/actionlint/archive/refs/tags/v$pkgver.tar.gz"
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	go build \
+		-ldflags="-buildid= -X github.com/rhysd/actionlint.version=$pkgver -s -w" \
+		./cmd/$pkgname
+	ronn ./man/$pkgname.1.ronn
+}
+
+check() {
+	# actionlint.version should be devel when running linter_test.go
+	sed -i 's/{{ getVersion | json }}/"(devel)"/g' testdata/format/sarif_template.txt
+
+	# Some tests expect to be run from a git repository.
+	git init --quiet
+	go test ./...
+	rm -rf .git
+}
+
+package() {
+	install -Dm755 $pkgname "$pkgdir"/usr/bin/$pkgname
+	install -Dm644 man/$pkgname.1 "$pkgdir"/usr/share/man/man1/$pkgname.1
+	install -Dm644 LICENSE.txt "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}
+
+sha512sums="
+aab6986299e78f0d8f9aec655fcf633c5c28c0162120641b9353ee736bb06a8065817c7533de9f38cb8386147bc214327b58cbb099fe15739c5446e6a684890b  actionlint-1.7.9.tar.gz
+"

@@ -1,0 +1,37 @@
+# Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
+# Maintainer: Sören Tempel <soeren+alpine@soeren-tempel.net>
+pkgname=cproc
+pkgver=0_git20240427
+_commit=f66a661359a39e10af01508ad02429517b8460e3
+pkgrel=1
+pkgdesc="A C11 compiler based on the QBE compiler backend"
+url="https://sr.ht/~mcf/cproc"
+arch="x86_64 aarch64 riscv64" # blocked by qbe
+license="ISC AND MIT AND Unlicense"
+depends="binutils qbe cmd:cpp"
+subpackages="$pkgname-doc $pkgname-dbg"
+source="$pkgname-$_commit.tar.gz::https://github.com/michaelforney/cproc/archive/$_commit.tar.gz"
+builddir="$srcdir/$pkgname-$_commit"
+
+build() {
+	./configure \
+		--host=$CHOST \
+		--target=$CTARGET \
+		--prefix=/usr \
+		--with-cpp=cpp \
+		--with-as=as \
+		--with-ld=ld
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+d56636abaf14520974e3e7de867de05a3efe9b85d708b15ea75b9e77c763a7dd51b213db55877f60f0681b1672a07f3669ce9b92d4ef7cd3da840ab51327ecee  cproc-f66a661359a39e10af01508ad02429517b8460e3.tar.gz
+"

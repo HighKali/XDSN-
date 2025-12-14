@@ -1,0 +1,37 @@
+# Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
+# Contributor: Valery Kartel <valery.kartel@gmail.com>
+# Maintainer: Peter Shkenev <santurysim@gmail.com>
+pkgname=wayland-protocols
+pkgver=1.46
+pkgrel=0
+pkgdesc="Protocols and protocol extensions complementing the Wayland core protocol"
+url="https://wayland.freedesktop.org"
+arch="noarch"
+license="MIT"
+provides="$pkgname-dev=$pkgver-r$pkgrel"
+makedepends="meson wayland-dev"
+source="https://gitlab.freedesktop.org/wayland/wayland-protocols/-/releases/$pkgver/downloads/wayland-protocols-$pkgver.tar.xz"
+
+case "$CARCH" in
+ppc64*)
+	# xdg_toplevel_interface: symbol not found in a test
+	options="$options !check"
+	;;
+esac
+
+build() {
+	abuild-meson . output
+	meson compile -C output
+}
+
+check() {
+	meson test --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+867b55357b9ca49d14504e3066c2d4e39762b4706bae4ca30330d8e8fad954531d2e055595d1ceb544e37cca6cce68152f12cf093ee9805987975619a3b24958  wayland-protocols-1.46.tar.xz
+"

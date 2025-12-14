@@ -1,0 +1,46 @@
+# Contributor: Grigory Kirillov <txgk@bk.ru>
+# Maintainer: Celeste <cielesti@protonmail.com>
+maintainer="Celeste <cielesti@protonmail.com>"
+pkgname=nauty
+pkgver=2.9.1
+pkgrel=0
+_pkgver=${pkgver//./_}
+pkgdesc="Programs for computing automorphism groups of graphs and digraphs"
+url="https://pallini.di.uniroma1.it/"
+arch="all"
+license="Apache-2.0"
+subpackages="$pkgname-dev $pkgname-libs"
+source="https://pallini.di.uniroma1.it/nauty$_pkgver.tar.gz"
+builddir="$srcdir/$pkgname$_pkgver"
+
+build() {
+	export CFLAGS="${CFLAGS/-Os/-O3}" # gotta go fast
+
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var \
+		--enable-generic
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+libs() {
+	default_libs
+
+	amove usr/lib/libnauty*-*.*.so
+}
+
+sha512sums="
+d46f08b2ab91fd972a2415ab79b5d19d75922816944e24e090eb8ed2f4522fdc2c7368cbfac1d11887732d17945d56def065121b42dccc43e096bee40a1daec2  nauty2_9_1.tar.gz
+"

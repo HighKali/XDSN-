@@ -1,0 +1,89 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=akonadi
+pkgver=25.08.3
+pkgrel=1
+pkgdesc="A cross-desktop storage service for PIM data and meta data providing concurrent read, write, and query access"
+# armhf blocked by qt6-qtdeclarative
+arch="all !armhf"
+url="https://community.kde.org/KDE_PIM"
+license="LGPL-2.0-or-later"
+depends="
+	mariadb
+	qt6-qtbase-mysql
+	qt6-qtbase-sqlite
+	"
+depends_dev="
+	boost-dev
+	kcompletion-dev
+	kconfig-dev
+	kconfigwidgets-dev
+	kcoreaddons-dev
+	kcrash-dev
+	kdbusaddons-dev
+	ki18n-dev
+	kiconthemes-dev
+	kio-dev
+	kitemmodels-dev
+	kitemviews-dev
+	kwidgetsaddons-dev
+	kwindowsystem-dev
+	kxmlgui-dev
+	libxml2-dev
+	qt6-qtbase-dev
+	qt6-qtdeclarative-dev
+	shared-mime-info
+	sqlite-dev
+	"
+makedepends="$depends_dev
+	doxygen
+	extra-cmake-modules
+	graphviz
+	qt6-qtdeclarative-private-dev
+	qt6-qttools-dev
+	samurai
+	"
+checkdepends="
+	cmd:dbus-run-session
+	xwayland-run
+	"
+subpackages="$pkgname-dbg $pkgname-dev $pkgname-lang"
+_repo_url="https://invent.kde.org/pim/akonadi.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/akonadi-$pkgver.tar.xz"
+
+build() {
+	# make -dbg smaller
+	export CFLAGS="$CFLAGS -g1"
+	export CXXFLAGS="$CXXFLAGS -g1"
+
+	# akonadi recurses while walking e-mail threads, so give it a decent stack
+	LDFLAGS="$LDFLAGS -Wl,-z,stack-size=1024768" \
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_QCH=ON \
+		-DBUILD_DESIGNERPLUGIN=ON \
+		-DBUILD_TESTING=ON \
+		-DAKONADI_RUN_MYSQL_ISOLATED_TESTS=OFF \
+		-DAKONADI_RUN_SQLITE_ISOLATED_TESTS=OFF
+	cmake --build build
+}
+
+check() {
+	local fail=
+	case "$CARCH" in
+		# FIXME
+		arm*|x86) fail="|AkonadiServer-itemcreatehandlertest|entitytreemodeltest|tagmodeltest" ;;
+		s390x) fail="|AkonadiServer-itemcreatehandlertest" ;;
+	esac
+	dbus-run-session -- wlheadless-run -- ctest -j1 --test-dir build -E "mimetypechecker$fail"
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+sha512sums="
+cd142e4e0277e7c05907256e949c257aea435a7d210de6d39a844f18cb445bafefa16dfcd844b4c7d0ae4a1e188a2ae5aa91cc09e31269a61f6b7a7ad0247a28  akonadi-25.08.3.tar.xz
+"

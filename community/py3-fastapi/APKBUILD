@@ -1,0 +1,76 @@
+# Contributor: Wen Heping <wenhepingalpine@sohu.com>
+# Contributor: Steven Guikal <void@fluix.one>
+# Maintainer: Steven Guikal <void@fluix.one>
+pkgname=py3-fastapi
+_pkgname=fastapi
+pkgver=0.121.2
+pkgrel=1
+pkgdesc="Modern, high-performance, web framework for building APIs based on standard Python type hints"
+url="https://github.com/fastapi/fastapi"
+arch="noarch"
+license="MIT"
+depends="
+	py3-annotated-doc
+	py3-pydantic
+	py3-starlette
+	"
+makedepends="
+	py3-gpep517
+	py3-installer
+	py3-pdm-backend
+	"
+checkdepends="
+	py3-aiosqlite
+	py3-anyio
+	py3-databases
+	py3-dirty-equals
+	py3-email-validator
+	py3-flask
+	py3-httpx
+	py3-inline-snapshot
+	py3-jwt
+	py3-orjson
+	py3-pwdlib
+	py3-pytest
+	py3-pydantic-settings
+	py3-python-jose
+	py3-python-multipart
+	py3-sqlalchemy
+	py3-trio
+	py3-ujson
+	py3-yaml
+	"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver-r$pkgrel.tar.gz::https://files.pythonhosted.org/packages/source/${_pkgname:0:1}/$_pkgname/$_pkgname-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages testenv
+	testenv/bin/python3 -m installer .dist/*.whl
+
+	# Set a timeout in the event tests occasionally hang on the builders
+	# e.g. tests/test_tutorial/test_websockets/test_tutorial003.py
+	# The deselected test wants to run fastapi cli from $PATH or depend on sqlmodel which itself checkdepends on fastapi. That would cause a cyclic dependency.
+	timeout 30m \
+	testenv/bin/python3 -m pytest \
+		--deselect tests/test_fastapi_cli.py::test_fastapi_cli \
+		--ignore tests/test_tutorial/test_sql_databases/test_tutorial001.py \
+		--ignore tests/test_tutorial/test_sql_databases/test_tutorial002.py \
+		--ignore tests/test_tutorial/test_header_param_models/test_tutorial001.py \
+		--ignore tests/test_tutorial/test_header_param_models/test_tutorial003.py
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+3430203f4aac0e177f3e92fc4c2ac2fb80650040b112ac234e44b240cb1ea42183fdc1116e3f63258363263bbb683727d248218ee1c73cf2feaa3f661563674f  py3-fastapi-0.121.2-r1.tar.gz
+"

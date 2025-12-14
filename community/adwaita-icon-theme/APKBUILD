@@ -1,0 +1,33 @@
+# Contributor: Łukasz Jendrysik <scadu@yandex.com>
+# Maintainer: team/gnome <achill@achill.org>
+pkgname=adwaita-icon-theme
+pkgver=49.0
+pkgrel=1
+pkgdesc="Adwaita icon theme"
+url="https://gitlab.gnome.org/GNOME/adwaita-icon-theme"
+arch="noarch"
+options="!check"  # Icons only, no binaries.
+license="LGPL-3.0-or-later OR CC-BY-SA-3.0"
+depends="librsvg"
+makedepends="
+	gtk+3.0
+	icon-naming-utils
+	intltool
+	meson
+	"
+subpackages="$pkgname-dev $pkgname-doc"
+source="https://download.gnome.org/sources/adwaita-icon-theme/${pkgver%.*}/adwaita-icon-theme-$pkgver.tar.xz"
+
+build() {
+	abuild-meson . output
+	meson compile -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+	# maybe move pkgconfigs to /usr/lib/ for consistency
+}
+
+sha512sums="
+79a283bfdef5d3e9faaf6be3f41dc2ae55f676eb798cd7ce41d07204ff831c76e6ee457733bd9d08b9bad8dcbaddddf3e8bd262285579b5a8ed9944ffd4493c7  adwaita-icon-theme-49.0.tar.xz
+"

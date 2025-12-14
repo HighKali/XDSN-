@@ -1,0 +1,49 @@
+# Contributor: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+# Maintainer:
+pkgname=py3-xarray
+_pkgorig=xarray
+pkgver=2025.11.0
+pkgrel=0
+pkgdesc="N-D labeled arrays and datasets in Python"
+url="https://xarray.dev"
+arch="all !armhf !armv7 !x86"
+license="Apache-2.0"
+depends="python3 py3-numpy py3-packaging py3-pandas"
+makedepends="py3-gpep517 py3-setuptools_scm py3-wheel"
+checkdepends="py3-coverage py3-mock py3-pytest-xdist py3-pytest-cov py3-pytest-asyncio"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://files.pythonhosted.org/packages/source/x/xarray/xarray-$pkgver.tar.gz
+	fix-pytest-ini-options.patch
+	"
+builddir="$srcdir/$_pkgorig-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+
+	case "$CARCH" in
+		# Tests fail on 32-bit arches
+		armhf|armv7|x86) .testenv/bin/python3 -m pytest -k \
+			'not test_repr_truncates_nodes and not test_doc_example' ;;
+		*) .testenv/bin/python3 -m pytest ;;
+	esac
+
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+
+	rm -r "$pkgdir"/usr/lib/python3.*/site-packages/xarray/tests
+}
+
+sha512sums="
+8dc1a7dc058d945c19c829f95f1ea132fe4f52471659428d0a4e109f54dbae9c4da10647303b6870548f0b0013469936265206638559096bcc6fe73a0f1f7c1c  py3-xarray-2025.11.0.tar.gz
+c14100a3667e1a0661049a88c1286bbad104608e02cfc52f095a01cfb1a46464581c9cab69d3ddc0956dba6842a805f49f3728221a0d77c1ea14c3d2b8954ea7  fix-pytest-ini-options.patch
+"

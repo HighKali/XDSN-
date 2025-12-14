@@ -1,0 +1,42 @@
+maintainer="Achill Gilgenast <achill@achill.org>"
+pkgname=bpftop
+pkgver=0.7.1
+pkgrel=0
+pkgdesc="Dynamic real-time view of running eBPF programs"
+url="https://github.com/Netflix/bpftop"
+arch="all"
+license="Apache-2.0"
+depends="
+	libgcc
+	zlib
+	"
+makedepends="
+	cargo-auditable
+	git
+	linux-headers
+	elfutils-dev
+	clang
+	"
+source="$pkgname-$pkgver.tar.gz::https://github.com/Netflix/bpftop/archive/refs/tags/v$pkgver.tar.gz"
+
+prepare() {
+	default_prepare
+
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build --frozen --release
+}
+
+check() {
+	cargo test --frozen --release
+}
+
+package() {
+	install -Dm755 target/release/bpftop -t "$pkgdir"/usr/bin/
+}
+
+sha512sums="
+ccaf51db18904523d96ae6902d1444462db333dcbf22021a8c851022a8b9e1432c77995405742d4b8030bcc760507272e07ba598660d80a6a9c38ef88d81e836  bpftop-0.7.1.tar.gz
+"

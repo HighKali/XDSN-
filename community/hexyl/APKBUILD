@@ -1,0 +1,33 @@
+maintainer="Michał Polański <michal@polanski.me>"
+pkgname=hexyl
+pkgver=0.16.0
+pkgrel=0
+pkgdesc="Command-line hex viewer with colored output"
+url="https://github.com/sharkdp/hexyl"
+license="MIT OR Apache-2.0"
+arch="all"
+makedepends="cargo cargo-auditable"
+source="https://github.com/sharkdp/hexyl/archive/v$pkgver/hexyl-$pkgver.tar.gz"
+options="net" # fetch dependencies
+
+prepare() {
+	default_prepare
+
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build --frozen --release
+}
+
+check() {
+	cargo test --frozen
+}
+
+package() {
+	install -Dm755 target/release/$pkgname -t "$pkgdir"/usr/bin/
+}
+
+sha512sums="
+2b345a5cf3414bae90e9d6a0daa6e0516f4e8cd61dc3c18042ba110b470335a6847e9943fd7402ab46a3d75d5adb407767a66d9bc7203dc10b80f8e0834cbfa1  hexyl-0.16.0.tar.gz
+"

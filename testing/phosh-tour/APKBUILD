@@ -1,0 +1,36 @@
+maintainer="Achill Gilgenat <achill@achill.org>"
+pkgname=phosh-tour
+pkgver=0.50.0
+pkgrel=1
+pkgdesc="Simple introduction to Phosh"
+url="https://gitlab.gnome.org/World/Phosh/phosh-tour"
+arch="all"
+license="GPL-3.0-or-later"
+makedepends="
+	meson
+	gtk4.0-dev
+	libadwaita-dev
+	gmobile-dev
+	desktop-file-utils
+	"
+subpackages="$pkgname-lang $pkgname-systemd"
+source="https://sources.phosh.mobi/releases/phosh-tour/phosh-tour-${pkgver/_/.}.tar.xz"
+builddir="$srcdir/$pkgname-${pkgver/_/.}"
+
+build() {
+	abuild-meson \
+		. output
+	meson compile -C output
+}
+
+check() {
+	meson test --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+b086561542e0e30c1d48abc9d2fb1e08b055f35e12d45cb5107e232301d012e39d6f87a6806aa5cb8ccc1e529b0e5fcb1ffe6a837433f160b72a33bc5ac71b84  phosh-tour-0.50.0.tar.xz
+"

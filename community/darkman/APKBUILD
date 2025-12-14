@@ -1,0 +1,38 @@
+maintainer="Hugo Osvaldo Barrera <hugo@whynothugo.nl>"
+pkgname=darkman
+pkgver=2.2.0
+pkgrel=1
+pkgdesc="Daemon for dark-mode and light-mode transitions on Unix-like desktop"
+url="https://darkman.whynothugo.nl/"
+arch="all"
+license="ISC"
+makedepends="go scdoc"
+subpackages="
+	$pkgname-doc
+	$pkgname-bash-completion
+	$pkgname-fish-completion
+	$pkgname-zsh-completion
+	$pkgname-openrc
+	$pkgname-systemd
+	"
+source="https://gitlab.com/WhyNotHugo/darkman/-/archive/v$pkgver/darkman-v$pkgver.tar.gz"
+builddir="$srcdir/$pkgname-v$pkgver"
+options="!check net"
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+# tarballs lack git version metadata required for buildling
+export VERSION="$pkgver"
+
+build() {
+	make build
+}
+
+package() {
+	make DESTDIR="$pkgdir/" PREFIX=/usr/ install
+}
+
+sha512sums="
+21c55bc55e900ad1a5e54ef6784e97f0215a0ed979d0dd14be55e90eff55da6fe27d645424214c900265359cb01a754b2e66e9d496a2de2207e12d985e3338ba  darkman-v2.2.0.tar.gz
+"

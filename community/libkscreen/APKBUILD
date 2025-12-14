@@ -1,0 +1,59 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-plasma
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=libkscreen
+pkgver=6.5.4
+pkgrel=0
+pkgdesc="KDE screen management software"
+# armhf blocked by qt6-qtdeclarative -> kconfig
+arch="all !armhf"
+url="https://kde.org/plasma-desktop/"
+license="LGPL-2.1-or-later AND GPL-2.0-or-later AND (GPL-2.0-only OR GPL-3.0-only)"
+depends_dev="
+	kconfig-dev
+	kwayland-dev
+	"
+makedepends="$depends_dev
+	doxygen
+	extra-cmake-modules
+	graphviz
+	plasma-wayland-protocols
+	qt6-qtbase-dev
+	qt6-qttools-dev
+	samurai
+	"
+checkdepends="
+	dbus
+	dbus-x11
+	xwayland-run
+	"
+
+case "$pkgver" in
+	*.*.9*) _rel=unstable;;
+	*) _rel=stable;;
+esac
+
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang $pkgname-systemd $pkgname-zsh-completion"
+_repo_url="https://invent.kde.org/plasma/libkscreen.git"
+source="https://download.kde.org/$_rel/plasma/$pkgver/libkscreen-$pkgver.tar.xz"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_QCH=ON
+	cmake --build build
+}
+
+check() {
+	dbus-run-session wlheadless-run -- ctest --test-dir build -E "kscreen-test(backendloader|edid|log|qscreenbackend|inprocess)"
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+f2f64de15b6fe22f07b80340f23bcd39c9baf793cddd6bad2ba5db4112dc1ab0649868f4f399e3fd3f93c2f0255602984fcc8f22074912eb3c7ac74fdb533f02  libkscreen-6.5.4.tar.xz
+"

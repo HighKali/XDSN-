@@ -1,0 +1,62 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-frameworks
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=kfilemetadata
+pkgver=6.20.0
+pkgrel=0
+pkgdesc="A library for extracting file metadata"
+# armhf blocked by qt6-qtdeclarative -> ki18n
+arch="all !armhf"
+url="https://community.kde.org/Frameworks"
+license="LGPL-2.1-or-later AND ( LGPL-2.1-only OR LGPL-3.0-only )"
+depends_dev="
+	attr-dev
+	exiv2-dev
+	karchive-dev
+	kcodecs-dev
+	kconfig-dev
+	kcoreaddons-dev
+	ki18n-dev
+	qt6-qtbase-dev
+	taglib-dev
+	"
+makedepends="$depends_dev
+	doxygen
+	extra-cmake-modules
+	ffmpeg-dev
+	kde-qdoc-common
+	qt6-qttools-dev
+	samurai
+	"
+checkdepends="xwayland-run"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+_repo_url="https://invent.kde.org/frameworks/kfilemetadata.git"
+source="https://download.kde.org/stable/frameworks/${pkgver%.*}/kfilemetadata-$pkgver.tar.xz"
+
+build() {
+	export KDE_DOCS=/usr/share/kde/documentation
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+
+	cmake --build build --target prepare_docs
+	cmake --build build --target generate_docs
+	cmake --build build --target generate_qch
+}
+
+check() {
+	wlheadless-run -- ctest --test-dir build -E "(index|exiv2)extractortest"
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+
+	DESTDIR="$pkgdir" cmake --build build --target install_html_docs
+	DESTDIR="$pkgdir" cmake --build build --target install_qch_docs
+}
+
+sha512sums="
+f3002f374abe0a7f7d37ee2456f3e4a8064b11b560dc319078d1fe5ab24321a45206057a32df0f620a26b52dcdb0de0154ff43682eb65cf163f8e6f36fef9722  kfilemetadata-6.20.0.tar.xz
+"

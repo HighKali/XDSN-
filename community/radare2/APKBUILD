@@ -1,0 +1,171 @@
+# Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
+# Contributor: Valery Kartel <valery.kartel@gmail.com>
+# Contributor: stef <l0ls0fo2i@ctrlc.hu>
+# Contributor: Jose-Luis Rivas <ghostbar@riseup.net>
+# Maintainer: omni <omni+alpine@hack.org>
+maintainer="omni <omni+alpine@hack.org>"
+pkgname=radare2
+pkgver=6.0.7
+pkgrel=0
+_sdbver=2.2.4 # subprojects/sdb.mk
+_qjsgit=6a9fe9af5ca0bf7c49ae697edef44864272317d1 # subprojects/qjs.mk
+pkgdesc="Opensource, crossplatform reverse engineering framework"
+url="https://www.radare.org/"
+arch="all"
+license="GPL-3.0-or-later AND LGPL-2.0-or-later AND LGPL-2.1-or-later"
+options="net !check" # upstream does not provide any working testsuite
+makedepends="
+	capstone-dev
+	file-dev
+	libzip-dev
+	linux-headers
+	lz4-dev
+	meson
+	xxhash-dev
+	zlib-dev
+	"
+subpackages="
+	$pkgname-dbg
+	$pkgname-dev
+	$pkgname-doc
+	$pkgname-libs
+	$pkgname-zsh-completion:zshcomp:noarch
+	"
+source="$pkgname-$pkgver.tar.gz::https://github.com/radareorg/radare2/archive/$pkgver.tar.gz
+	radare-sdb-$_sdbver.tar.gz::https://github.com/radareorg/sdb/archive/$_sdbver.tar.gz
+	https://github.com/quickjs-ng/quickjs/archive/$_qjsgit/quickjs-$_qjsgit.tar.gz
+	"
+
+# secfixes:
+#   5.8.2-r0:
+#     - CVE-2023-0302
+#   5.8.0-r0:
+#     - CVE-2022-4398
+#   5.7.2-r0:
+#     - CVE-2022-34520
+#     - CVE-2022-34502
+#   5.7.0-r0:
+#     - CVE-2022-1437
+#     - CVE-2022-1444
+#     - CVE-2022-1451
+#     - CVE-2022-1452
+#     - CVE-2022-1649
+#     - CVE-2022-1714
+#     - CVE-2022-1809
+#     - CVE-2022-1899
+#   5.6.8-r0:
+#     - CVE-2022-1061
+#     - CVE-2022-1207
+#     - CVE-2022-1237
+#     - CVE-2022-1238
+#     - CVE-2022-1244
+#     - CVE-2022-1283
+#     - CVE-2022-1284
+#     - CVE-2022-1296
+#     - CVE-2022-1297
+#     - CVE-2022-1382
+#     - CVE-2022-1383
+#   5.6.6-r0:
+#     - CVE-2022-0849
+#     - CVE-2022-1031
+#     - CVE-2022-1052
+#     - CVE-2022-1240
+#   5.6.4-r0:
+#     - CVE-2022-0476
+#     - CVE-2022-0676
+#     - CVE-2022-0695
+#     - CVE-2022-0712
+#     - CVE-2022-0713
+#   5.6.2-r0:
+#     - CVE-2022-0518
+#     - CVE-2022-0519
+#     - CVE-2022-0520
+#     - CVE-2022-0521
+#     - CVE-2022-0522
+#     - CVE-2022-0523
+#     - CVE-2022-0559
+#   5.6.0-r0:
+#     - CVE-2022-0139
+#     - CVE-2022-0173
+#     - CVE-2022-0419
+#   5.5.4-r0:
+#     - CVE-2021-44974
+#     - CVE-2021-44975
+#   5.5.2-r0:
+#     - CVE-2021-4021
+#   5.4.0-r0:
+#     - CVE-2021-3673
+#   5.3.1-r0:
+#     - CVE-2021-32613
+#   4.5.1-r0:
+#     - CVE-2020-16269
+#     - CVE-2020-17487
+#   4.5.0-r0:
+#     - CVE-2020-15121
+#   4.4.0-r0:
+#     - CVE-2020-27793
+#     - CVE-2020-27794
+#     - CVE-2020-27795
+#   4.0.0-r0:
+#     - CVE-2019-19590
+#     - CVE-2019-19647
+#   3.9.0-r0:
+#     - CVE-2019-14745
+#     - CVE-2019-12865
+#     - CVE-2019-12829
+#     - CVE-2019-12802
+#     - CVE-2019-12790
+
+prepare() {
+	default_prepare
+
+	mv "$srcdir"/sdb-"$_sdbver" "$builddir"/subprojects/sdb
+	mv "$srcdir"/quickjs-"$_qjsgit" "$builddir"/subprojects/qjs
+	mv "$builddir"/subprojects/packagefiles/qjs/meson.build \
+		"$builddir"/subprojects/qjs/meson.build
+}
+
+build() {
+	local _disable_debugger=
+	if [ "$CARCH" = "s390x" ]; then
+		_disable_debugger="-Ddebugger=false"
+	fi
+
+	abuild-meson \
+		$_disable_debugger \
+		-Duse_sys_magic=true \
+		-Duse_sys_zlib=true \
+		-Duse_sys_lz4=true \
+		-Duse_sys_xxhash=true \
+		-Duse_sys_zip=true \
+		-Duse_sys_capstone=true \
+		-Dwant_capstone=true \
+		. output
+	meson compile -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+
+	# Install additional documentation files
+	for file in doc/*; do
+		if [ -f "$file" ]; then
+			install -Dm644 -t "$pkgdir"/usr/share/doc/$pkgname "$file"
+		fi
+	done
+
+	# Create soname.major.minor symlinks which the meson build
+	# system doesn't create by default (GNU autotools did though).
+	for file in "$pkgdir"/usr/lib/libr_*.so.?.?.?; do
+		name=${file##*/} # basename with major.minor.patch
+		major=${name%.*} # basename with major.minor
+
+		ln -s "$name" "$pkgdir/usr/lib/$major"
+	done
+}
+
+sha512sums="
+6919c91a2324a74ea086dd846c646ad4cb5f61f408965edee6f5f4d9930f8f1c66322aac8aa32add65cc38ee42c37a967062fb80577214a1d1ee1794badff8c1  radare2-6.0.7.tar.gz
+388bf72385f1f4dcf61b3157f2fb0905375204b542b357935324e33ca045e804a3a438724eec55fc077857f2f7a5736229925fbf93ae68c1d5003070a6c3291b  radare-sdb-2.2.4.tar.gz
+f3a2c20a4b380365f5ec2a038959df5c46f11ef3f33cd3f8aea4fc7a3281603248b3a25b4c2200f52af0ff24f2045124c1f3169dffdfb1c96ce64e62f62e5fe4  quickjs-6a9fe9af5ca0bf7c49ae697edef44864272317d1.tar.gz
+"

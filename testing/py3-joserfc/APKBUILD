@@ -1,0 +1,37 @@
+# Contributor: Guy Godfroy <guy.godfroy@gugod.fr>
+# Maintainer: Guy Godfroy <guy.godfroy@gugod.fr>
+pkgname=py3-joserfc
+_pkgname=joserfc
+pkgver=1.5.0
+pkgrel=0
+pkgdesc="Implementations of JOSE RFCs in Python"
+url="https://jose.authlib.org"
+arch="noarch"
+license="BSD-3-Clause"
+depends="py3-cryptography py3-pycryptodome"
+makedepends="py3-gpep517 py3-setuptools py3-wheel"
+checkdepends="py3-pytest"
+subpackages="$pkgname-pyc"
+source="$_pkgname-$pkgver.tar.gz::https://github.com/authlib/joserfc/archive/refs/tags/$pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-$pkgver/"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+31b6a77c53abb35c316595c692a8f44a8a18f50e92ab55f80b0a89e0d6154a73327271bc86a485896f55a7122788cfa854aa451659d090c2bd813d7c9396889e  joserfc-1.5.0.tar.gz
+"

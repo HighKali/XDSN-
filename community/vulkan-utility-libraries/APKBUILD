@@ -1,0 +1,34 @@
+# Maintainer: Simon Zeni <simon@bl4ckb0ne.ca>
+pkgname=vulkan-utility-libraries
+_pkgname=Vulkan-Utility-Libraries
+pkgver=1.4.321.0
+pkgrel=0
+pkgdesc=" Utility libraries for Vulkan developers "
+url="https://github.com/KhronosGroup/Vulkan-Utility-Libraries"
+arch="all"
+license="Apache-2.0"
+options="!check" # TODO sort out the dependency download mess
+makedepends="cmake samurai python3 vulkan-headers gtest-dev"
+source="$pkgname-$pkgver.tar.gz::https://github.com/KhronosGroup/Vulkan-Utility-Libraries/archive/refs/tags/vulkan-sdk-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-vulkan-sdk-$pkgver"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_TESTS="$(want_check && echo ON || echo OFF)"
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+764e3150aee1a13a81ff66f8b8690c4aa1874bd91a811470ff7dd5cd8d0e79d10f7e4d84962300bdf19405944d7b69c2840175d319e0718bfb19841373bcba22  vulkan-utility-libraries-1.4.321.0.tar.gz
+"

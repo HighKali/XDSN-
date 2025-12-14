@@ -1,0 +1,83 @@
+# Contributor: Mark Riedesel <mark@klowner.com>
+# Contributor: Damian Kurek <starfire24680@gmail.com>
+# Maintainer: Leon Marz <main@lmarz.org>
+pkgname=openimageio
+pkgver=3.0.10.1
+pkgrel=3
+pkgdesc="Image I/O library supporting a multitude of image formats"
+options="!check" # more than 10% of all tests fail
+url="https://sites.google.com/site/openimageio/"
+# s390x has missing dependency ptex-dev
+arch="all !s390x"
+license="Apache-2.0"
+makedepends="cmake
+	bzip2-dev
+	ffmpeg-dev
+	fmt-dev
+	freetype-dev
+	giflib-dev
+	libheif-dev
+	libraw-dev
+	onetbb-dev
+	opencolorio-dev
+	openexr-dev
+	openjpeg-dev
+	ptex-dev
+	ptex-static
+	python3-dev
+	py3-pybind11-dev
+	qt6-qtbase-dev
+	robin-map
+	samurai
+	tiff-dev
+	"
+subpackages="py3-$pkgname:_python $pkgname-dev $pkgname-doc $pkgname-tools"
+source="$pkgname-$pkgver.tar.gz::https://github.com/OpenImageIO/oiio/archive/v$pkgver.tar.gz
+	0001-fix-compile-error.patch
+	"
+builddir="$srcdir/OpenImageIO-$pkgver"
+
+build() {
+	local _iv="ON"
+
+	case "$CARCH" in
+		aarch64|armv7|armhf)
+			_iv="OFF";;
+	esac
+
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DCMAKE_SKIP_RPATH=ON \
+		-DBUILD_TESTING=OFF \
+		-DENABLE_iv=$_iv \
+		-DINSTALL_FONTS=OFF
+	cmake --build build
+}
+
+check() {
+	cd build
+	ctest -E broken
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+tools() {
+	pkgdesc="Tools for manipulating a multitude of image formats"
+
+	amove usr/bin
+}
+
+_python() {
+	pkgdesc="Python bindings for OpenImageIO image I/O library"
+
+	amove usr/lib/python*
+}
+
+sha512sums="
+0ed91d33621783cb1631c81d98b9124f46ed856b802ae24dcf517f1e79034566c8cc43bd9745245267493b2494652ab66b4ec95fb53983ff33b3d811dbb35698  openimageio-3.0.10.1.tar.gz
+8324fe135aa072c1bd68486c48f08a33741ddb7f3ad62be0ed705eac68f7f03c675043c3792c7b36e189bb13a209bd52954fbe37317122ca7c333cb87f49cdc4  0001-fix-compile-error.patch
+"

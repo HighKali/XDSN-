@@ -1,0 +1,44 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=kbruch
+pkgver=25.08.3
+pkgrel=0
+# armhf blocked by extra-cmake-modules
+arch="all !armhf"
+url="https://edu.kde.org/kbruch/"
+pkgdesc="Practice Fractions"
+license="GPL-2.0-or-later AND GFDL-1.2-only"
+makedepends="
+	extra-cmake-modules
+	kconfig-dev
+	kcrash-dev
+	kdoctools-dev
+	ki18n-dev
+	kwidgetsaddons-dev
+	kxmlgui-dev
+	qt6-qtbase-dev
+	samurai
+	"
+subpackages="$pkgname-doc $pkgname-lang"
+_repo_url="https://invent.kde.org/education/kbruch.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kbruch-$pkgver.tar.xz"
+options="!check" # No tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+b637940c15755bdff403d86d90d754f727f394b9819af77ad1eb8a3f8825cd5476b27cc5667c70146b568243f9d92cce075494ea82fc7bad6c9ac14e6d394b44  kbruch-25.08.3.tar.xz
+"

@@ -1,0 +1,32 @@
+# Maintainer: Celeste <cielesti@protonmail.com>
+maintainer="Celeste <cielesti@protonmail.com>"
+pkgname=sdb
+pkgver=2.2.4
+pkgrel=0
+pkgdesc="Key-value database with support for arrays and json"
+url="https://github.com/radareorg/sdb"
+arch="all"
+license="MIT"
+checkdepends="bash"
+subpackages="$pkgname-static $pkgname-dev $pkgname-doc $pkgname-libs"
+source="https://github.com/radareorg/sdb/archive/refs/tags/$pkgver/sdb-$pkgver.tar.gz"
+
+build() {
+	make
+}
+
+check() {
+	make test
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+	rmdir -v "$pkgdir"/usr/share/vala/vapi "$pkgdir"/usr/share/vala
+
+	install -Dvm644 doc/*.md -t "$pkgdir"/usr/share/doc/$pkgname/
+	install -Dvm644 COPYING -t "$pkgdir"/usr/share/licenses/$pkgname/
+}
+
+sha512sums="
+388bf72385f1f4dcf61b3157f2fb0905375204b542b357935324e33ca045e804a3a438724eec55fc077857f2f7a5736229925fbf93ae68c1d5003070a6c3291b  sdb-2.2.4.tar.gz
+"

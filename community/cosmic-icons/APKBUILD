@@ -1,0 +1,26 @@
+# Contributor: Clayton Craft <clayton@craftyguy.net>
+# Maintainer: Clayton Craft <clayton@craftyguy.net>
+pkgname=cosmic-icons
+pkgver=1.0.0
+_upstreamver="${pkgver/_beta/-beta.}"
+_upstreamver="${_upstreamver/_p/.}"
+pkgrel=0
+pkgdesc="Icons for the COSMIC Desktop Environment"
+url="https://github.com/pop-os/cosmic-icons"
+# riscv64: too slow to build
+arch="noarch !riscv64"
+license="GPL-3.0-or-later AND CC-BY-SA-4.0"
+makedepends="
+	just
+"
+options="!check"  # no tests
+source="$pkgname-$pkgver.tar.gz::https://github.com/pop-os/cosmic-icons/archive/refs/tags/epoch-$_upstreamver.tar.gz"
+builddir="$srcdir/$pkgname-epoch-$_upstreamver"
+
+package() {
+	just rootdir="$pkgdir" install
+}
+
+sha512sums="
+da97836911d4330052d8ef81af86169f9a7bc5abf900585d5c3c51133d4f7fb5f1f2bd06eb6a7d6fb12d563bfb51954e523a06fb8ede247a8a81e1b4b3ec35cd  cosmic-icons-1.0.0.tar.gz
+"

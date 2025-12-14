@@ -1,0 +1,58 @@
+# Maintainer: Antoine Martin (ayakael) <dev@ayakael.net>
+pkgname=pdf4qt
+pkgver=1.5.2.0
+pkgrel=0
+pkgdesc="Open source PDF editor"
+# armhf blocked by qt6-qtdeclarative
+arch="all !armhf"
+url="https://jakubmelka.github.io/"
+license="MIT"
+# opt depends:
+# 'flite: Text-To-Speech using flite synthesizer',
+# 'libspeechd: Text-To-Speech using speechd synthesizer'
+makedepends="
+	blend2d-dev
+	cmake
+	freetype-dev
+	lcms2-dev
+	libjpeg-turbo-dev
+	musl-dev
+	onetbb-dev
+	openjpeg-dev
+	openssl-dev
+	qt6-qtbase-dev
+	qt6-qtdeclarative-dev
+	qt6-qtmultimedia-dev
+	qt6-qtspeech-dev
+	qt6-qtsvg-dev
+	qt6-qttools-dev
+	samurai
+	zlib-dev
+	"
+source="
+	$pkgname-$pkgver.tar.gz::https://github.com/JakubMelka/PDF4QT/archive/refs/tags/v$pkgver.tar.gz
+	CMakeListsMain.patch
+	blend2d.patch
+	FindLCMS2.cmake
+	"
+builddir="$srcdir"/PDF4QT-$pkgver
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE='Release' \
+		-DCMAKE_INSTALL_PREFIX='/' \
+		-Wno-dev \
+		-DCMAKE_MODULE_PATH="$srcdir" \
+		-DPDF4QT_INSTALL_DEPENDENCIES=0
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+sha512sums="
+d916cf2a7b05ac8457d6dc4eceb29b3bc7221ed996004b385f9c0b7b4d9c6186d71ea21266cbfc986e8f096065f3f6ca30d2b461d9103e02461deacda96562b5  pdf4qt-1.5.2.0.tar.gz
+1b5318e7823c8cd73e9c6bb47afff7fe340d77f09bd1fe019a46113cfc0b331cf0d9ff078b4a433bf9c52d3fcceea46a409c7b659ad8037e3722f948d0a8fdd2  CMakeListsMain.patch
+8d43aa0e6bc9e0eff3a8b58a00c68ad8c879a3fff5327942c0a8490dff02f90b165056ba7e6e1acd692497e3fdffe26145538e7b865112626aa163e454cae599  blend2d.patch
+48cdc9f6cf0691baef2d80b423c62315772e51ac7b9bfa1c0c619315a11a6867e282fcf764c50290eb3c310d51be496502bb0e60b6a82e9bbcfd4f15e6ee1a73  FindLCMS2.cmake
+"

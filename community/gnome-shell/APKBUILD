@@ -1,0 +1,125 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: team/gnome <achill@achill.org>
+pkgname=gnome-shell
+pkgver=49.2
+pkgrel=1
+pkgdesc="GNOME shell"
+url="https://gitlab.gnome.org/GNOME/gnome-shell"
+# armhf: gjs -> mozjs
+arch="all !armhf"
+license="GPL-2.0-or-later"
+depends="
+	accountsservice
+	adwaita-fonts
+	adwaita-icon-theme
+	desktop-file-utils
+	elogind
+	gnome-bluetooth
+	gnome-control-center
+	gnome-shell-schemas
+	gsettings-desktop-schemas>=46
+	gst-plugin-pipewire
+	gst-plugins-good
+	gstreamer
+	ibus
+	librsvg
+	networkmanager
+	tecla
+	unzip
+	upower
+	"
+makedepends="
+	asciidoc
+	elogind-dev
+	evolution-data-server-dev evolution-dev
+	gcr4-dev
+	gjs-dev>=1.78.0
+	gnome-autoar-dev
+	gnome-bluetooth-dev
+	gnome-control-center-dev
+	gnome-desktop-dev>=44.0
+	gobject-introspection-dev
+	gstreamer-dev
+	ibus-dev
+	libcanberra-dev
+	libnma-dev
+	libxml2-dev
+	libxml2-utils
+	meson
+	mutter-dev>=46
+	networkmanager-dev
+	pipewire-dev
+	polkit-dev
+	pulseaudio-dev
+	py3-docutils
+	py3-setuptools
+	python3
+	sassc
+	startup-notification-dev
+	tecla-dev
+	"
+checkdepends="
+	mesa-dri-gallium
+	xvfb-run
+	"
+	# gdm is also needed but introduces circular dep
+subpackages="
+	$pkgname-dbg
+	$pkgname-doc
+	$pkgname-lang
+	$pkgname-schemas::noarch
+	gnome-extensions-app:extensions_app:noarch
+	"
+source="https://download.gnome.org/sources/gnome-shell/${pkgver%.*}/gnome-shell-$pkgver.tar.xz
+	gsh.patch
+	revert-gnome-session-49.patch
+	"
+options="!check" # Tests have circular dependency 'gnome-shell <-> gdm'
+
+# secfixes:
+#   0:
+#     - CVE-2019-3820
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		-Dsystemd=false \
+		-Dtests=false \
+		. output
+	meson compile -C output
+}
+
+check() {
+	xvfb-run meson test --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+extensions_app() {
+	pkgdesc="Manage GNOME Shell extensions"
+	depends="gnome-shell libadwaita"
+	replaces="gnome-shell"
+
+	amove usr/bin/gnome-extensions-app
+	amove usr/share/applications/org.gnome.Extensions.desktop
+	amove usr/share/gnome-shell/org.gnome.Extensions
+	amove usr/share/gnome-shell/org.gnome.Extensions.data.gresource
+	amove usr/share/gnome-shell/org.gnome.Extensions.src.gresource
+}
+
+schemas() {
+	pkgdesc="GNOME Shell gsetting schemas"
+	depends=""
+	replaces="gnome-shell"
+
+	amove usr/share/glib-2.0/schemas
+	amove usr/share/gnome-control-center/keybindings
+}
+
+sha512sums="
+d12b86efc5c20563470c79cf1af4f2784970860c6f30d3c0a479eb3cdf186619466b650cc8e67cfb167af4f618aabb1f44b8c38f821bcc63e213b1f94c241109  gnome-shell-49.2.tar.xz
+ae4ac679bacd35948b44068e5a70407f473bd96986ee126abb1bdf066db5cbc2087a3ffae0b390286689cacbe8325870fd43663ba39f4f7543216e02bf083934  gsh.patch
+9fc784ef42f3b64f242be05fefc5014f88c20292b433c04fb20acb4f2d481d6421eb1836652ec38dc358945d950abf8b36b4efd30b281efc32ff26331341bd21  revert-gnome-session-49.patch
+"

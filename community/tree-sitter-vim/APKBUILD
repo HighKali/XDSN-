@@ -1,0 +1,32 @@
+# Maintainer: John Vogel <jvogel@stygian.me>
+maintainer="John Vogel <jvogel@stygian.me>"
+pkgname=tree-sitter-vim
+pkgver=0.7.0
+pkgrel=0
+pkgdesc="A tree-sitter parser for Vimscript files"
+url="https://github.com/tree-sitter-grammars/tree-sitter-vim/"
+arch="all"
+license="MIT"
+makedepends="tree-sitter-dev"
+checkdepends="tree-sitter-cli"
+install_if="tree-sitter-grammars"
+subpackages="$pkgname-doc"
+source="https://github.com/tree-sitter-grammars/tree-sitter-vim/archive/v$pkgver/tree-sitter-vim-$pkgver.tar.gz"
+
+build() {
+	abuild-tree-sitter build -q queries/vim
+}
+
+check() {
+	HOME="$srcdir" tree-sitter test
+}
+
+package() {
+	DESTDIR="$pkgdir" abuild-tree-sitter install -q queries/vim
+	install -Dm644 README.md -t "$pkgdir"/usr/share/doc/"$pkgname"
+	install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/"$pkgname"
+}
+
+sha512sums="
+fe585fc01f1fae6239ac89c1924d5adf70c43f41b40a8c811457068723094bc4a3a545581738173d39f10b6525ca711d419c3cb0ab59d48c60a9ea68c62ade3b  tree-sitter-vim-0.7.0.tar.gz
+"

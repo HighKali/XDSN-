@@ -1,0 +1,54 @@
+# Maintainer: Sascha Brawer <sascha@brawer.ch>
+pkgname=croaring
+pkgver=4.4.1
+pkgrel=0
+pkgdesc="fast compressed bitmaps in C (and C++)"
+url="https://github.com/RoaringBitmap/CRoaring"
+arch="all"
+license="Apache-2.0 OR MIT"
+depends_dev="
+	$pkgname=$pkgver-r$pkgrel
+	linux-headers
+"
+makedepends="
+	$depends_dev
+	cmake
+	cmocka-dev
+	samurai
+"
+subpackages="$pkgname-static $pkgname-dev"
+source="croaring-$pkgver.tar.gz::https://github.com/RoaringBitmap/CRoaring/archive/refs/tags/v$pkgver.tar.gz"
+builddir="$srcdir/CRoaring-$pkgver"
+
+build() {
+	cmake -B build-shared -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DBUILD_SHARED_LIBS=ON \
+		-DROARING_USE_CPM=OFF
+
+	cmake -B build-static -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DBUILD_SHARED_LIBS=OFF \
+		-DROARING_USE_CPM=OFF
+
+	cmake --build build-shared
+	cmake --build build-static
+}
+
+check() {
+	ctest --test-dir build-shared
+	ctest --test-dir build-static
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build-static
+	DESTDIR="$pkgdir" cmake --install build-shared
+}
+
+sha512sums="
+60092ca5030b0859c618a4f2dae40100c8fb0d77696dc68f0b5247a047e84455bb6108f17374004038f00ba8b52bf13e879a39d21df67e417def805862629c8e  croaring-4.4.1.tar.gz
+"

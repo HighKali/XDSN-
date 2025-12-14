@@ -1,0 +1,41 @@
+# Contributor: Łukasz Jendrysik <scadu@yandex.com>
+# Contributor: Jeff Bilyk <jbilyk at gmail>
+# Maintainer: Leonardo Arena <rnalrd@alpinelinux.org>
+pkgname=perl-dbd-mysql
+_pkgreal=DBD-mysql
+pkgver=4.054
+pkgrel=0
+pkgdesc="Perl CPAN DBD::Mysql module"
+url="https://metacpan.org/dist/DBD-mysql"
+arch="all"
+license="GPL-1.0-or-later OR Artistic-1.0-Perl"
+depends="perl perl-dbi"
+makedepends="perl-dev mariadb-connector-c-dev zlib-dev perl-devel-checklib"
+source="https://cpan.metacpan.org/authors/id/D/DV/DVEEDEN/DBD-mysql-$pkgver.tar.gz"
+subpackages="$pkgname-doc"
+options="!check" # requires a running dbms
+builddir="$srcdir/$_pkgreal-$pkgver"
+
+prepare() {
+	default_prepare
+	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
+	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
+}
+
+build() {
+	make
+}
+
+check() {
+	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
+	make test
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+	find "$pkgdir" -name perllocal.pod -delete
+}
+
+sha512sums="
+aadfabbf36c2b96e726f0a6ccbabda8b38a469785ac98d985e4f2167f5b0a548e4f14ede6c4d5f42fcd76f017d66b54c5e548a66b136acbbf2b61f8edcbde3ec  DBD-mysql-4.054.tar.gz
+"

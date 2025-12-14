@@ -1,0 +1,92 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=falkon
+pkgver=25.08.3
+pkgrel=0
+pkgdesc="Cross-platform Qt Web Browser"
+url="https://github.com/KDE/falkon"
+# armhf, x86, s390x and riscv64 blocked by qt6-qtwebengine
+arch="all !armhf !x86 !s390x !riscv64"
+license="GPL-3.0-or-later"
+depends="qt6-qtbase-sqlite"
+makedepends="
+	extra-cmake-modules
+	karchive-dev
+	kcoreaddons-dev
+	kcrash-dev
+	ki18n-dev
+	kio-dev
+	kwallet-dev
+	libxcb-dev
+	openssl-dev>3
+	purpose-dev
+	python3
+	qt6-qtbase-dev
+	qt6-qtdeclarative-dev
+	qt6-qttools-dev
+	qt6-qtwebengine-dev
+	samurai
+	xcb-util-dev
+	"
+checkdepends="
+	dbus
+	xwayland-run
+	"
+subpackages="$pkgname-lang $pkgname-bash-completion:bashcomp:noarch"
+_repo_url="https://invent.kde.org/network/falkon.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/falkon-$pkgver.tar.xz"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		-DBUILD_TESTING=ON
+	cmake --build build
+}
+
+check() {
+	# Requires working OpenGL
+	# qmlhistoryapitest, qmlcookiesapitest, qmltabsapitest and qmlwindowsapitest are SIGTRAP'ing
+	local skipped_tests="falkon-("
+	local tests="
+		locationbar
+		qml-qmlclipboardapi
+		qml-qmltabsapi
+		qml-qmltopsitesapi
+		sitesettings
+		webtab
+		"
+	case "$CARCH" in
+		armv7)
+			tests="$tests
+				qml-qmlcookiesapi
+				qml-qmlhistoryapi
+				webview
+				"
+			;;
+	esac
+	for test in $tests; do
+		skipped_tests="$skipped_tests|$test"
+	done
+	skipped_tests="$skipped_tests)test"
+	dbus-run-session -- wlheadless-run -- ctest --test-dir build -j1 -E "$skipped_tests"
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+bashcomp() {
+	depends=""
+	pkgdesc="Bash completions for $pkgname"
+	install_if="$pkgname=$pkgver-r$pkgrel bash-completion"
+
+	amove usr/share/bash-completion/completions
+}
+
+sha512sums="
+1e5764075fb366ac330cdfaa281d508bff178945d8a42edfffc92552f0abb4386db161e1bbd36e678f8e43a68975d188f5cd5207c5c9294ffc2c89ce22ca7ff5  falkon-25.08.3.tar.xz
+"

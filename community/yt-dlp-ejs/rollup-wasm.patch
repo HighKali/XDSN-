@@ -1,0 +1,13 @@
+--- ./package.json.orig
++++ ./package.json
+@@ -26,5 +26,10 @@
+     "rollup-plugin-license": "3.6.0",
+     "typescript-eslint": "8.46.2"
+   },
++  "pnpm": {
++    "overrides": {
++      "rollup": "npm:@rollup/wasm-node@4.52.5"
++    }
++  },
+   "packageManager": "pnpm@10.24.0"
+ }

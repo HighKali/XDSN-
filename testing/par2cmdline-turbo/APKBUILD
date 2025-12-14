@@ -1,0 +1,30 @@
+# Contributor: Fabricio Silva <hi@fabricio.dev>
+# Maintainer: Fabricio Silva <hi@fabricio.dev>
+pkgname=par2cmdline-turbo
+pkgver=1.3.0
+pkgrel=0
+pkgdesc="par2cmdline x ParPar: speed focused par2cmdline fork"
+url="https://github.com/animetosho/par2cmdline-turbo"
+arch="all"
+license="GPL-2.0-or-later"
+makedepends="automake autoconf"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/animetosho/par2cmdline-turbo/archive/v$pkgver.tar.gz"
+
+build() {
+	./automake.sh
+	./configure --prefix=/usr
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+63b4b5e7c9f184d7251ad94b5bfef70e7d27fb155e4af26c3cab1dc8e0b80618ebdc08f45b1f3e8b64812f45d62e3d29dee6532774a24b9453c2cefc077d3d1d  par2cmdline-turbo-1.3.0.tar.gz
+"

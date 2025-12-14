@@ -1,0 +1,41 @@
+# Contributor: Fabricio Silva <hi@fabricio.dev>
+maintainer="Fabricio Silva <hi@fabricio.dev>"
+pkgname=tqm
+pkgver=1.18.0
+pkgrel=0
+pkgdesc="Torrent Queue Manager, a tool to manage torrents in your clients."
+url="https://github.com/autobrr/tqm"
+arch="all"
+license="GPL-3.0-only"
+options="net" # net for go
+makedepends="go"
+source="
+	$pkgname-$pkgver.tar.gz::https://github.com/autobrr/tqm/archive/v$pkgver.tar.gz
+	no-self-update.patch
+	"
+
+prepare() {
+	default_prepare
+	go mod download
+}
+
+build() {
+	go build -ldflags "-s -w
+		-X github.com/autobrr/tqm/pkg/runtime.Version=$pkgver
+		-X github.com/autobrr/tqm/pkg/runtime.GitCommit=alpine-r$pkgrel
+		-X github.com/autobrr/tqm/pkg/runtime.Timestamp=$(date -u "+%Y-%m-%dT%H:%M:%SZ" ${SOURCE_DATE_EPOCH:+-d @$SOURCE_DATE_EPOCH})
+		" ./cmd/tqm
+}
+
+check() {
+	go test ./...
+}
+
+package() {
+	install -Dm755 tqm -t "$pkgdir"/usr/bin/
+}
+
+sha512sums="
+a357ae39a2ae2efb12e8a54a2aff8043c16847b6b26faa613dded3e3268f3d8308b9785722905d7d3297dc8fe299b3971fd7a719c7b872fc865055ab928b3bcb  tqm-1.18.0.tar.gz
+ca29ce126793dc9be647aa57bace9e053d4f08532d40539957f10e2cf0479ba29bf2a71e8937152c3c057b95b32f1e5e9c32be25a52e87ffd0352817fddbe2ed  no-self-update.patch
+"

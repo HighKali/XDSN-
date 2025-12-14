@@ -1,0 +1,40 @@
+# Maintainer: Celeste <cielesti@protonmail.com>
+maintainer="Celeste <cielesti@protonmail.com>"
+pkgname=py3-dj-database-url
+pkgver=3.0.1
+pkgrel=0
+pkgdesc="Use Database URLs in your Django Application"
+url="https://pypi.org/project/dj-database-url/"
+arch="noarch"
+license="BSD-3-Clause"
+depends="py3-django"
+makedepends="
+	py3-gpep517
+	py3-setuptools
+	py3-wheel
+	"
+checkdepends="py3-pytest"
+subpackages="$pkgname-pyc"
+source="https://github.com/jazzband/dj-database-url/archive/v$pkgver/py3-dj-database-url-$pkgver.tar.gz"
+builddir="$srcdir/dj-database-url-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+73290a47e1af47cc310f1eac3a4b1a13cf7d135bbe4a9c929774f880fb48f260fd4aa03e2e4cef242bae0064b7202906ab672b4ed6cee377a8661c395785823c  py3-dj-database-url-3.0.1.tar.gz
+"

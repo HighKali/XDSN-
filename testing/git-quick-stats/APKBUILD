@@ -1,0 +1,26 @@
+# Contributor: Guy Godfroy <guy.godfroy@gugod.fr>
+# Maintainer: Guy Godfroy <guy.godfroy@gugod.fr>
+pkgname=git-quick-stats
+pkgver=2.8.0
+pkgrel=0
+pkgdesc="Access various statistics in git repository"
+url="https://git-quick-stats.sh"
+arch="noarch"
+license="MIT"
+depends="bash git util-linux ncurses coreutils"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/arzzen/git-quick-stats/archive/refs/tags/$pkgver.tar.gz"
+
+check() {
+	export TERM=xterm-256color # without that it fails in ci/cd
+	bash tests/commands_test.sh
+}
+
+package() {
+	install -Dm0755 git-quick-stats -t "$pkgdir"/usr/bin/
+	install -Dm0644 git-quick-stats.1 -t "$pkgdir"/usr/share/man/man1/
+}
+
+sha512sums="
+b951051c889de714bf886ce71cd17337957e24ef1d1c4df4290baa2ce7e524ab1691524179b8db78725c712e8b6f5e4e1643138cb3990dca81105277bb15c1d8  git-quick-stats-2.8.0.tar.gz
+"

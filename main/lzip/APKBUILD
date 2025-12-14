@@ -1,0 +1,34 @@
+# Contributor: ScrumpyJack <scrumpyjack@st.ilet.to>
+# Maintainer: Celeste <cielesti@protonmail.com>
+maintainer="Celeste <cielesti@protonmail.com>"
+pkgname=lzip
+pkgver=1.25
+pkgrel=0
+pkgdesc="Lzip is a lossless data compressor"
+url="https://www.nongnu.org/lzip/"
+arch="all"
+license="GPL-2.0-or-later"
+subpackages="$pkgname-doc"
+source="https://download-mirror.savannah.gnu.org/releases/lzip/lzip-$pkgver.tar.gz"
+
+build() {
+	./configure \
+		--prefix=/usr \
+		CXX="$CXX" \
+		CPPFLAGS="$CPPFLAGS" \
+		CXXFLAGS="$CXXFLAGS" \
+		LDFLAGS="$LDFLAGS"
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+6dec5625d5668d2f6f93816b0f2d7050ef357b5ce9a9af100bde45dddc21171341c2bcb623acdde8146b7eaed2248f8e0f5f32e64f57ecc6fe6cb9a0e187b796  lzip-1.25.tar.gz
+"

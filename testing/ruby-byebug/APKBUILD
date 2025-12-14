@@ -1,0 +1,48 @@
+# Contributor: Will Sinatra <wpsinatra@gmail.com>
+# Maintainer: Will Sinatra <wpsinatra@gmail.com>
+pkgname=ruby-byebug
+_gemname=${pkgname#ruby-}
+pkgver=12.0.0
+pkgrel=0
+pkgdesc="a Ruby debugger implemented using the tracepoint C api"
+url="https://rubygems.org/gems/byebug"
+arch="all"
+license="BSD-2-Clause"
+depends="ruby ruby-dev ruby-rake-compiler"
+checkdepends="ruby-rake ruby-bundler ruby-minitest ruby-pry ruby-simplecov ruby-yard ruby-chandler"
+source="$pkgname-$pkgver.tar.gz::https://github.com/deivid-rodriguez/byebug/archive/refs/tags/v$pkgver.tar.gz"
+builddir="$srcdir/$_gemname-$pkgver"
+options="!check" # requires ruby-chandler
+
+prepare() {
+	default_prepare
+
+	sed -i '/spec.signing_key/d' $_gemname.gemspec
+}
+
+build() {
+	gem build $_gemname.gemspec
+}
+
+check() {
+	rake test
+}
+
+package() {
+	local gemdir="$pkgdir/$(ruby -e 'puts Gem.default_dir')"
+
+	gem install --local \
+		--install-dir "$gemdir" \
+		--ignore-dependencies \
+		--no-document \
+		--verbose \
+		$_gemname
+
+	rm -r "$gemdir"/cache \
+		"$gemdir"/build_info \
+		"$gemdir"/doc
+}
+
+sha512sums="
+2f54c554c451d9bdaf69de738b555f618b944154a810ccadce017aedb73524e0e98c8a6b62139f1df91bb67cf64653607c504e640a20e27ce2710827c9056c9d  ruby-byebug-12.0.0.tar.gz
+"

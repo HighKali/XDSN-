@@ -1,0 +1,36 @@
+# Contributor: Alex Yam <alex@alexyam.com>
+# Maintainer: Celeste <cielesti@protonmail.com>
+maintainer="Celeste <cielesti@protonmail.com>"
+pkgname=ginac
+pkgver=1.8.9
+pkgrel=0
+pkgdesc="C++ library for symbolic computations"
+url="https://www.ginac.de/"
+arch="all"
+license="GPL-2.0-or-later"
+makedepends="cmake cln-dev flex bison readline-dev python3 texinfo samurai"
+subpackages="$pkgname-dev $pkgname-doc"
+source="https://www.ginac.de/ginac-$pkgver.tar.bz2"
+
+build() {
+	CXXFLAGS="${CXXFLAGS//-Os/-O2} -flto=auto" \
+	CFLAGS="${CFLAGS//-Os/-O2} -flto=auto" \
+	cmake3.5 -B build -G Ninja -Wno-dev \
+		-DCMAKE_BUILD_TYPE=None \
+		-DCMAKE_PREFIX_PATH=/usr \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build --target all test_suite
+}
+
+check() {
+	ctest --test-dir build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+33e7a74458a220bb132f42a42b785c799cf0b14c5da66ab5b54cbc8359aa8f97b9a897f62387f3f79b07418bbae7937c8e14b3d8e4f79f69d3866108644a80b1  ginac-1.8.9.tar.bz2
+"

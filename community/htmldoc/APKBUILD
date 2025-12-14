@@ -1,0 +1,33 @@
+# Contributor: Grigory Kirillov <txgk@bk.ru>
+# Maintainer: Celeste <cielesti@protonmail.com>
+maintainer="Celeste <cielesti@protonmail.com>"
+pkgname=htmldoc
+pkgver=1.9.21
+pkgrel=0
+pkgdesc="HTML conversion software"
+url="https://www.msweet.org/htmldoc/"
+arch="all"
+license="GPL-2.0-only"
+makedepends="cups-dev fltk-dev libpng-dev libjpeg-turbo-dev zlib-dev"
+subpackages="$pkgname-doc"
+source="https://github.com/michaelrsweet/htmldoc/archive/v$pkgver/htmldoc-$pkgver.tar.gz"
+options="!check" # no test suite in source archive
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+9a114ef72856cff1677881ae7495925b70b1799148d5cc201d82a6d26344251aa1de37f44c8d39a5ae816977145d991fd827f697d06c737c32f6797165a4f33a  htmldoc-1.9.21.tar.gz
+"

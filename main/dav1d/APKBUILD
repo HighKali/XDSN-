@@ -1,0 +1,40 @@
+maintainer="Bart Ribbers <bribbers@disroot.org>"
+pkgname=dav1d
+pkgver=1.5.2
+pkgrel=0
+pkgdesc="small and fast AV1 Decoder"
+url="https://code.videolan.org/videolan/dav1d"
+arch="all"
+license="BSD-2-Clause"
+makedepends="
+	meson
+	nasm
+	"
+subpackages="$pkgname-dev lib$pkgname:libs"
+source="https://code.videolan.org/videolan/dav1d/-/archive/$pkgver/dav1d-$pkgver.tar.gz"
+
+build() {
+	CFLAGS="$CFLAGS -O2" \
+	CXXFLAGS="$CXXFLAGS -O2" \
+	abuild-meson \
+		-Db_lto=true \
+		-Denable_tests=true \
+		-Denable_tools=true \
+		-Dfuzzing_engine=none \
+		-Dtestdata_tests=false \
+		-Denable_asm=true \
+		build
+	meson compile -C build
+}
+
+check() {
+	meson test --print-errorlogs -C build
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C build
+}
+
+sha512sums="
+633cba2e6b520bfe6600267849eaa1efe7587fd4a95cf4c2a1b797cf5de3280913f7d2d039507d8e3d505f7e1fd15bb226f95a41367a83beb81e02102ee7dce9  dav1d-1.5.2.tar.gz
+"

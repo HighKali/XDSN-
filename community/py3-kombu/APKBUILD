@@ -1,0 +1,43 @@
+# Contributor: Stefan Wagner <stw@bit-strickerei.de>
+# Maintainer: Antoine Martin (ayakael) <dev@ayakael.net>
+pkgname=py3-kombu
+pkgver=5.6.0
+pkgrel=0
+pkgdesc="a message queue abstraction layer"
+url="https://pypi.org/project/kombu/"
+arch="noarch"
+license="BSD-3-Clause"
+depends="py3-amqp py3-vine"
+makedepends="py3-setuptools py3-gpep517 py3-wheel"
+checkdepends="py3-pyro4 py3-case py3-nose py3-mock py3-tz py3-tzdata py3-pytest py3-sqlalchemy py3-fakeredis py3-botocore py3-hypothesis py3-sniffio py3-google-api-python-client py3-googleapis-common-protos"
+subpackages="$pkgname-pyc"
+source="https://files.pythonhosted.org/packages/source/k/kombu/kombu-$pkgver.tar.gz"
+builddir="$srcdir/kombu-$pkgver"
+
+replaces="py-kombu" # Backwards compatibility
+provides="py-kombu=$pkgver-r$pkgrel" # Backwards compatibility
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+# t/unit/transport/test_azurestoragesqueues.py: needs py3-azure
+# t/unit/transport/test_gcpubsub.py: needs py3-google-cloud-pubsub
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer "$builddir"/.dist/*.whl
+	.testenv/bin/python3 -m pytest -v \
+		--ignore="t/unit/transport/test_azurestoragequeues.py" \
+		--ignore="t/unit/transport/test_gcpubsub.py"
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+a69c835a44a2307803c708ade77ff49d0d016f4d9fa19f2881499cbf4a24b981ed8b6a2e50d5ebb2482508303110cc3d14695dd69d30cd9b00875992605e66ec  kombu-5.6.0.tar.gz
+"

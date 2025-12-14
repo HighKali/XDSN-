@@ -1,0 +1,53 @@
+# Contributor: prspkt <prspkt@protonmail.com>
+# Contributor: Fabian Affolter <fabian@affolter-engineering.ch>
+# Maintainer: Celeste <cielesti@protonmail.com>
+maintainer="Celeste <cielesti@protonmail.com>"
+pkgname=gnuplot
+pkgver=6.0.3
+pkgrel=2
+pkgdesc="Utility for plotting graphs"
+url="https://gnuplot.sourceforge.net/"
+arch="all"
+license="MIT"
+_luaver=5.3
+makedepends="
+	cairo-dev
+	gd-dev
+	libcerf-dev
+	libjpeg-turbo-dev
+	libpng-dev
+	lua$_luaver-dev
+	pango-dev
+	readline-dev
+	"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver-1.tar.gz::https://downloads.sourceforge.net/sourceforge/gnuplot/gnuplot-$pkgver.tar.gz"
+
+build() {
+	./configure \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var \
+		--enable-stats \
+		--disable-wxwidgets \
+		--without-qt
+	make
+}
+
+check() {
+	make GNUTERM=dumb check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+
+	install -Dm644 BUGS NEWS PGPKEYS README* \
+		-t "$pkgdir"/usr/share/doc/$pkgname/
+	install -Dm644 Copyright \
+		-t "$pkgdir"/usr/share/licenses/$pkgname/
+}
+
+sha512sums="
+33b0954ff70f1655e23ce0b6986b317a2b1be5ff6c3edda4df0499ef1e2db9bef97f2f3f5ca6c18272bd3375e60c8c07db3639f1c139be51416e8a6aba6e33c9  gnuplot-6.0.3-1.tar.gz
+"

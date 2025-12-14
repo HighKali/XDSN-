@@ -1,0 +1,51 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=kalk
+pkgver=25.08.3
+pkgrel=1
+pkgdesc="A powerful cross-platfrom calculator application"
+# Blocked by qt6-qtdeclarative
+arch="all !armhf"
+url="https://invent.kde.org/utilities/kalk"
+license="GPL-3.0-or-later"
+makedepends="
+	bison
+	extra-cmake-modules
+	flex
+	gmp-dev
+	kconfig-dev
+	kcoreaddons-dev
+	ki18n-dev
+	kirigami-dev
+	kunitconversion-dev
+	libqalculate-dev
+	mpfr-dev
+	qt6-qtbase-dev
+	qt6-qtdeclarative-dev
+	qt6-qtdeclarative-private-dev
+	samurai
+	"
+subpackages="$pkgname-lang"
+_repo_url="https://invent.kde.org/utilities/kalk.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kalk-$pkgver.tar.xz"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DBUILD_TESTING=ON
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+057b96c733795fa8c719549256e41543fbe010bc954655290f5ceda8f7f49d5d31bcc6fa3e31231d3e0c912ed3c9880d9308c439a290ee9ce9a07b899ec38a31  kalk-25.08.3.tar.xz
+"

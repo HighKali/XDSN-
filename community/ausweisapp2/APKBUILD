@@ -1,0 +1,58 @@
+# Contributor: André Klitzing <aklitzing@gmail.com>
+# Maintainer: André Klitzing <aklitzing@gmail.com>
+pkgname=ausweisapp2
+pkgver=2.4.0
+pkgrel=1
+pkgdesc="Official authentication app for German ID card and residence permit"
+url="https://www.ausweisapp.bund.de/"
+# armhf: qt6-qtdeclarative
+arch="all !armhf"
+license="EUPL-1.2"
+depends="
+	acsccid
+	ccid
+	pcsc-cyberjack
+	pcsc-lite
+	"
+makedepends="
+	cmake
+	http-parser-dev
+	openssl-dev
+	pcsc-lite-dev
+	qt6-qtbase-dev
+	qt6-qtdeclarative-dev
+	qt6-qtdeclarative-private-dev
+	qt6-qtscxml-dev
+	qt6-qtsvg-dev
+	qt6-qttools-dev
+	qt6-qtwebsockets-dev
+	qt6-qtwebsockets
+	samurai
+	"
+subpackages="$pkgname-doc"
+source="https://github.com/Governikus/AusweisApp/archive/refs/tags/$pkgver/ausweisapp2-$pkgver.tar.gz"
+builddir="$srcdir/AusweisApp-$pkgver"
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		cmake_crossopts="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DBUILD_TESTING="$(want_check && echo ON || echo OFF)" \
+		$cmake_crossopts .
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+aeabcb7c16e3ab6f24fe3987e7036d9fd254b5d3cdb3d1a0fdcab0be9638bd106878ad7ac1134776c56e08a39b182cb8fff22db742c69616951481678b930ef4  ausweisapp2-2.4.0.tar.gz
+"

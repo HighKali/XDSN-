@@ -1,0 +1,62 @@
+# Contributor: knuxify <knuxify@gmail.com>
+# Maintainer: knuxify <knuxify@gmail.com>
+pkgname=tangram
+pkgver=3.4
+pkgrel=0
+_troll_commit="8b0275948eedec9ed0378f9bdda1aa4aac3062ba"
+pkgdesc="Browser for your pinned tabs"
+url="https://apps.gnome.org/Tangram"
+# armhf: blocked by gjs
+arch="noarch !armhf"
+license="GPL-3.0-or-later"
+depends="
+	gjs
+	gtk4.0
+	libadwaita
+	webkit2gtk-6.0
+	"
+makedepends="
+	appstream-glib
+	blueprint-compiler
+	coreutils
+	desktop-file-utils
+	gjs-dev
+	glib-dev
+	gtk4.0-dev
+	libadwaita-dev
+	meson
+	"
+subpackages="$pkgname-lang"
+source="https://github.com/sonnyp/Tangram/archive/refs/tags/v$pkgver/Tangram-$pkgver.tar.gz
+	troll-$_troll_commit.tar.gz::https://github.com/sonnyp/troll/archive/$_troll_commit.tar.gz
+	busybox.patch
+	"
+builddir="$srcdir/Tangram-$pkgver"
+options="!check" # no test suite
+
+prepare() {
+	default_prepare
+
+	rm -r "$builddir"/troll
+	mv "$srcdir"/troll-$_troll_commit "$builddir"/troll
+}
+
+build() {
+	abuild-meson \
+		. output
+	meson compile -C output
+}
+
+check() {
+	meson test --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+2e85eba8fee7f19a75ffa46dcc571057b7fb2748b8672e52c27fbaa0cadc1447447c30a3bf035fec87b51e6dfd019010d7bd31dbbe0293d5f895a6a0929cd303  Tangram-3.4.tar.gz
+a3476ea1017fd4f73f88dcbdca84e4cb55eabe9593549b5bd95da5fab9128816b8cb91c24abed970ca36d508746e481e3199829b4a0b6db80bea972c22f98afb  troll-8b0275948eedec9ed0378f9bdda1aa4aac3062ba.tar.gz
+0312705a1a832da0ff26c89fd83769a6f1720917dd954cc1d43482daf386841a8a0cae3a4e8b45cbf6c2b7ac3dbf5eb888ed690a568ab48b1763cc727ad69ebe  busybox.patch
+"

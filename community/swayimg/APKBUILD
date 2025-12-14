@@ -1,0 +1,90 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=swayimg
+pkgver=4.6
+pkgrel=0
+pkgdesc="Image viewer for Sway"
+url="https://github.com/artemsen/swayimg"
+# optional libjxl, but nobody is using this on s390x
+arch="all !s390x"
+license="MIT"
+makedepends="
+	bash-completion-dev
+	cairo-dev
+	giflib-dev
+	json-c-dev
+	libexif-dev
+	libheif-dev
+	libjpeg-turbo-dev
+	libjxl-dev
+	librsvg-dev
+	libwebp-dev
+	libxkbcommon-dev
+	meson
+	wayland-dev
+	wayland-protocols
+	"
+subpackages="
+	$pkgname-full
+	$pkgname-doc
+	$pkgname-bash-completion
+	"
+source="https://github.com/artemsen/swayimg/archive/v$pkgver/swayimg-$pkgver.tar.gz"
+options="!check"  # no tests provided
+
+build() {
+	msg 'Building basic variant'
+	_build output \
+		-Dheif=disabled \
+		-Djxl=disabled \
+		-Dsvg=disabled \
+		-Dwebp=disabled
+
+	msg 'Building full variant'
+	_build output-full \
+		-Dbash=disabled \
+		-Dman=false
+}
+
+_build() {
+	local outdir=$1; shift
+
+	abuild-meson \
+		-Db_lto=true \
+		-Dgif=enabled \
+		-Dheif=enabled \
+		-Djpeg=enabled \
+		-Djxl=enabled \
+		-Dpng=enabled \
+		-Dsvg=enabled \
+		-Dwebp=enabled \
+		-Dexif=enabled \
+		-Dbash=enabled \
+		-Dversion=$pkgver \
+		"$@" \
+		. "$outdir"
+	meson compile -C "$outdir"
+}
+
+package() {
+	pkgdesc="$pkgdesc - with support for basic formats"
+	provider_priority="100"  # highest (other provider is swayimg-full)
+
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+	install -D -m644 extra/swayimgrc "$pkgdir"/etc/xdg/$pkgname/config
+}
+
+full() {
+	pkgdesc="$pkgdesc - with support for all formats"
+	provides="$pkgname=$pkgver-r$pkgrel"
+	provider_priority="10"  # lowest (other provider is swayimg)
+
+	cd "$builddir"
+
+	DESTDIR="$subpkgdir" meson install --no-rebuild -C output-full
+	install -D -m644 extra/swayimgrc "$subpkgdir"/etc/xdg/$pkgname/config
+}
+
+sha512sums="
+a2cd6f3a70b484e33a3f4d478ccda74f046b90622a2ce0c969f864c588358b38373f4755f29159295f4d368e28877536fca11d7c00ce9f83e99867a27d4d9e96  swayimg-4.6.tar.gz
+"

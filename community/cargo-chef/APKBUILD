@@ -1,0 +1,43 @@
+maintainer="Paolo Barbolini <paolo.barbolini@m4ss.net>"
+pkgname=cargo-chef
+pkgver=0.1.73
+pkgrel=0
+pkgdesc="A cargo sub-command to build project dependencies for optimal Docker layer caching."
+url="https://github.com/LukeMathWalker/cargo-chef"
+arch="all"
+license="MIT OR Apache-2.0"
+makedepends="
+	cargo
+	cargo-auditable
+	"
+checkdepends="cargo"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/LukeMathWalker/cargo-chef/archive/refs/tags/v$pkgver.tar.gz"
+# cargo fetch
+options="net"
+
+prepare() {
+	default_prepare
+
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build --release --frozen
+}
+
+check() {
+	cargo test --frozen
+}
+
+package() {
+	install -Dm755 target/release/cargo-chef -t "$pkgdir"/usr/bin/
+
+	install -Dm 644 README.md -t "$pkgdir"/usr/share/doc/"$pkgname"/
+	install -Dm 644 LICENSE-MIT -t "$pkgdir"/usr/share/licenses/"$pkgname"/
+	install -Dm 644 LICENSE-APACHE -t "$pkgdir"/usr/share/licenses/"$pkgname"/
+}
+
+sha512sums="
+4b62873518eb2f90bfa3b16d1a17be2ec86e46b952419e73b53d31ed5ca6811fecfd15364a50ed1f6e648ece90ef94ac342e6e93e2b1dbac7a082760c7c803a0  cargo-chef-0.1.73.tar.gz
+"

@@ -1,0 +1,44 @@
+# Maintainer: Lauri Tirkkonen <lauri@hacktheplanet.fi>
+pkgname=kubie
+pkgver=0.26.0
+pkgrel=0
+pkgdesc="A more powerful alternative to kubectx and kubens"
+url="https://github.com/sbstp/kubie"
+arch="all"
+license="Zlib"
+subpackages="$pkgname-bash-completion $pkgname-fish-completion"
+makedepends="
+	cargo
+	cargo-auditable
+	clang-dev
+	cmake
+	cmd:ninja
+	"
+source="v$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz"
+
+prepare() {
+	default_prepare
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build --frozen --release --no-default-features
+}
+
+check() {
+	cargo test --frozen
+}
+
+package() {
+	install -D -m 0755 target/release/$pkgname "$pkgdir"/usr/bin/$pkgname
+
+	install -Dm644 completion/$pkgname.bash \
+		"$pkgdir"/usr/share/bash-completion/completions/$pkgname
+
+	install -Dm644 completion/$pkgname.fish \
+		"$pkgdir"/usr/share/fish/vendor_completions.d/$pkgname.fish
+}
+
+sha512sums="
+cecd02b42f4ce45de8d10b12034e62d1ee97f11d3fa13d2772e4d4b884b63935010647a3c3cc5ae58da6c000f916b725efba03dd92dfd938090e7548434d29f7  v0.26.0.tar.gz
+"

@@ -1,0 +1,47 @@
+maintainer="Achill Gilgenast <achill@achill.org>"
+pkgname=py3-redis
+_pkgname=redis
+pkgver=7.1.0
+pkgrel=0
+pkgdesc="Python3 client for Redis key-value store"
+url="https://github.com/andymccurdy/redis-py"
+arch="noarch"
+license="MIT"
+depends="py3-hiredis"
+makedepends="py3-setuptools py3-hatchling py3-gpep517 py3-wheel"
+checkdepends="py3-pytest py3-mock redis"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://files.pythonhosted.org/packages/source/${_pkgname:0:1}/$_pkgname/$_pkgname-$pkgver.tar.gz"
+builddir="$srcdir"/$_pkgname-$pkgver
+options="!check" # tests fail due to old version + disabled proprietary redis features
+
+replaces="py-redis" # Backwards compatibility
+provides="py-redis=$pkgver-r$pkgrel" # Backwards compatibility
+
+# secfixes:
+#   4.5.4-r0:
+#     - CVE-2023-28858
+#     - CVE-2023-28859
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	redis-server --dir "$builddir" &
+	trap "kill $!" EXIT
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+a6dd967471605d6c321a3332979face8641ed0b7ff8af4cbb9440b6d50c6bc5a512a2ca8410163dd471af97983e19b12eaa67f59c7338273dca077177319fc3d  py3-redis-7.1.0.tar.gz
+"

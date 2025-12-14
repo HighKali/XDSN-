@@ -1,0 +1,46 @@
+maintainer="Michał Polański <michal@polanski.me>"
+pkgname=py3-faker
+pkgver=37.12.0
+pkgrel=0
+pkgdesc="Python package that generates fake data for you"
+url="https://faker.readthedocs.io/en/master"
+license="MIT"
+arch="noarch"
+depends="py3-tzdata"
+makedepends="py3-gpep517 py3-setuptools py3-wheel"
+checkdepends="py3-email-validator py3-ipaddress py3-mock py3-freezegun
+	py3-more-itertools py3-pytest py3-ukpostcodeparser py3-validators
+	py3-pytest-runner py3-random2 py3-pillow"
+subpackages="$pkgname-pyc"
+source="https://github.com/joke2k/faker/archive/v$pkgver/py3-faker-$pkgver.tar.gz"
+builddir="$srcdir/faker-$pkgver"
+
+replaces="py-faker" # Backwards compatibility
+provides="py-faker=$pkgver-r$pkgrel" # Backwards compatibility
+
+prepare() {
+	default_prepare
+	# tests erroneously require a specific version of pytest
+	sed -i setup.py -e 's/ *"pytest>=.*//g'
+}
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+8b0a8173b2628fca8284efa00d45dace58a9a6b8e0ac6dc08d4d6bbe3062da6f5c6fcaf2e739b3b0bc8e6247b19d633c045c1e95211b70388736bc14251d2759  py3-faker-37.12.0.tar.gz
+"

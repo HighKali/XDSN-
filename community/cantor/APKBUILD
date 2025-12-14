@@ -1,0 +1,63 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=cantor
+pkgver=25.08.3
+pkgrel=0
+# armhf blocked by qt6-qtdeclarative
+# x86, s390x, riscv64 and loongarch64 blocked by qt6-qtwebengine
+arch="all !armhf !x86 !s390x !riscv64 !loongarch64"
+url="https://edu.kde.org/cantor/"
+pkgdesc="KDE Frontend to Mathematical Software"
+license="GPL-2.0-or-later"
+makedepends="
+	analitza-dev
+	discount-dev
+	extra-cmake-modules
+	karchive-dev
+	kcompletion5-dev
+	kconfig-dev
+	kcoreaddons-dev
+	kcrash-dev
+	kdoctools-dev
+	ki18n-dev
+	kiconthemes-dev
+	kio-dev
+	knewstuff-dev
+	kparts-dev
+	kpty-dev
+	ktexteditor-dev
+	ktextwidgets-dev
+	kxmlgui-dev
+	poppler-qt5-dev
+	python3-dev
+	qt6-qtbase-dev
+	qt6-qtsvg-dev
+	qt6-qtwebengine-dev
+	samurai
+	syntax-highlighting-dev
+	"
+checkdepends="xvfb-run"
+subpackages="$pkgname-doc $pkgname-lang"
+_repo_url="https://invent.kde.org/education/cantor.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/cantor-$pkgver.tar.xz"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	xvfb-run -a ctest --test-dir build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+28e1db6e048714a1eabd50f2ff0d21eba808e9833e5a962d9b92be77a64097be0472df2767dc89a40afd7b1e616be06c63ad33b5068c9e041ac7fc6f6933ea5a  cantor-25.08.3.tar.xz
+"

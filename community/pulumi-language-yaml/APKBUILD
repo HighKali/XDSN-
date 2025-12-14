@@ -1,0 +1,49 @@
+maintainer="Hoang Nguyen <folliekazetani@protonmail.com>"
+pkgname=pulumi-language-yaml
+pkgver=1.24.0
+pkgrel=1
+pkgdesc="Infrastructure as Code SDK (YAML language provider)"
+url="https://pulumi.com/"
+# blocked by pulumi
+arch="x86_64 aarch64"
+license="Apache-2.0"
+makedepends="go"
+checkdepends="pulumi pulumi-language-go"
+source="$pkgname-$pkgver.tar.gz::https://github.com/pulumi/pulumi-yaml/archive/refs/tags/v$pkgver.tar.gz"
+builddir="$srcdir/pulumi-yaml-$pkgver"
+options="net" # download Go modules
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	mkdir -p bin
+	go build -v \
+		-ldflags "-X github.com/pulumi/pulumi-yaml/pkg/version.Version=v$pkgver" \
+		-o bin/ \
+		./cmd/...
+}
+
+check() {
+	# expose pulumi-language-yaml binary in PATH for the tests to use
+	export PATH="$PATH:$builddir/bin"
+
+	# Unset -trimpath, since some tests create run_plugin_version_test.go file using relative path.
+	# Skipped tests depend externally downloaded schema files (scripts/get_schemas.sh is broken upstream) and pulumi resource plugins.
+	# TestLanguage depends on the main pulumi repository
+	GOFLAGS="${GOFLAGS/-trimpath/}" \
+		PULUMI_SKIP_UPDATE_CHECK=true \
+		PULUMI_DISABLE_AUTOMATIC_PLUGIN_ACQUISITION=true \
+		go test \
+		-skip 'Test(GenerateProgram|ImportTemplate|GenerateExamples|Parameterized|ResourceOrderingWithDefaultProvider|Language|RemoteComponent|TypeCheckError|ResourcePropertiesConfig|ResourceSecret|Random|AuthoredComponent)' \
+		./...
+}
+
+package() {
+	install -Dm755 bin/pulumi-language-yaml bin/pulumi-converter-yaml -t "$pkgdir"/usr/bin/
+}
+
+sha512sums="
+0077ec1480167374921de6d2e34d90b4e64ec5b97fa1f1c2adc95d68f369953ecd0a9976fad28aed439cd2b1c1c1998cb2d38bbbe0d870d140db7d984a32ca35  pulumi-language-yaml-1.24.0.tar.gz
+"

@@ -1,0 +1,37 @@
+maintainer="Bart Ribbers <bribbers@disroot.org>"
+pkgname=py3-jellyfin-apiclient-python
+pkgver=1.11.0
+pkgrel=0
+pkgdesc="Python API client for Jellyfin"
+url="https://github.com/jellyfin/jellyfin-apiclient-python"
+arch="noarch"
+license="GPL-3.0-only"
+depends="
+	py3-requests
+	py3-urllib3
+	py3-websocket-client
+	"
+makedepends="
+	py3-gpep517
+	py3-setuptools
+	py3-wheel
+	"
+subpackages="$pkgname-pyc"
+source="https://pypi.python.org/packages/source/j/jellyfin_apiclient_python/jellyfin_apiclient_python-$pkgver.tar.gz"
+options="!check" # No tests
+builddir="$srcdir/jellyfin_apiclient_python-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+61dea85a3a66bd7660a26c10f2e321d58d96e7e1255474af4448a89728e4f3740a9176912b6b958f7f895ffab296973f010bd02e9466b23667e3665a012daedd  jellyfin_apiclient_python-1.11.0.tar.gz
+"

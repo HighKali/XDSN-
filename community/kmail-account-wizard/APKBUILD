@@ -1,0 +1,68 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=kmail-account-wizard
+pkgver=25.08.3
+pkgrel=1
+# armhf blocked by extra-cmake-modules
+# x86, s390x, riscv64 and armv7 blocked by qt6-qtwebengine -> kmailtransport
+arch="all !armhf !x86 !s390x !riscv64 !armv7"
+url="https://kontact.kde.org/"
+pkgdesc="KMail account wizard"
+license="GPL-2.0-or-later AND LGPL-2.0-or-later AND GFDL-1.2-only"
+makedepends="
+	akonadi-dev
+	akonadi-mime-dev
+	extra-cmake-modules
+	gpgme-dev
+	kcmutils-dev
+	kcodecs-dev
+	kconfig-dev
+	kcrash-dev
+	kdbusaddons-dev
+	kdoctools-dev
+	kidentitymanagement-dev
+	kimap-dev
+	kldap-dev
+	kmailtransport-dev
+	knewstuff-dev
+	knotifications-dev
+	knotifyconfig-dev
+	kservice-dev
+	ktexteditor-dev
+	kwallet-dev
+	libkdepim-dev
+	libkleo-dev
+	pimcommon-dev
+	qt6-qtbase-dev
+	qt6-qtdeclarative-private-dev
+	samurai
+	shared-mime-info
+	"
+checkdepends="
+	dbus
+	xwayland-run
+	"
+subpackages="$pkgname-lang"
+_repo_url="https://invent.kde.org/pim/kmail-account-wizard.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kmail-account-wizard-$pkgver.tar.xz"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	dbus-run-session wlheadless-run -- ctest --test-dir build -E "akonadi-(mysql|sqlite)-accountconfigurationtest"
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+ea0a6e5c268998478d431e1660cdcfafbccce74f8ac8bcc81412e41ca3bb07069a517ae48b810528a3c55781f9d4d25c1431fa6b2f8282f5530297d70344dda0  kmail-account-wizard-25.08.3.tar.xz
+"

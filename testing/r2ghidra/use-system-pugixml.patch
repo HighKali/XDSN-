@@ -1,0 +1,11 @@
+--- a/meson.build
++++ b/meson.build
+@@ -92,7 +92,7 @@ ghidra_incs = ghidra.get_variable('incs'
+ libdecomp_static = ghidra.get_variable('libdecomp_static')
+ slgh_static = ghidra.get_variable('slgh_static')
+ 
+-pugixml = subproject('pugixml').get_variable('pugixml_dep')
++pugixml = dependency('pugixml')
+ 
+ r2ghidra_core_sources = [
+   r2ghidra_sources,

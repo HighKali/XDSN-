@@ -1,0 +1,36 @@
+# Contributor: Aster Boese <asterboese@mailbox.org>
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Luca Weiss <luca@lucaweiss.eu>
+pkgname=lomiri-schemas
+pkgver=0.1.9
+pkgrel=0
+pkgdesc="GSettings / AccountsService schema files for Lomiri"
+arch="noarch"
+url="https://gitlab.com/ubports/development/core/lomiri-schemas"
+license="LGPL-2.1-or-later"
+makedepends="
+	cmake
+	cmake-extras
+	glib-dev
+	intltool
+	samurai
+	"
+source="https://gitlab.com/ubports/development/core/lomiri-schemas/-/archive/$pkgver/lomiri-schemas-$pkgver.tar.gz"
+options="!check" # No tests
+
+build() {
+	# FIXME intltool_merge_translations doesn't work with ninja backend
+	cmake -B build -G "Unix Makefiles" \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DCMAKE_BUILD_TYPE=None
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+3558889727f54c6a4a335b3b3c36f35b53b08623c81ee27aade2cb5ce94609759827b739a266a47ac61f27b8d12601841eb860927d0985e6999fdd489673b1ce  lomiri-schemas-0.1.9.tar.gz
+"

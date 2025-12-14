@@ -1,0 +1,79 @@
+# Contributor: Henrik Riomar <henrik.riomar@gmail.com>
+# Maintainer: Henrik Riomar <henrik.riomar@gmail.com>
+pkgname=py3-pkcs11
+_pkgname=python-pkcs11
+pkgver=0.9.2
+pkgrel=0
+pkgdesc="PKCS#11/Cryptoki support for Python"
+url="https://github.com/danni/python-pkcs11"
+arch="all"
+license="MIT"
+checkdepends="
+	py3-parameterized
+	py3-pytest
+	softhsm
+	"
+makedepends="
+	cython
+	py3-gpep517
+	py3-setuptools_scm
+	py3-wheel
+	python3-dev
+	"
+depends="
+	py3-asn1crypto
+	py3-cached-property
+	py3-cryptography
+	python3
+	"
+subpackages="$pkgname-pyc"
+source="
+	$_pkgname-$pkgver.tar.gz::https://github.com/pyauth/python-pkcs11/archive/refs/tags/v$pkgver/$pkgver.tar.gz
+	"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+build() {
+	export SETUPTOOLS_SCM_PRETEND_VERSION=$pkgver
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	# setup softhsm for tests
+	tokendir=$(mktemp -d "$builddir/token.XXXXXX")
+	conffile=$(mktemp "$builddir/conf.XXXXXX")
+	cat > "$conffile" << EOF
+directories.tokendir = $tokendir
+objectstore.backend = file
+EOF
+	export SOFTHSM2_CONF=$conffile
+	softhsm2-util --init-token --free --label pytest --pin 1234 --so-pin 987654321
+
+	export PKCS11_TOKEN_LABEL=pytest
+	export PKCS11_TOKEN_PIN=1234
+	export PKCS11_TOKEN_SO_PIN=987654321
+
+	export PKCS11_MODULE=/usr/lib/softhsm/libsofthsm2.so
+
+	# do test installation
+	export SETUPTOOLS_SCM_PRETEND_VERSION=$pkgver
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+
+	# run tests
+	local _python_version
+	_python_version="$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')"
+	PYTHONPATH="$builddir/.testenv/lib/python$_python_version/site-packages" \
+	pytest-3 --import-mode=append \
+		-k "not test_aes_gcm_test_vector and not test_encrypt_gcm"
+}
+
+package() {
+	export SETUPTOOLS_SCM_PRETEND_VERSION=$pkgver
+	python3 -m installer -d "$pkgdir" .dist/*.whl
+}
+
+sha512sums="
+ab886c2dc53b572b1c09f0f9822440d89de23eb39fb05e7a236e242aec45341071618060b49acd3f3c47d240c3ac17df1851e340206cf25d8d2c7fb473d1d533  python-pkcs11-0.9.2.tar.gz
+"

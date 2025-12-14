@@ -1,0 +1,31 @@
+# Maintainer: Celeste <cielesti@protonmail.com>
+maintainer="Celeste <cielesti@protonmail.com>"
+pkgname=zathura-djvu
+pkgver=0.2.11
+pkgrel=0
+pkgdesc="DjVu plugin for zathura"
+url="https://pwmt.org/projects/zathura-djvu/"
+arch="all"
+license="Zlib"
+options="!check" # no tests
+depends="zathura"
+makedepends="
+	djvulibre-dev
+	muon
+	zathura-dev
+	"
+source="https://pwmt.org/projects/zathura-djvu/download/zathura-djvu-$pkgver.tar.xz"
+
+build() {
+	abuild-muon \
+		build .
+	ninja -C build
+}
+
+package() {
+	DESTDIR="$pkgdir" muon -C build install
+}
+
+sha512sums="
+8b449387d567d43025deeeaae25eb1d558d0cb286b42dccd437e36003264554033e22044725aa31493ef1f6dcb14dc5f767ad9193b524a7de93c6c0d344ca431  zathura-djvu-0.2.11.tar.xz
+"

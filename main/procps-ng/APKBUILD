@@ -1,0 +1,97 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=procps-ng
+pkgver=4.0.5
+pkgrel=0
+pkgdesc="Utilities for monitoring your system and processes on your system"
+url="https://gitlab.com/procps-ng/procps"
+arch="all"
+license="GPL-2.0-or-later AND LGPL-2.1-or-later"
+makedepends="
+	autoconf
+	automake
+	gettext-dev
+	libtool
+	ncurses-dev
+	utmps-dev
+	"
+checkdepends="dejagnu"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang libproc2"
+source="$pkgname-$pkgver.tar.xz::https://sourceforge.net/projects/procps-ng/files/Production/procps-ng-$pkgver.tar.xz/download
+	disable-test_pids-check.patch
+	"
+
+# used to be named procps
+provides="procps=$pkgver-r$pkgrel"
+replaces="procps"
+
+case "$CARCH" in
+x86|ppc64le)
+	# TODO, x86: FAIL: strtod_nol_or_err("123") != 123.000000
+	# https://gitlab.com/procps-ng/procps/-/issues/271
+	# ppc64le: FAIL: check_fatal_proc_unmounted
+	options="$options !check"
+	;;
+esac
+
+# secfixes:
+#   4.0.4-r0:
+#     - CVE-2023-4016
+prepare() {
+	default_prepare
+	autoreconf -vif
+}
+
+build() {
+	export CFLAGS="$CFLAGS $(pkg-config --cflags libutmps)"
+	export LIBS="$LIBS -lintl $(pkg-config --libs libutmps)"
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--bindir=/bin \
+		--sbindir=/sbin \
+		--mandir=/usr/share/man \
+		--sysconfdir=/etc \
+		--localstatedir=/var \
+		--docdir=/usr/share/doc/procps \
+		--datarootdir=/usr/share \
+		--disable-static \
+		--disable-w-from \
+		--disable-kill \
+		--disable-rpath \
+		--with-ncurses \
+		--disable-modern-top
+	make
+}
+
+check() {
+	make check || {
+		cat test-suite.log
+		return 1
+	}
+}
+
+package() {
+	make DESTDIR="$pkgdir" ldconfig=true install="install -D" \
+		install
+
+	# These binaries are identical.
+	ln -sf pgrep "$pkgdir"/bin/pkill
+
+	# Override BusyBox symlinks
+	mkdir -p "$pkgdir"/usr/bin
+	for i in free pgrep pkill pmap pwdx top uptime; do
+		mv "$pkgdir"/bin/$i "$pkgdir"/usr/bin/$i
+	done
+}
+
+libproc2() {
+	pkgdesc="Library for monitoring system and processes"
+
+	amove usr/lib
+}
+
+sha512sums="
+c27730743210cf850c4af98e1fb81bc8ee8d550b07b9eedb34a5b9d661263d0f1bc92c4e73802a0ed8d4405854aef4bc542bff283c28e8fbb6dabb967f9e4359  procps-ng-4.0.5.tar.xz
+e4ea61dfe0ffc09bd28e6fe60eb33156cac1372e2c68272db8d61aab62151ba03426586f218a78c79aa9cd56a82bf4327817290197238ca799dda5079d4293b3  disable-test_pids-check.patch
+"

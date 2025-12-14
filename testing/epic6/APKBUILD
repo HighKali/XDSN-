@@ -1,0 +1,68 @@
+# Maintainer: Celeste <cielesti@protonmail.com>
+maintainer="Celeste <cielesti@protonmail.com>"
+pkgname=epic6
+pkgver=0_git20250821
+reporev=24c9c255230eda160f877a51ef47e34a2826fd23
+pkgrel=0
+pkgdesc="Enhanced Programmable ircII Client, version 6"
+url="https://epicsol.org/"
+arch="all"
+license="BSD-3-Clause"
+makedepends="
+	autoconf
+	c-ares-dev
+	libarchive-dev
+	libsodium-dev
+	ncurses-dev
+	openssl-dev
+	pcre2-dev
+	sqlite-dev
+	"
+subpackages="
+	$pkgname-doc
+	$pkgname-script::noarch
+	"
+giturl="https://git.epicsol.org/epic6.git"
+source="https://dev.alpinelinux.org/archive/epic6/epic6-$reporev.tar.gz"
+builddir="$srcdir/$pkgname-$reporev"
+
+prepare() {
+	default_prepare
+
+	autoconf
+}
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var \
+		--with-pcre2
+	make
+}
+
+check() {
+	./source/epic6 -v
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+
+	install -Dm644 doc/* -t "$pkgdir"/usr/share/doc/$pkgname/
+
+	rm -v "$pkgdir"/usr/share/doc/$pkgname/epic*.1
+}
+
+script() {
+	pkgdesc="$pkgdesc (bundled scripts)"
+	depends="cmd:$pkgname=$pkgver-r$pkgrel"
+
+	amove usr/share/epic6
+}
+
+sha512sums="
+add895a012a296fca83cc7a2c88f16b04ab02c3824cf9a6331b4f57c39a86b981a468e80fe0d162e576c82a780d6b90ad4718ab29fee432a97d9923f62fd6348  epic6-24c9c255230eda160f877a51ef47e34a2826fd23.tar.gz
+"

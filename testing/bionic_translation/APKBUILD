@@ -1,0 +1,40 @@
+maintainer="Bart Ribbers <bribbers@disroot.org>"
+pkgname=bionic_translation
+pkgver=0_git20251008
+pkgrel=0
+_commit="028fb270a852f4791b522389d8899377bb824dcf"
+pkgdesc="A set of libraries for loading bionic-linked .so files on musl/glibc"
+url="https://gitlab.com/android_translation_layer/bionic_translation"
+arch="x86_64 aarch64 armv7 x86"
+license="Apache-2.0"
+makedepends="
+	elfutils-dev
+	libbsd-dev
+	libunwind-dev
+	mesa-dev
+	meson
+	samurai
+	"
+checkdepends="bubblewrap"
+subpackages="$pkgname-dev $pkgname-dbg"
+source="https://gitlab.com/android_translation_layer/bionic_translation/-/archive/$_commit/bionic_translation-$_commit.tar.gz"
+options="!check" # Tests require bubblewrap which can not run in CI/containerized environments
+builddir="$srcdir/bionic_translation-$_commit"
+
+build() {
+	abuild-meson \
+		. output
+	meson compile -C output
+}
+
+check() {
+	meson test --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+a3abffa8a2d1122f332c11f97e9c818c44cf23048fc13701e9fc6ca8129960cd8096e33f49db92e11f2807dd16acc5f2a681672ec8e88ecc992eb1a362bf9499  bionic_translation-028fb270a852f4791b522389d8899377bb824dcf.tar.gz
+"

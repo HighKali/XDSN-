@@ -1,0 +1,64 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Maintainer: Celeste <cielesti@protonmail.com>
+maintainer="Celeste <cielesti@protonmail.com>"
+pkgname=b3sum
+pkgver=1.8.2
+pkgrel=1
+pkgdesc="Command line implementation of the BLAKE3 hash function"
+url="https://github.com/BLAKE3-team/BLAKE3"
+arch="all"
+license="CC0-1.0 OR Apache-2.0"
+makedepends="
+	cargo
+	cargo-auditable
+	cmake
+	samurai
+	onetbb-dev
+	"
+subpackages="blake3-libs blake3-dev"
+source="$pkgname-$pkgver-1.tar.gz::https://github.com/BLAKE3-team/BLAKE3/archive/refs/tags/$pkgver.tar.gz"
+builddir="$srcdir/BLAKE3-$pkgver/b3sum"
+
+case "$CARCH" in
+armhf)
+	# hang forever, probably due to non-native hardware
+	options="$options !check"
+	;;
+aarch64|armv7)
+	_features="neon"
+	;;
+esac
+
+
+prepare() {
+	default_prepare
+
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build --release --frozen \
+		${_features:+--features $_features}
+
+	cmake -S ../c/ -B build -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=ON \
+		-DCMAKE_BUILD_TYPE=None \
+		-DBLAKE3_USE_TBB=ON
+	cmake --build build
+}
+
+check() {
+	cargo test --frozen ${_features:+--features $_features}
+}
+
+package() {
+	install -Dm755 target/release/b3sum -t "$pkgdir"/usr/bin/
+
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+5832d15373a0ec224e3c8dc86e1540e9246efbdf8db88fc2cce8924552f632532d9b74eeb15e1d31e3f13676656b5230d009151b4c57eb9d84224a9e385ba839  b3sum-1.8.2-1.tar.gz
+"

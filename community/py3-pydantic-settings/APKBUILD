@@ -1,0 +1,55 @@
+# Contributor: Steven Guikal <void@fluix.one>
+# Maintainer: Steven Guikal <void@fluix.one>
+pkgname=py3-pydantic-settings
+pkgver=2.11.0
+pkgrel=0
+pkgdesc="Settings management using pydantic"
+arch="noarch"
+url="https://github.com/pydantic/pydantic-settings"
+license="MIT"
+depends="
+	python3
+	py3-dotenv
+	py3-pydantic
+	py3-typing-inspection
+	"
+makedepends="
+	py3-gpep517
+	py3-hatchling
+	py3-setuptools
+	py3-wheel
+	"
+checkdepends="
+	py3-pytest
+	py3-pytest-mock
+	"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/pydantic/pydantic-settings/archive/refs/tags/v$pkgver.tar.gz
+	637.patch"
+builddir="$srcdir"/pydantic-settings-$pkgver
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --system-site-packages testenv
+	testenv/bin/python3 -m installer dist/*.whl
+	# test_docs.py needs pytest-examples which is not packaged
+	# test_source_azure_key_vault.py requires azure-keyvault-secrets
+	# test_source_gcp_secret_manager.py requires google-cloud-secret-manager
+	testenv/bin/python3 -m pytest --ignore=tests/test_docs.py \
+		--ignore tests/test_source_azure_key_vault.py \
+		--ignore tests/test_source_gcp_secret_manager.py
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" dist/*.whl
+}
+
+sha512sums="
+8280a32b8d966901d9a85d6a4c5ec7aafbd55b89cca742171db2cde047e7c7e3413694b0880ad8b34f6d2b926ac8533907741bf15c2cb88fc71758ca6745c75f  py3-pydantic-settings-2.11.0.tar.gz
+a2ce371a7823147b0475bc29222e7716967b750fb8b5a924194a8b4bf0c763b40a267b3396633280fafbda3097cd26195b077a852808e50e089c219bfa985d35  637.patch
+"

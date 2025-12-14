@@ -1,0 +1,60 @@
+# Maintainer: Lauri Tirkkonen <lauri@hacktheplanet.fi>
+pkgname=yaml-language-server
+pkgver=1.19.2
+pkgrel=0
+pkgdesc="Language Server for YAML Files"
+url="https://github.com/redhat-developer/yaml-language-server"
+arch="noarch"
+license="MIT"
+depends="nodejs"
+makedepends="npm esbuild jq"
+source="yaml-language-server-$pkgver.tar.gz::https://github.com/redhat-developer/yaml-language-server/archive/$pkgver.tar.gz
+yaml-language-server
+"
+subpackages="$pkgname-doc"
+
+_get_npm_deps() {
+	local pkg_with_ver="$(npm list -s --pattern "$1" | awk "/$1@/"' { print $2; }')"
+	npm info --json "$pkg_with_ver" dependencies | jq -r 'keys[]'
+}
+
+build() {
+	npm ci
+
+	# vscode-json-languageservice can't be bundled:
+	# https://github.com/microsoft/vscode-json-languageservice/issues/200
+	# work around by making it and its direct dependencies external.
+	local extpkgs="vscode-json-languageservice $(_get_npm_deps vscode-json-languageservice)"
+	local extarg=
+	for p in $extpkgs; do
+		extarg="$extarg --external:$p"
+	done
+
+	npm run compile
+	esbuild out/server/src/server.js $extarg --platform=node --bundle --outdir=dist/
+}
+
+check() {
+	npm test
+}
+
+package() {
+	local moddir="$pkgdir"/usr/lib/node_modules/$pkgname
+	local extpkgs="vscode-json-languageservice $(_get_npm_deps vscode-json-languageservice)"
+
+	install -d "$moddir"/node_modules
+	# l10n json bundles are loaded by server.js from "../../../l10n" relative to
+	# server.js, so we have to place the bundles as well as server.js accordingly
+	install -Dm 0644 dist/server.js "$moddir"/out/server/src/server.js
+	cp -r l10n "$moddir"/
+	for p in $extpkgs; do
+		cp -r node_modules/$p "$moddir"/node_modules/
+	done
+
+	install -Dm0755 "$srcdir"/$pkgname "$pkgdir"/usr/bin/$pkgname
+	install -Dm0644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}
+sha512sums="
+64f488fc78e4738836e3ad8bb16a3c3e68a5240a8536fa287c0195d5c198d9c6df8a656995a16e36f5f52f095c1f23ad3341f54fdf57761d5b9770b3c3598a1c  yaml-language-server-1.19.2.tar.gz
+30b27f64f649656a752339956326fd1cab5395a7bf936b5ed51fe6019e18f7f9c0312ab73aef2dcdfcd79cc71732df4e61c2ede5bbc60726a14b3a719f381a25  yaml-language-server
+"

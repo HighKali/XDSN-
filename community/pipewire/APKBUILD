@@ -1,0 +1,257 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+maintainer="team/alpine-desktop <bribbers@disroot.org>"
+pkgname=pipewire
+pkgver=1.4.9
+pkgrel=2
+_so_ver=0.3
+pkgdesc="Multimedia processing graphs"
+url="https://pipewire.org/"
+arch="all"
+license="LGPL-2.1-or-later"
+pkggroups="pipewire"
+makedepends="
+	alsa-lib-dev
+	avahi-dev
+	bash
+	bluez-dev
+	dbus-dev
+	doxygen
+	eudev-dev
+	fdk-aac-dev
+	glib-dev
+	graphviz
+	gst-plugins-base-dev
+	gstreamer-dev
+	jack-dev
+	libcamera-dev
+	libfreeaptx-dev
+	liblc3-dev
+	libusb-dev
+	libx11-dev
+	lilv-dev
+	meson
+	modemmanager-dev
+	ncurses-dev
+	pulseaudio-dev
+	py3-docutils
+	readline-dev
+	roc-toolkit-dev
+	sbc-dev
+	vulkan-loader-dev
+	webrtc-audio-processing-2-dev
+	xmltoman
+	"
+# move regular -dev after -jackdev, to steal files
+subpackages="
+	$pkgname-dbg
+	$pkgname-doc
+	$pkgname-alsa
+	$pkgname-pulse
+	$pkgname-pulse-openrc:pulse_openrc
+	$pkgname-jack
+	$pkgname-jack-dev:jackdev
+	$pkgname-dev
+	gst-plugin-pipewire:gst_plugin
+	$pkgname-zeroconf
+	$pkgname-spa-bluez
+	$pkgname-spa-vulkan
+	$pkgname-tools
+	$pkgname-spa-tools:spa_tools
+	$pkgname-lang
+	$pkgname-echo-cancel:echo_cancel
+	$pkgname-openrc
+	$pkgname-udev
+	"
+install="$pkgname.post-upgrade $pkgname.post-install"
+source="https://gitlab.freedesktop.org/PipeWire/pipewire/-/archive/$pkgver/pipewire-$pkgver.tar.gz
+	pipewire.desktop
+	pipewire-launcher.sh
+	pipewire.initd
+	pipewire-pulse.initd
+	"
+
+case "$CARCH" in
+	s390x)
+		# libldac not available for big endian
+		;;
+	*)
+		makedepends="$makedepends libldac-dev"
+		;;
+esac
+
+# put libs last to steal residual files taken by some prior extras
+subpackages="$subpackages $pkgname-libs"
+
+build() {
+	CFLAGS="$CFLAGS -O2" \
+	CXXFLAGS="$CXXFLAGS -O2" \
+	CPPFLAGS="$CPPFLAGS -O2" \
+	abuild-meson \
+		-Db_lto=true \
+		-Dlibjack-path=/usr/lib \
+		-Dlibv4l2-path=/usr/lib \
+		-Ddocs=disabled \
+		-Dman=enabled \
+		-Dgstreamer=enabled \
+		-Dexamples=enabled \
+		-Dffmpeg=disabled \
+		-Djack-devel=true \
+		-Dsystemd=disabled \
+		-Dvulkan=enabled \
+		-Dsdl2=disabled \
+		-Dlv2=enabled \
+		-Dlibcamera=enabled \
+		-Droc=enabled \
+		-Dbluez5-codec-lc3=enabled \
+		-Dbluez5-backend-native-mm=enabled \
+		-Dsession-managers=[] \
+		. output
+	meson compile -C output
+}
+
+check() {
+	meson test --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+
+	install -Dm644 "$srcdir"/pipewire.desktop -t "$pkgdir"/etc/xdg/autostart/
+	install -Dm755 "$srcdir"/pipewire-launcher.sh "$pkgdir"/usr/libexec/pipewire-launcher
+
+	install -Dm755 "$srcdir"/pipewire.initd "$pkgdir"/etc/user/init.d/pipewire
+	install -Dm755 "$srcdir"/pipewire-pulse.initd "$pkgdir"/etc/user/init.d/pipewire-pulse
+}
+
+alsa() {
+	pkgdesc="ALSA support for pipewire"
+	replaces="$pkgname"  # for backward compatibility
+
+	amove usr/lib/alsa-lib
+	amove usr/share/alsa/alsa.conf.d
+
+	install -d "$subpkgdir"/etc/alsa/conf.d
+	for i in "$subpkgdir"/usr/share/alsa/alsa.conf.d/*.conf; do
+		ln -s -- "${i#"$subpkgdir"}" "$subpkgdir"/etc/alsa/conf.d/
+	done
+}
+
+pulse() {
+	pkgdesc="Pulseaudio support for pipewire"
+	depends="
+		pipewire-session-manager
+		pulseaudio-utils
+		"
+	provides="pulseaudio=$pkgver-r$pkgrel pulseaudio-bluez=$pkgver-r$pkgrel"
+	provider_priority=1
+
+	amove usr/bin/pipewire-pulse
+	amove usr/lib/pipewire-$_so_ver/libpipewire-module-protocol-pulse.so
+	amove usr/lib/pipewire-$_so_ver/libpipewire-module-pulse-tunnel.so
+	amove usr/lib/pipewire-$_so_ver/libpipewire-module-filter-chain.so
+	amove usr/share/pipewire/pipewire-pulse.conf
+	amove usr/share/pipewire/pipewire-pulse.conf.avail
+}
+
+pulse_openrc() {
+	install_if="$pkgname-pulse openrc"
+	amove etc/user/init.d/pipewire-pulse
+}
+
+jack() {
+	pkgdesc="JACK support for pipewire"
+	depends="pipewire-session-manager"
+	provides="jack=$pkgver-r$pkgrel"
+	replaces="jack"
+
+	amove usr/lib/libjack*.so.*
+	amove usr/bin/pw-jack
+	amove usr/lib/spa-*/jack/libspa-jack.so
+	amove usr/share/pipewire/jack.conf
+}
+
+gst_plugin() {
+	pkgdesc="Multimedia graph framework - PipeWire plugin"
+	depends="pipewire-session-manager gst-plugins-base"
+	install_if="$pkgname=$pkgver-r$pkgrel gstreamer"
+
+	amove usr/lib/gstreamer-1.0
+}
+
+echo_cancel() {
+	pkgdesc="WebRTC-based echo canceller module for PipeWire"
+	depends="$pkgname=$pkgver-r$pkgrel"
+
+	amove usr/lib/pipewire-$_so_ver/libpipewire-module-echo-cancel.so
+}
+
+zeroconf() {
+	pkgdesc="$pkgdesc - Zeroconf support"
+	depends=""
+	provides="pulseaudio-zeroconf=$pkgver-r$pkgrel"
+	provider_priority=1
+
+	amove usr/lib/pipewire-$_so_ver/libpipewire-module-zeroconf-discover.so
+	amove usr/lib/pipewire-$_so_ver/libpipewire-module-raop-*.so
+}
+
+bluez() {
+	pkgdesc="PipeWire BlueZ5 SPA plugin (Bluetooth)"
+	depends=""
+	replaces="$pkgname"  # for backward compatibility
+
+	amove usr/lib/spa-*/bluez5
+}
+
+vulkan() {
+	pkgdesc="PipeWire Vulkan SPA plugin"
+	depends=""
+
+	amove usr/lib/spa-*/vulkan
+}
+
+tools() {
+	pkgdesc="PipeWire tools"
+	depends="$pkgname=$pkgver-r$pkgrel"
+	replaces="$pkgname"  # for backward compatibility
+
+	amove usr/bin/pw-*
+}
+
+spa_tools() {
+	pkgdesc="PipeWire SPA tools"
+	depends=""
+	replaces="$pkgname"  # for backward compatibility
+
+	amove usr/bin/spa-*
+}
+
+jackdev() {
+	pkgdesc="JACK development files (from pipewire)"
+	provides="jack-dev=$pkgver-r$pkgrel"
+
+	amove usr/lib/libjack*.so
+	amove usr/include/jack
+	amove usr/lib/pkgconfig/jack.pc
+}
+
+libs() {
+	default_libs
+
+	# the libraries must be paired with the client config and the plugins,
+	# see:
+	# https://gitlab.freedesktop.org/pipewire/pipewire/-/issues/3296
+	# https://bugs.archlinux.org/task/78813
+	amove \
+		usr/share/pipewire/client*.conf* \
+		usr/lib/pipewire-*/ \
+		usr/lib/spa-*/
+}
+
+sha512sums="
+15d5383b307c6a33e221a1f3b13e1a6b182e1826f419420654e25c5db2daf3793b094f816604bda9fa03abe6dff66c12dad98637edab67ca5966bbb8c57ea4ad  pipewire-1.4.9.tar.gz
+b70b05151bcf4b7f13d68b2731d789b9c062fadfcb91f4ed6bdb0d495390b0010f57034fb115a053e1459c7d9ea27523ca1c0c69639aeeb96c17ebac8dfc5b57  pipewire.desktop
+1ab91358462f079f215f09728f3efb22e6e5a83d035740933f9536a907ef842642f9b2394233b7848dfe72c323df2a9e5c76640f3a574fc86391f68b04b91a7f  pipewire-launcher.sh
+f70a6c0333961ddb4f86bf8fbad7861a4579ae905d901ffdc9eb00474c567e942ac62eac6a2cd5c8a97d89c2192c1e81f6f6fa18836458d21e6a6e5a8acedc0a  pipewire.initd
+3558f804aaad5e7607905c8c81e12609d79b901c828ba27c10c44763204cce40e10c9012a913fb9ea22cffbf9ac1bdc98da68717c0c6f445cb33a3a6739789e6  pipewire-pulse.initd
+"

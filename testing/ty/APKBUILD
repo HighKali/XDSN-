@@ -1,0 +1,43 @@
+maintainer="Hugo Osvaldo Barrera <hugo@whynothugo.nl>"
+pkgname=ty
+pkgver=0.0.1_alpha19
+_pkgver=${pkgver/_alpha/-alpha.}
+pkgrel=0
+pkgdesc="Extremely fast Python type checker"
+url="https://github.com/astral-sh/ty"
+# loongarch64: rustix: https://github.com/bytecodealliance/rustix/issues/1502
+arch="all !loongarch64"
+license="MIT"
+makedepends="
+	cargo
+	py3-build
+	py3-installer
+	py3-maturin
+"
+subpackages="
+	$pkgname-pyc
+	$pkgname-bash-completion
+	$pkgname-fish-completion
+	$pkgname-zsh-completion
+	"
+source="ty-$pkgver.tar.gz::https://github.com/astral-sh/ty/releases/download/$_pkgver/source.tar.gz"
+builddir="$srcdir/"
+options="!check net" # no tests, fetch dependencies
+
+build() {
+	python -m build --wheel --no-isolation
+	./ruff/target/release/ty generate-shell-completion zsh > ty.zsh
+	./ruff/target/release/ty generate-shell-completion fish > ty.fish
+	./ruff/target/release/ty generate-shell-completion bash > ty.bash
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" ruff/target/wheels/ty-*.whl
+	install -Dm644 ty.zsh "$pkgdir/usr/share/zsh/site-functions/_ty"
+	install -Dm644 ty.bash "$pkgdir/usr/share/bash-completion/completions/ty"
+	install -Dm644 ty.fish "$pkgdir/usr/share/fish/vendor_completions.d/ty.fish"
+}
+
+sha512sums="
+9650cb4b745c7f6a63093a18734c188a18a2583d9efcf715b6d7c0f7a7f401e6c8e3e3201b406eddbd9597a4a97deab34329378a6bdab8bb08a6248d257f81e1  ty-0.0.1_alpha19.tar.gz
+"

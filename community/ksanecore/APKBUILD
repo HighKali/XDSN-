@@ -1,0 +1,41 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=ksanecore
+pkgver=25.08.3
+pkgrel=0
+# armhf blocked by qt6-qtdeclarative -> ki18n
+arch="all !armhf"
+url="https://www.kde.org/applications/graphics/"
+pkgdesc="Library providing logic to interface scanners"
+license="BSD-2-Clause AND BSD-3-Clause AND CC0-1.0 AND (LGPL-2.1-only OR LGPL-3.0-only) AND LicenseRef-KDE-Accepted-LGPL"
+depends_dev="
+	ki18n-dev
+	qt6-qtbase-dev
+	sane-dev
+	"
+makedepends="$depends_dev
+	extra-cmake-modules
+	samurai
+	"
+subpackages="$pkgname-dev $pkgname-lang"
+_repo_url="https://invent.kde.org/libraries/ksanecore.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/ksanecore-$pkgver.tar.xz"
+options="!check" # No tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_TESTING=ON
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+3101c067f0148e1a261945ec508e347b048ed5dbe1307023447ba5b572d544aca15c5959f78ce7af7cf45934c67938e0aabd0e70aa79858a25ee756d9e3b9b93  ksanecore-25.08.3.tar.xz
+"

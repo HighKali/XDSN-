@@ -1,0 +1,30 @@
+# Contributor: Robin Candau <robincandau@protonmail.com>
+# Maintainer: Robin Candau <robincandau@protonmail.com>
+pkgname=timeshift
+pkgver=25.12.1
+pkgrel=0
+pkgdesc="A system restore utility for Linux"
+url="https://github.com/linuxmint/timeshift"
+arch="all"
+license="GPL-2.0-or-later"
+depends="rsync cronie xhost"
+makedepends="help2man meson vala gtk+3.0-dev json-glib-dev vte3-dev libgee-dev xapp-dev"
+subpackages="$pkgname-doc $pkgname-lang"
+source="$pkgname-$pkgver.tar.gz::https://github.com/linuxmint/timeshift/archive/refs/tags/$pkgver.tar.gz"
+
+build() {
+	meson setup --prefix=/usr --buildtype=plain "$srcdir/$pkgname-$pkgver" build
+	meson compile -C build
+}
+
+check() {
+	meson test -C build
+}
+
+package() {
+	meson install -C build --destdir "$pkgdir"
+}
+
+sha512sums="
+3d940664990a93b2146157c0b975e24729dd1544b2fd41f2e38426b92246b8b064caaa7365e4c49a36d666dffb540c069cc6fa5668003c06a13f7517c38db7fd  timeshift-25.12.1.tar.gz
+"

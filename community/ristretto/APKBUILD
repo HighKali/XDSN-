@@ -1,0 +1,32 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=ristretto
+pkgver=0.13.3
+pkgrel=0
+pkgdesc="Image viewer for Xfce"
+url="https://docs.xfce.org/apps/ristretto/start"
+arch="all"
+license="GPL-2.0-or-later"
+depends="desktop-file-utils hicolor-icon-theme"
+makedepends="libxfce4ui-dev file-dev libexif-dev thunar-dev"
+subpackages="$pkgname-lang"
+source="https://archive.xfce.org/src/apps/ristretto/${pkgver%.*}/ristretto-$pkgver.tar.bz2"
+options="!check" # no tests
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--localstatedir=/var \
+		--disable-debug
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+92eb0993cbe64a83c80cd78972a64762a03766a055ac66ad16f86c2ee4360a2cc9114723a60d60257f56052ccd579c618df8110a909e45a5cab10ee7c4a3d0f3  ristretto-0.13.3.tar.bz2
+"

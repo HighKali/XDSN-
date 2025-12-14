@@ -1,0 +1,45 @@
+# Maintainer: Ariadne Conill <ariadne@dereferenced.org>
+pkgname=uclient
+pkgver=20241022
+pkgrel=0
+pkgdesc="ustream-based HTTP client library"
+url="https://git.openwrt.org/project/uclient.git"
+arch="all"
+license="ISC"
+depends_dev="libubox-dev ustream-ssl-dev"
+makedepends="cmake samurai ucode-dev zstd $depends_dev"
+subpackages="$pkgname-dev $pkgname-fetch:_fetch"
+_owrtgit=88ae8f20
+_owrtver="${pkgver:0:4}.${pkgver:4:2}.${pkgver:6:2}~$_owrtgit"
+source="https://sources.openwrt.org/uclient-$_owrtver.tar.zst"
+builddir="$srcdir/uclient-$_owrtver"
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		CMAKE_CROSSOPTS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	cmake -B build -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		-DCMAKE_BUILD_TYPE=None \
+		$CMAKE_CROSSOPTS .
+	cmake --build build
+}
+
+check() {
+	cd build
+	ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+_fetch() {
+	amove usr/bin/uclient-fetch
+}
+
+sha512sums="
+f95cc3f78a2d4580436b2374401e688eabca0316077346c99e8e47c80bdd570297bfcd8a329337610b2c655cd11d8bb16835c531df2a11b8d031befac5474c6c  uclient-2024.10.22~88ae8f20.tar.zst
+"

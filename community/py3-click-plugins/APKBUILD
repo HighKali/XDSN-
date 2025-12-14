@@ -1,0 +1,41 @@
+# Contributor: Holger Jaekel <holger.jaekel@gmx.de>
+maintainer="Holger Jaekel <holger.jaekel@gmx.de>"
+_pkgname=click-plugins
+pkgname=py3-$_pkgname
+pkgver=1.1.1.2
+pkgrel=0
+pkgdesc="An extension module for click to enable registering CLI commands via setuptools entry-points"
+url="https://pypi.org/project/click-plugins/"
+arch="noarch"
+license="BSD-3-Clause"
+depends="
+	python3
+	py3-click
+	"
+makedepends="
+	py3-setuptools
+	"
+checkdepends="
+	py3-pytest
+	"
+subpackages="$pkgname-pyc"
+source="
+	py3-click-plugins-$pkgver.tar.gz::https://github.com/click-contrib/click-plugins/archive/$pkgver.tar.gz
+	"
+builddir="$srcdir/click-plugins-$pkgver"
+
+build() {
+	python3 setup.py build
+}
+
+check() {
+	pytest-3
+}
+
+package() {
+	python3 setup.py install --skip-build --root="$pkgdir"
+}
+
+sha512sums="
+c4273a3448c1b0fd7b9e50ba8877dbdd631e168b56325e2648d5a1c24a0f82f98385fbbe417af5e038b3504b1093225666036978613d4a0b8e8bddac6ee4dd02  py3-click-plugins-1.1.1.2.tar.gz
+"

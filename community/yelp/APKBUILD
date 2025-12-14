@@ -1,0 +1,49 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: team/gnome <achill@achill.org>
+pkgname=yelp
+pkgver=49.0
+pkgrel=1
+pkgdesc="Help browser for GNOME desktop"
+url="https://apps.gnome.org/Yelp"
+arch="all"
+license="GPL-2.0-or-later"
+depends="dconf desktop-file-utils hicolor-icon-theme yelp-xsl"
+makedepends="
+	bash
+	bzip2-dev
+	glib-dev
+	gtk4.0-dev
+	itstool
+	libadwaita-dev
+	libgcrypt-dev
+	libxml2-dev
+	libxslt-dev
+	meson
+	sqlite-dev
+	webkit2gtk-6.0-dev
+	xz-dev
+	"
+subpackages="$pkgname-dev $pkgname-lang"
+source="https://download.gnome.org/sources/yelp/${pkgver%.*}/yelp-$pkgver.tar.xz"
+
+# secfixes:
+#   42.2-r5:
+#     - CVE-2025-3155
+
+build() {
+	abuild-meson \
+		output .
+	meson compile -C output
+}
+
+check() {
+	meson test --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+3669a550402bf928be913b5bdb8a2e1efc063b1e5e820b919fecbf87a1aea3e88a6980fd427b62ed9de77ed7725170e22375d832c2b14287f365a9ec43be9e8d  yelp-49.0.tar.xz
+"

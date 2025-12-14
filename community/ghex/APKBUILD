@@ -1,0 +1,39 @@
+# Contributor: August Klein <amatcoder@gmail.com>
+# Maintainer: August Klein <amatcoder@gmail.com>
+pkgname=ghex
+pkgver=48.3
+_pkgver=${pkgver%.*}
+pkgrel=0
+pkgdesc="A hex editor for GNOME"
+url="https://gitlab.gnome.org/GNOME/ghex"
+arch="all"
+license="GPL-2.0-or-later"
+depends="dconf"
+makedepends="
+	at-spi2-core-dev
+	desktop-file-utils
+	glib-dev
+	gtk4.0-dev
+	itstool
+	libadwaita-dev
+	meson
+	"
+subpackages="$pkgname-dev $pkgname-lang $pkgname-doc"
+source="https://download.gnome.org/sources/ghex/$_pkgver/ghex-$pkgver.tar.xz"
+
+build() {
+	abuild-meson -Db_lto=true . output
+	meson compile -C output
+}
+
+check() {
+	meson test --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+8159eec716868f8c66c9a0a136c34dbadaa4552f59add6fe47e0606e3cf3dc9d53c1607702dbdd91444b6f4540ce862da3acc1d69231820282719991fa86d5bf  ghex-48.3.tar.xz
+"

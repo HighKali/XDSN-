@@ -1,0 +1,113 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Contributor: Nulo <alpine@nulo.in>
+# Contributor: Donoban <donoban@riseup.net>
+# Maintainer: Milan P. Stanić <mps@arvanta.net>
+pkgname=telegram-desktop
+# NOTE: Keep in mind that seemingly normal releases may be pre-releases.
+# Check GitHub to make sure:
+# https://github.com/telegramdesktop/tdesktop/releases
+pkgver=6.3.6
+pkgrel=0
+pkgdesc="Telegram Desktop messaging app"
+options="!check" # no test suite
+url="https://desktop.telegram.org/"
+arch="all !s390x" # tg_owt
+license="GPL-3.0-or-later WITH OpenSSL"
+_commitid=369ee922b45bfa7e8da357e4d62e93925862d86d
+depends="qt6-qtimageformats font-opensans"
+
+# Sorted according to
+# https://github.com/telegramdesktop/tdesktop/wiki/The-Packaged-Building-Mode
+# libtgvoip is bundled as suggested by upstream
+# jemalloc is disabled
+# rlottie is bundled as suggested by upstream
+# We are forcing it to use packaged libvpx with a patch below
+# kcoreaddons is bundled as it requires to be built with Qt6.
+makedepends="
+	ada-dev
+	python3
+	extra-cmake-modules
+	qt6-qt5compat-dev
+	qt6-qtsvg-dev
+	qt6-qtwayland-dev
+
+	tg_owt-dev
+	gperf
+	opus-dev
+	alsa-lib-dev
+	pulseaudio-dev
+
+	boost-dev
+	fmt-dev
+
+	abseil-cpp-dev
+	ffmpeg-dev
+	gobject-introspection-dev
+	libdispatch-dev
+	gsl-dev
+	hunspell-dev
+	lz4-dev
+	minizip-dev
+	msgsl
+	openal-soft-dev
+	openssl-dev>3
+	range-v3-dev
+	rnnoise-dev
+	tl-expected
+	wayland-dev
+	libxcb-dev
+	xcb-util-keysyms-dev
+	xxhash-dev
+	zlib-dev
+
+	libavif-dev
+	libheif-dev
+	libjxl-dev
+	libvpx-dev
+	protobuf-dev
+
+	cmake
+	samurai
+	meson
+	"
+
+# small-sizes.patch is for postmarketOS. It makes UI elements fit in small
+# screens.
+# https://github.com/telegramdesktop/tdesktop/issues/8058#issuecomment-643461605
+source="
+	https://github.com/telegramdesktop/tdesktop/releases/download/v$pkgver/tdesktop-$pkgver-full.tar.gz
+	tdlib-$_commitid.tar.gz::https://github.com/tdlib/td/archive/$_commitid.tar.gz
+	small-sizes.patch
+	"
+builddir="$srcdir/tdesktop-$pkgver-full"
+
+build() {
+	LDFLAGS="$LDFLAGS -Wl,-z,stack-size=1024768"
+	cmake -S $srcdir/td-$_commitid -B $srcdir/td-$_commitid/build \
+		-DCMAKE_BUILD_TYPE=None \
+		-DCMAKE_INSTALL_PREFIX="$srcdir/td-$_commitid/install" \
+		-Wno-dev \
+		-DTD_E2E_ONLY=ON
+	cmake --build $srcdir/td-$_commitid/build
+	cmake --install $srcdir/td-$_commitid/build
+
+	cmake -B build -G Ninja . \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-Dtde2e_DIR="$srcdir/td-$_commitid/install/lib/cmake/tde2e" \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DDESKTOP_APP_DISABLE_CRASH_REPORTS=ON \
+		-DTDESKTOP_API_ID=17349 \
+		-DTDESKTOP_API_HASH=344583e45741c457fe1862106095a5eb \
+		-DDESKTOP_APP_USE_PACKAGED=ON
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+739df5d0e3951df7883ba1db5fcf3ae1e084e9c5b8b67c4b55e46b3d132938f196a3e4e99f974d2109dd6d6edc9966aa15ba42b35b2cf4176191b7a8050dfb54  tdesktop-6.3.6-full.tar.gz
+0985b70d2ba873d41347a276118d434936ee5359aaa70afc7442381972d6a36ad379fff56d659315974c97c5c6c5a141b8fede531c9607186e0a26008f761016  tdlib-369ee922b45bfa7e8da357e4d62e93925862d86d.tar.gz
+396b5577bdeb852be3659fcbf09a1ebdc33432baea49296869e2f968d61343679187ed4b923c51c8f417b8d4679aedd7ac863abed255b5b6b1b589029fdc34f6  small-sizes.patch
+"

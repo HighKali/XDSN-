@@ -1,0 +1,43 @@
+# Contributor: knuxify <knuxify@gmail.com>
+# Maintainer: knuxify <knuxify@gmail.com>
+pkgname=warp
+pkgver=0.9.2
+pkgrel=1
+pkgdesc="Fast and secure file transfer"
+url="https://apps.gnome.org/Warp/"
+arch="all"
+license="GPL-3.0-or-later"
+depends_doc="yelp"
+makedepends="
+	cargo
+	desktop-file-utils
+	gst-plugins-bad-dev
+	gtk4.0-dev
+	itstool
+	libadwaita-dev
+	meson
+	"
+subpackages="$pkgname-doc $pkgname-lang"
+source="https://gitlab.gnome.org/World/warp/-/archive/v$pkgver/warp-v$pkgver.tar.gz"
+builddir="$srcdir/warp-v$pkgver"
+options="!check net" # no tests, cargo deps
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		-Dqr-code-scanning=enabled \
+		. output
+	meson compile -C output
+}
+
+check() {
+	meson test -v -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+2f15e4a76bb054de5f793f213bc20f01c685d0af360e1d7e74d239d1429afd73b15e924de05efffddf6b201741cc21b01bf514632589eba532c29adc021727a3  warp-v0.9.2.tar.gz
+"

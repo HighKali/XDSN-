@@ -1,0 +1,109 @@
+# Maintainer: Patrick Gansterer <paroga@paroga.com>
+pkgname=thrift
+pkgver=0.22.0
+pkgrel=0
+pkgdesc="Language-independent software stack for RPC implementation"
+url="https://thrift.apache.org/"
+arch="all"
+license="Apache-2.0"
+depends_dev="
+	$pkgname=$pkgver-r$pkgrel
+	libevent-dev
+	"
+makedepends="
+	bison
+	boost-dev
+	cmake
+	flex
+	glib-dev
+	libevent-dev
+	qt5-qtbase-dev
+	openssl-dev
+	samurai
+	zlib-dev
+	"
+subpackages="
+	$pkgname-dev
+	lib$pkgname:lib
+	lib${pkgname}nb:libnb
+	lib${pkgname}z:libz
+	lib$pkgname-glib:libglib
+	lib$pkgname-qt:libqt
+	"
+source="$pkgname-$pkgver.tar.gz::https://github.com/apache/thrift/archive/v$pkgver.tar.gz
+	big-endian.patch
+	"
+
+# secfixes:
+#   0.14.0-r0:
+#     - CVE-2020-13949
+
+build() {
+	cmake -B _build -G Ninja \
+		-DCMAKE_BUILD_TYPE=None \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DBUILD_SHARED_LIBS=ON \
+		-DBUILD_TESTING="$(want_check && echo ON || echo OFF)" \
+		-DWITH_AS3=OFF \
+		-DWITH_JAVA=OFF \
+		-DWITH_JAVASCRIPT=OFF \
+		-DWITH_NODEJS=OFF \
+		-DWITH_PYTHON=OFF
+	cmake --build _build
+}
+
+check() {
+	local skipped_tests="(StressTestConcurrent|StressTestNonBlocking"
+	local tests="
+		testapplicationexception
+		testtransportsocket
+		testbinaryprotocol
+		testcompactprotocol
+		testbufferedtransport
+		testframedtransport
+		testfdtransport
+		testsimpleserver
+		testdebugproto
+		testthriftbinaryreadcheck
+		testthriftbufferedreadcheck
+		testthriftcompactreadcheck
+		testthriftframedreadcheck
+		testthriftfdreadcheck
+		testzlibtransport
+		testthrifttestzlibclient
+		"
+	for test in $tests; do
+		skipped_tests="$skipped_tests|$test"
+	done
+	skipped_tests="$skipped_tests)"
+	ctest --test-dir _build -E "$skipped_tests"
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install _build
+}
+
+lib() {
+	amove usr/lib/libthrift.so.*
+}
+
+libglib() {
+	amove usr/lib/libthrift_c_glib*.so.*
+}
+
+libnb() {
+	amove usr/lib/libthriftnb.so.*
+}
+
+libqt() {
+	amove usr/lib/libthriftqt5.so.*
+}
+
+libz() {
+	amove usr/lib/libthriftz.so.*
+}
+
+sha512sums="
+6dedcf48a8900e3a1dabfa73a4577a4d2482527b45ad8b77fec3fa7fdd8ea21b9249b3602c1e3e54bcee98143a9bb325b59e345423dc6dd8c9365889095615e2  thrift-0.22.0.tar.gz
+678ad38455e315a6babc6a76b0338a7af2cca7d3168344a02aafcfe15758f21613879ab07e5e04185088334bc2d0ca88dc26c72a07a63bce880f744b54b14440  big-endian.patch
+"

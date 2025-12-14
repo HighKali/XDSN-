@@ -1,0 +1,41 @@
+# Maintainer: Celeste <cielesti@protonmail.com>
+maintainer="Celeste <cielesti@protonmail.com>"
+pkgname=py3-zstd
+pkgver=1.5.7.2
+pkgrel=0
+pkgdesc="Simple Python bindings to Yann Collet ZSTD compression library"
+url="https://pypi.org/project/zstd/"
+arch="all"
+license="BSD-2-Clause"
+makedepends="
+	py3-gpep517
+	py3-setuptools
+	py3-wheel
+	python3-dev
+	zstd-dev
+	"
+checkdepends="py3-pytest-forked"
+source="https://github.com/sergey-dryabzhinsky/python-zstd/archive/v$pkgver/py3-zstd-$pkgver.tar.gz"
+builddir="$srcdir/python-zstd-$pkgver"
+
+build() {
+	export ZSTD_EXTERNAL="true"
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest --forked
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+8c32713346efdd54b2775769b75a55e09fb01b80e4d198b520fd566a05bbb21818b9935a95b31faeeafbf785b9ac43392fcddc0ff4906d89927d30fa66a1a0ea  py3-zstd-1.5.7.2.tar.gz
+"

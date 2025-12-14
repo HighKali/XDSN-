@@ -1,0 +1,38 @@
+# Contributor: Fabio Ribeiro <fabiorphp@gmail.com>
+# Maintainer: Andy Postnikov <apostnikov@gmail.com>
+pkgname=php83-pecl-timezonedb
+_extname=timezonedb
+pkgver=2025.2
+pkgrel=0
+pkgdesc="Timezone Database to be used with PHP's date and time functions."
+url="https://pecl.php.net/package/timezonedb"
+arch="all"
+license="PHP-3.01"
+_phpv=83
+_php=php$_phpv
+depends="$_php-common"
+makedepends="$_php-dev"
+source="php-pecl-$_extname-$pkgver.tgz::https://pecl.php.net/get/$_extname-$pkgver.tgz"
+builddir="$srcdir/$_extname-$pkgver"
+
+build() {
+	phpize$_phpv
+	./configure --prefix=/usr --with-php-config=php-config$_phpv
+	make
+}
+
+check() {
+	# Test suite is not a part of pecl release.
+	$_php -dextension=modules/$_extname.so --ri $_extname
+}
+
+package() {
+	make INSTALL_ROOT="$pkgdir" install
+	local _confdir="$pkgdir"/etc/$_php/conf.d
+	install -d $_confdir
+	echo "extension=$_extname" > $_confdir/40_$_extname.ini
+}
+
+sha512sums="
+ad9f57c7b0181a9507a2f886facda993248fb11539eaaf3e23d6596a639814f947a96aeb77604acf3222e571df967010bad2b0764b2dc44aaa16064da10e6ace  php-pecl-timezonedb-2025.2.tgz
+"

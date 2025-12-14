@@ -1,0 +1,59 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-plasma
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=print-manager
+pkgver=6.5.4
+pkgrel=0
+# armhf blocked by qt6-qtdeclarative
+arch="all !armhf"
+url="https://www.kde.org/applications/utilities/"
+pkgdesc="A tool for managing print jobs and printers"
+license="GPL-2.0-or-later"
+depends="system-config-printer"
+makedepends="
+	cups-dev
+	extra-cmake-modules
+	kcmutils-dev
+	kconfig-dev
+	kconfigwidgets-dev
+	kcoreaddons-dev
+	kdbusaddons-dev
+	ki18n-dev
+	kiconthemes-dev
+	kio-dev
+	kirigami-addons-dev
+	knotifications-dev
+	kwidgetsaddons-dev
+	kwindowsystem-dev
+	libplasma-dev
+	qt6-qtbase-dev
+	qt6-qtdeclarative-dev
+	qt6-qtdeclarative-private-dev
+	samurai
+	"
+subpackages="$pkgname-lang"
+
+case "$pkgver" in
+	*.*.9*) _rel=unstable;;
+	*) _rel=stable;;
+esac
+
+_repo_url="https://invent.kde.org/utilities/print-manager.git"
+source="https://download.kde.org/$_rel/plasma/$pkgver/print-manager-$pkgver.tar.xz"
+options="!check" # No tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+71d290f2084cb5c8116cd72005afd6faeff922147e582483947e151856a0a522ad37b2d1eda93bde31192ded17d4676b4a012d5ae6cadbf2b682e92fd7b1333b  print-manager-6.5.4.tar.xz
+"

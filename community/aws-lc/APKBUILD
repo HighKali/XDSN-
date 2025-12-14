@@ -1,0 +1,58 @@
+# Maintainer: Celeste <cielesti@protonmail.com>
+maintainer="Celeste <cielesti@protonmail.com>"
+pkgname=aws-lc
+pkgver=1.66.0
+pkgrel=0
+pkgdesc="General-purpose cryptographic library based on BoringSSL and OpenSSL"
+url="https://github.com/aws/aws-lc"
+# ppc64le, s390x: tests fail
+arch="all !ppc64le !s390x"
+license="(Apache-2.0 OR ISC) AND BSD-3-Clause AND MIT AND OpenSSL"
+provider_priority=10  # lowest (other provider is openssl)
+pcprefix="$pkgname:"  # avoid mix up with openssl pkg-config
+sonameprefix="$pkgname:"  # avoid mix up with openssl
+makedepends="
+	cmake
+	go
+	linux-headers
+	perl-dev
+	samurai
+	"
+depends_dev="!openssl-dev"
+subpackages="
+	$pkgname-dev
+	$pkgname-tools
+	"
+source="https://github.com/aws/aws-lc/archive/v$pkgver/aws-lc-$pkgver.tar.gz
+	move-cmake-dirs.patch
+	"
+options="net" # for go test runner to download modules
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=ON \
+		-DBUILD_TESTING="$(want_check && echo ON || echo OFF)" \
+		-DCMAKE_BUILD_TYPE=None
+	cmake --build build
+}
+
+check() {
+	timeout 30m cmake --build build --target run_tests
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+tools() {
+	pkgdesc="$pkgdesc (tools)"
+
+	amove usr/bin
+}
+
+sha512sums="
+054a31c9ab1330779c4c24931db6a0edbfdd82078c115f124cbb1e20cd83048d6794d43071b0084b1c5f2fb3a220352f2d1acbca8eeb990682ad75c61875447a  aws-lc-1.66.0.tar.gz
+f2b5e775d13dc9ee1de27acac13f488df82cd1f1631fc53146da50a77b6f2b2bb5b180f0421bfc32917f514c521029b6d86e1117f079760535a878c0119d5e9f  move-cmake-dirs.patch
+"

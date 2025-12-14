@@ -1,0 +1,47 @@
+# Contributor: Antoine Martin (ayakael) <dev@ayakael.net>
+# Maintainer: Antoine Martin (ayakael) <dev@ayakael.net>
+pkgname=py3-concurrent-log-handler
+_pyname=concurrent-log-handler
+pkgver=0.9.28
+pkgrel=0
+arch="noarch"
+pkgdesc="RotatingFileHandler replacement with concurrency, gzip and Windows support"
+url="https://pypi.python.org/project/concurrent-log-handler"
+license="Apache-2.0"
+depends="
+	py3-portalocker
+	"
+makedepends="
+	py3-setuptools
+	py3-gpep517
+	py3-wheel
+	py3-hatchling
+	"
+checkdepends="
+	py3-pytest
+	py3-pytest-mock
+	"
+source="$pkgname-$pkgver.tar.gz::https://github.com/Preston-Landers/concurrent-log-handler/archive/refs/tags/$pkgver.tar.gz"
+builddir="$srcdir"/$_pyname-$pkgver
+subpackages="$pkgname-pyc"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest -v
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+c8c2ec381228b742d0affa2be160f93ec5f73adcfa02044d2985e56f3420f4aa77c4de97ae4ca486b57edf0d4cdf7358bf16774f0b0a1ec0ae0d9a94d5568f21  py3-concurrent-log-handler-0.9.28.tar.gz
+"

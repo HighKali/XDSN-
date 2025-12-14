@@ -1,0 +1,63 @@
+# Contributor: Ivan Tham <pickfire@riseup.net>
+# Maintainer: Celeste <cielesti@protonmail.com>
+maintainer="Celeste <cielesti@protonmail.com>"
+pkgname=opencc
+pkgver=1.1.9
+pkgrel=2
+pkgdesc="Open Chinese Convert"
+url="https://opencc.byvoid.com/"
+arch="all"
+license="Apache-2.0"
+makedepends="
+	cmake
+	doxygen
+	libmarisa-dev
+	python3
+	rapidjson-dev
+	samurai
+	tclap-dev
+	"
+checkdepends="
+	benchmark-dev
+	"
+subpackages="
+	$pkgname-dev
+	$pkgname-doc
+	$pkgname-libs
+	"
+source="https://github.com/BYVoid/OpenCC/archive/refs/tags/ver.$pkgver/OpenCC-ver.$pkgver.tar.gz
+	serializedvalues-gcc15-cstdint.patch
+	"
+builddir="$srcdir/OpenCC-ver.$pkgver"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DBUILD_DOCUMENTATION=ON \
+		-DBUILD_TESTING=OFF \
+		-DUSE_SYSTEM_MARISA=ON \
+		-DUSE_SYSTEM_RAPIDJSON=ON \
+		-DUSE_SYSTEM_TCLAP=ON \
+		-DUSE_SYSTEM_GOOGLE_BENCHMARK=ON \
+		-DUSE_SYSTEM_GTEST=OFF \
+		-DINSTALL_GTEST=OFF \
+		-DENABLE_GTEST="$(want_check && echo ON || echo OFF)"
+	cmake --build build
+}
+
+check() {
+	./build/test/CommandLineConvertTest
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+
+	mkdir -p "$pkgdir"/usr/share/doc
+	mv "$pkgdir"/usr/share/opencc/doc "$pkgdir"/usr/share/doc/opencc
+}
+
+sha512sums="
+713cf00931d7616994eb455eef3bc893096b5cd6d42b346aa1130591752d9612891ea3ed035bd7bd4ec7df1c90425e86375f5b3337fac11663c656c79a8f33e9  OpenCC-ver.1.1.9.tar.gz
+81c5c8ac1b6b43f911d2202740b0d64bddcc5aded7717acff0982aade09b6cbe0029dfba9c020b3788875a8083de1f3cbda6c10b394699bfbc275cef6677efc4  serializedvalues-gcc15-cstdint.patch
+"

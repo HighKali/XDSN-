@@ -1,0 +1,36 @@
+# Contributor: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+# Maintainer: Will Sinatra <wpsinatra@gmail.com>
+pkgname=py3-bayesian-optimization
+pkgver=2.0.4
+pkgrel=0
+pkgdesc="A Python implementation of global optimization with gaussian processes"
+url="https://github.com/fmfn/BayesianOptimization"
+arch="noarch"
+license="MIT"
+depends="python3 py3-colorama py3-numpy py3-scipy py3-scikit-learn"
+makedepends="py3-gpep517 py3-poetry-core py3-wheel"
+checkdepends="py3-pytest-xdist"
+subpackages="$pkgname-pyc"
+source="https://github.com/fmfn/BayesianOptimization/archive/v$pkgver/bayesian-optimization-$pkgver.tar.gz"
+builddir="$srcdir/BayesianOptimization-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest -n auto --ignore=tests/test_notebooks_run.py
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+058c7affd74f489d442374d8556aaf087f4d7c3bad0201a200408ebf5253dde02326a8a7a9bd7e62d0e701c8a07652774aad4f045be5a8ec99fea98faee7d5d3  bayesian-optimization-2.0.4.tar.gz
+"

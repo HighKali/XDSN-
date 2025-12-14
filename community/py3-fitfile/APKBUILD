@@ -1,0 +1,42 @@
+# Contributor: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+# Maintainer: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+pkgname=py3-fitfile
+_pkgorig=fitfile
+pkgver=1.1.11
+pkgrel=0
+pkgdesc="Decode/parse Garmin's FIT format files"
+url="https://github.com/tcgoetz/Fit"
+arch="noarch"
+license="GPL-2.0-or-later"
+depends="python3"
+checkdepends="
+	py3-pytest-xdist
+	"
+makedepends="
+	py3-gpep517
+	py3-setuptools
+	py3-wheel
+	"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://files.pythonhosted.org/packages/source/f/fitfile/fitfile-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgorig-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest -n auto
+}
+
+package() {
+	python3 -m installer --destdir="$pkgdir" .dist/*.whl
+}
+
+sha512sums="
+3a5f6fe12d437525c5e37b2bff539c5a8f9c57a10566ba5d4f5373861e397410080b4689b1e6de3a14a360669abbfeafebdb2d8b76b2324b70b6937a5e88ae52  py3-fitfile-1.1.11.tar.gz
+"

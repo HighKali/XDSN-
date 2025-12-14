@@ -1,0 +1,39 @@
+# Contributor: Felix Singer <felixsinger@posteo.net>
+# Maintainer: Clayton Craft <clayton@craftyguy.net>
+pkgname='flashprog'
+pkgver=1.4
+pkgrel=0
+source="https://flashprog.org/releases/flashprog-v$pkgver.tar.bz2"
+pkgdesc="A utility for identifying, reading, writing, verifying and erasing flash chips"
+url="https://flashprog.org"
+arch="all"
+license="GPL-2.0-or-later"
+depends="dmidecode"
+makedepends="
+	libjaylink-dev
+	libgpiod-dev
+	libftdi1-dev
+	libusb-dev
+	linux-headers
+	meson
+	pciutils-dev
+"
+subpackages="$pkgname-doc $pkgname-dev $pkgname-libs"
+builddir="$srcdir"/$pkgname-v$pkgver
+options="!check" # can't run without special setup..?
+
+build() {
+	# internal dmi- false- prefer dmidecode cli
+	abuild-meson \
+		-Duse_internal_dmi=false \
+		. output
+	meson compile -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+fa23d37803d8d1b342b8c349e7f88f099e3f8390f1436f751709cdd3709fecddff903ae6621c633dc87fd899cdef2b5bbb57133f28b81cea2de17637530e0339  flashprog-v1.4.tar.bz2
+"

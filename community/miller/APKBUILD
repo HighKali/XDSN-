@@ -1,0 +1,46 @@
+# Contributor: Richard Patel <me@terorie.dev>
+# Contributor: John Kerl <kerl.john.r@gmail.com>
+# Maintainer: Celeste <cielesti@protonmail.com>
+maintainer="Celeste <cielesti@protonmail.com>"
+pkgname=miller
+pkgver=6.15.0
+pkgrel=3
+_majorver=${pkgver%%.*}
+pkgdesc="Name-indexed data processing tool"
+url="https://miller.readthedocs.io/"
+arch="all"
+license="BSD-2-Clause"
+makedepends="go bash"
+checkdepends="tzdata"
+subpackages="$pkgname-doc"
+source="https://github.com/johnkerl/miller/archive/v$pkgver/miller-$pkgver.tar.gz"
+options="net" # for downloading Go modules
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	go build github.com/johnkerl/miller/v$_majorver/cmd/mlr
+}
+
+check() {
+	# skip failed regression test cases
+	case $CARCH in
+		loongarch64) rm -rf test/cases/dsl-stats/moments test/cases/verb-summary ;;
+	esac
+
+	msg "unit tests"
+	go test github.com/johnkerl/miller/v$_majorver/pkg/...
+	msg "regression tests"
+	go test regression_test.go
+}
+
+package() {
+	install -Dm755 mlr -t "$pkgdir"/usr/bin/
+	install -Dm644 man/mlr.1 -t "$pkgdir"/usr/share/man/man1/
+}
+
+sha512sums="
+16a709304d2d5ceafe1ebfe5147258dcdc4d0ec593f098a9210485d3b7a6efe62443a046dc117e00e0b8687617aa46c7747b34c8c9888b9b2bf5e4e3619d8512  miller-6.15.0.tar.gz
+"

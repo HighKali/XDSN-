@@ -1,0 +1,51 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=qt6
+maintainer="Bart Ribbers <bribbers@disroot.org>"
+pkgname=qt6-qtlanguageserver
+pkgver=6.10.1
+pkgrel=0
+pkgdesc="Qt implementation of the Language Server Protocol"
+url="https://qt.io/"
+arch="all"
+license="LGPL-2.1-only AND LGPL-3.0-only AND GPL-3.0-only AND Qt-GPL-exception-1.0"
+depends_dev="$pkgname-static
+	qt6-qtbase-dev
+	qt6-qtbase-private-dev
+	"
+makedepends="
+	$depends_dev
+	cmake
+	samurai
+	"
+subpackages="$pkgname-static $pkgname-dev"
+options="!check" # No tests
+builddir="$srcdir/qtlanguageserver-everywhere-src-${pkgver/_/-}"
+
+case $pkgver in
+	*_alpha*|*_beta*|*_rc*) _rel=development_releases;;
+	*) _rel=official_releases;;
+esac
+source="https://download.qt.io/$_rel/qt/${pkgver%.*}/${pkgver/_/-}/submodules/qtlanguageserver-everywhere-src-${pkgver/_/-}.tar.xz"
+
+build() {
+	export CFLAGS="$CFLAGS -flto=auto"
+	export CXXFLAGS="$CXXFLAGS -flto=auto"
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+dev() {
+	default_dev
+
+	amove usr/lib/qt6/sbom
+}
+
+sha512sums="
+1bfb3a7b0ae738ff569c8aca13a693b5e0a03550540b008f5569f64f4e08621010221cbd603bb7ef041f3fa0a9edc9638e56be37168ea74bc2bee34a032272cb  qtlanguageserver-everywhere-src-6.10.1.tar.xz
+"

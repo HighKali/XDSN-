@@ -1,0 +1,47 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=mcfly
+pkgver=0.9.3
+pkgrel=0
+pkgdesc="Fly through your shell history"
+url="https://github.com/cantino/mcfly"
+arch="all"
+license="MIT"
+makedepends="cargo sqlite-dev cargo-auditable"
+subpackages="
+	$pkgname-bash-completion
+	$pkgname-fish-completion
+	$pkgname-zsh-completion
+	"
+source="https://github.com/cantino/mcfly/archive/v$pkgver/mcfly-$pkgver.tar.gz"
+
+_cargo_opts="--frozen --no-default-features"
+
+# Reduce size of the mcfly binary.
+export CARGO_PROFILE_RELEASE_OPT_LEVEL="z"
+
+prepare() {
+	default_prepare
+
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build $_cargo_opts --release
+}
+
+check() {
+	cargo test $_cargo_opts
+}
+
+package() {
+	install -D -m755 target/release/$pkgname -t "$pkgdir"/usr/bin/
+
+	install -Dm 644 mcfly.bash "$pkgdir"/usr/share/bash-completion/completions/mcfly
+	install -Dm 644 mcfly.fish "$pkgdir"/usr/share/fish/vendor_completions.d/mcfly.fish
+	install -Dm 644 mcfly.zsh "$pkgdir"/usr/share/zsh/site-functions/_mcfly
+}
+
+sha512sums="
+18ad0b53ca1a306041dbaa9af6118d9e1398dc9c63bb4febe24ec2aa935e3d5390c3533b75784433b54a3d8c289ba40972537bcdcc0ca4f5af47356148cf207e  mcfly-0.9.3.tar.gz
+"

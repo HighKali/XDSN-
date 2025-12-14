@@ -1,0 +1,72 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=rustup
+pkgver=1.28.2
+pkgrel=0
+pkgdesc="Rust toolchain installer"
+url="https://rustup.rs/"
+arch="aarch64 x86_64 loongarch64" # limited by upstream only supporting these arches
+license="Apache-2.0"
+makedepends="
+	cargo
+	cargo-auditable
+	curl-dev
+	openssl-dev>3
+	perl
+	zlib-dev
+	zstd-dev
+	"
+options="!check" # Doesn't recognise x86_64-unknown-linux-musl yet
+subpackages="
+	$pkgname-bash-completion
+	$pkgname-fish-completion
+	$pkgname-zsh-completion
+	"
+source="
+	$pkgname-$pkgver.tar.gz::https://github.com/rust-lang/rustup.rs/archive/$pkgver.tar.gz
+	dont-copy-rustup-bin.patch
+	system.patch
+	"
+
+# It doesn't like our custom triplet
+export RUSTUP_OVERRIDE_BUILD_TRIPLE="$CARCH-unknown-linux-musl"
+
+prepare() {
+	default_prepare
+
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	# removes reqwest-rustls-tls feature and adds no-self-update
+	cargo auditable build --release --frozen \
+		--no-default-features \
+		--features no-self-update,curl-backend,reqwest-native-tls \
+		--bin rustup-init
+
+	ln -s target/release/rustup-init rustup
+	./rustup completions zsh > rustup.zsh
+	./rustup completions bash > rustup.bash
+	./rustup completions fish > rustup.fish
+}
+
+check() {
+	cargo test --frozen
+}
+
+package() {
+	install -Dm755 target/release/rustup-init -t "$pkgdir"/usr/bin/
+
+	install -Dm644 rustup.bash \
+		"$pkgdir"/usr/share/bash-completion/completions/$pkgname
+	install -Dm644 rustup.fish \
+		"$pkgdir"/usr/share/fish/vendor_completions.d/$pkgname.fish
+	install -Dm644 rustup.zsh \
+		"$pkgdir"/usr/share/zsh/site-functions/_$pkgname
+}
+
+sha512sums="
+dc85f4551e9d3d9d105e4a5c8a7544b6944c82ca4db167a6993e1e0cea498221471b891cefc15e7f634a8528678bb8438dbddadb80a8afe19fbc69bb74817049  rustup-1.28.2.tar.gz
+9078e39499041db69a2100a13c92e6563e1c852f8cbf13cef0cc8a373083f6eac21d349c051eb8ffc1d524165974ad4fb4c051633912b3ff1837374b73f2c3b8  dont-copy-rustup-bin.patch
+1186753c875f1915c21aa4e70cb7b28dc4c12b1187485accd8d8cdb1addae0686def2b0edd495604be43b2864b811e3125db70007cf268d65fb1c5160e240307  system.patch
+"

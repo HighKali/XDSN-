@@ -1,0 +1,51 @@
+maintainer="Bart Ribbers <bribbers@disroot.org>"
+pkgname=py3-nitrokey
+pkgver=0.3.2
+pkgrel=0
+pkgdesc="Nitrokey Python SDK"
+url="https://github.com/Nitrokey/nitrokey-sdk-py"
+arch="noarch"
+license="Apache-2.0 AND MIT"
+depends="
+	py3-crcmod
+	py3-cryptography
+	py3-fido2
+	py3-hidapi
+	py3-hidapi
+	py3-protobuf
+	py3-requests
+	py3-semver
+	py3-pyserial
+	py3-tlv8
+	"
+makedepends="
+	poetry
+	py3-gpep517
+	py3-installer
+	py3-setuptools
+	py3-wheel
+	"
+checkdepends="py3-pytest"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/Nitrokey/nitrokey-sdk-py/archive/refs/tags/v$pkgver.tar.gz"
+builddir="$srcdir/nitrokey-sdk-py-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" .dist/*.whl
+}
+
+sha512sums="
+f49788388dda6a9f06e09fca7b68b34dfb70693e323982db92fc96a8775c67d49447cabd57d77cf2fc9075eeb5901d8260c608b5b2b3a222f9b06605d074932f  py3-nitrokey-0.3.2.tar.gz
+"

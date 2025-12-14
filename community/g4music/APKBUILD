@@ -1,0 +1,40 @@
+# Contributor: Jakob Meier <comcloudway@ccw.icu>
+# Maintainer: Jakob Meier <comcloudway@ccw.icu>
+pkgname=g4music
+pkgver=4.4
+pkgrel=0
+pkgdesc="Fast fluent lightweight music player written in GTK4, with a beautiful and adaptive user interface"
+url="https://gitlab.gnome.org/neithern/g4music"
+arch="all"
+license="GPL-3.0-only"
+subpackages="$pkgname-lang"
+makedepends="
+	cmake
+	desktop-file-utils
+	gettext-dev
+	gst-plugins-base-dev
+	gstreamer-dev
+	libadwaita-dev
+	meson
+	vala
+	"
+source="https://gitlab.gnome.org/neithern/g4music/-/archive/v$pkgver/g4music-v$pkgver.tar.gz"
+builddir="$srcdir/g4music-v$pkgver"
+
+build() {
+	abuild-meson \
+		. output
+	meson compile -C output
+}
+
+check() {
+	meson test --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+6eafc3574c8d4a297f12164b7697bcfc54a201d7e59c960a0e728689a6b5684cf8bf2eebd7e0daa068c0237c7fbbb5fac5c52c9d290d8822e7cc955cb8264e09  g4music-v4.4.tar.gz
+"

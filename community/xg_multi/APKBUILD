@@ -1,0 +1,33 @@
+# Contributor: macmpi <spam@ipik.org>
+# Maintainer: macmpi <spam@ipik.org>
+pkgname=xg_multi
+pkgver=0.8
+pkgrel=1
+pkgdesc="Extended Multifunction USB-gadget"
+url="https://github.com/macmpi/xg_multi"
+arch="noarch"
+license="MIT"
+source="$pkgname-$pkgver.tar.gz::https://github.com/macmpi/xg_multi/archive/refs/tags/v$pkgver.tar.gz"
+# does not have any tests
+options="!check"
+subpackages="$pkgname-doc $pkgname-openrc $pkgname-systemd:systemd:noarch"
+
+package() {
+	install -D -m755 "$builddir"/$pkgname "$pkgdir"/usr/bin/$pkgname
+	install -D -m755 "$builddir"/services/openrc/$pkgname.initd "$pkgdir"/etc/init.d/$pkgname
+	install -D -m644 "$builddir"/services/openrc/$pkgname.confd "$pkgdir"/etc/conf.d/$pkgname
+	install -D -m644 "$builddir"/LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}
+
+systemd() {
+	pkgdesc="$pkgdesc (systemd files)"
+	install_if="systemd $pkgname=$pkgver-r$pkgrel"
+	
+	install -D -m644 "$builddir"/services/systemd/$pkgname.service "$subpkgdir"/usr/lib/systemd/system/$pkgname.service
+	install -D -m644 "$builddir"/services/systemd/$pkgname.default "$subpkgdir"/etc/default/$pkgname
+}
+
+sha512sums="
+fb3b15885bd3e2f4627ef4b74d58969b7a2a3942a9ccd7a4a78ad3ffe90457206bd3387ec75f5d8943ff192ed486c6b522002030864320deb833f1342029342e  xg_multi-0.8.tar.gz
+"
+

@@ -1,0 +1,60 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-plasma
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=kde-cli-tools
+pkgver=6.5.4
+pkgrel=0
+pkgdesc="Tools based on KDE Frameworks 5 to better interact with the system"
+# armhf blocked by qt6-qtdeclarative -> ki18n
+arch="all !armhf"
+url="https://invent.kde.org/plasma/kde-cli-tools"
+license="(GPL-2.0-only OR GPL-3.0-only) AND GPL-2.0-or-later AND GPL-2.0-only AND LGPL-2.1-only"
+makedepends="
+	extra-cmake-modules
+	kcmutils-dev
+	kconfig-dev
+	kdeclarative-dev
+	kdesu-dev
+	kdoctools-dev
+	ki18n-dev
+	kiconthemes-dev
+	kio-dev
+	kparts-dev
+	kservice-dev
+	kwindowsystem-dev
+	plasma-activities-dev
+	qt6-qtbase-dev
+	qt6-qtsvg-dev
+	samurai
+	"
+checkdepends="xwayland-run"
+
+case "$pkgver" in
+	*.*.9*) _rel=unstable;;
+	*) _rel=stable;;
+esac
+
+subpackages="$pkgname-doc $pkgname-lang $pkgname-zsh-completion"
+_repo_url="https://invent.kde.org/plasma/kde-cli-tools.git"
+source="https://download.kde.org/$_rel/plasma/$pkgver/kde-cli-tools-$pkgver.tar.xz"
+# Broken
+options="!check"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	wlheadless-run -- ctest --test-dir build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+sha512sums="
+f2056ea1ce37dfe98195accace3c0b37f47be4d2ce525125513f740c0f12d8870bc2dab1f599981061278d9a254dae0bbbad7a3fd5e829baf1af16062e4e50a1  kde-cli-tools-6.5.4.tar.xz
+"

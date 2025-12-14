@@ -1,0 +1,41 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=py3-cachetools
+_pyname=cachetools
+pkgver=5.5.2
+pkgrel=0
+pkgdesc="Extensible memoizing collections and decorators"
+url="https://github.com/tkem/cachetools"
+arch="noarch"
+license="MIT"
+depends="python3"
+makedepends="
+	py3-gpep517
+	py3-setuptools
+	py3-wheel
+	"
+checkdepends="py3-pytest"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/tkem/cachetools/archive/v$pkgver.tar.gz"
+builddir="$srcdir/$_pyname-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+7ff00f4dc68cdf455d4f81ccea55b65df9e945810d3af5ee9f23fe0e9cdcc941ddf4fb94acb3d973a92a10487cc5f6ecd86985f2a7bcb81b913939e85e4384f1  py3-cachetools-5.5.2.tar.gz
+"

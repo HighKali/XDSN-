@@ -1,0 +1,34 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Simon Zeni <simon@bl4ckb0ne.ca>
+pkgname=vulkan-headers
+_pkgname=Vulkan-Headers
+# Please be VERY careful upgrading this - vulkan-headers breaks API even
+# on point releases. So please make sure everything using this still builds
+# after upgrades
+pkgver=1.4.321.0
+pkgrel=0
+arch="noarch"
+url="https://www.vulkan.org/"
+pkgdesc="Vulkan header files"
+license="Apache-2.0"
+makedepends="cmake samurai"
+source="https://github.com/khronosgroup/vulkan-headers/archive/refs/tags/vulkan-sdk-$pkgver/vulkan-headers-v$pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-vulkan-sdk-$pkgver"
+options="!check" # No tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=None \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DVULKAN_HEADERS_ENABLE_MODULE=OFF \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+e69e56a53bbe75557d7fcf23879ef1ebcebec2187d0d1122563e78a6aee3999b832431c7b4b9a934f280a07aacca367b8f2dd087cf88e085826945fddb894cd6  vulkan-headers-v1.4.321.0.tar.gz
+"

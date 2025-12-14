@@ -1,0 +1,54 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=kosmindoormap
+pkgver=25.08.3
+pkgrel=0
+# armhf blocked by qt6-qtdeclarative
+arch="all !armhf"
+url="https://invent.kde.org/libraries/kosmindoormap"
+pkgdesc="OSM multi-floor indoor map renderer"
+license="BSD-2-Clause AND BSD-3-Clause MIT AND LGPL-2.0-or-later"
+depends_dev="
+	kcoreaddons-dev
+	ki18n-dev
+	kirigami-addons-dev
+	kopeninghours-dev
+	kpublictransport-dev
+	kservice-dev
+	protobuf-dev
+	qt6-qtbase-dev
+	qt6-qtdeclarative-dev
+	recastnavigation-dev
+	zlib-dev
+	"
+makedepends="$depends_dev
+	bison
+	extra-cmake-modules
+	flex
+	samurai
+	"
+subpackages="$pkgname-dev $pkgname-lang"
+_repo_url="https://invent.kde.org/libraries/kosmindoormap.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kosmindoormap-$pkgver.tar.xz"
+
+build() {
+	LDFLAGS="$LDFLAGS -Wl,--copy-dt-needed-entries" \
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+d6aabc5207ae822177c3095b32e056b12569e8cae96a59172568de42f1246ca30cfd9513844d8439e28f1d2d9b8d458e1642e59f95c72f649e2f6814f69389ca  kosmindoormap-25.08.3.tar.xz
+"

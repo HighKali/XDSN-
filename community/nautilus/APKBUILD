@@ -1,0 +1,73 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: team/gnome <achill@achill.org>
+pkgname=nautilus
+pkgver=49.2
+pkgrel=1
+pkgdesc="GNOME file manager"
+url="https://apps.gnome.org/Nautilus"
+arch="all"
+license="GPL-2.0-or-later"
+depends="
+	desktop-file-utils
+	gsettings-desktop-schemas
+	localsearch
+	"
+depends_dev="
+	gnome-autoar-dev
+	gnome-desktop-dev
+	"
+makedepends="
+	$depends_dev
+	docbook-xml
+	docbook-xsl
+	gexiv2-dev
+	gst-plugins-base-dev
+	itstool
+	jpeg-dev
+	libadwaita-dev
+	libcloudproviders-dev
+	libexif-dev
+	libportal-dev
+	librsvg-dev
+	libseccomp-dev
+	libxml2-dev
+	libxml2-utils
+	libxslt
+	meson
+	tiff-dev
+	tinysparql-dev
+	"
+checkdepends="bash dbus appstream-glib py3-gobject3 xwayland-run"
+subpackages="$pkgname-dev $pkgname-lang"
+source="https://download.gnome.org/sources/nautilus/${pkgver%%.*}/nautilus-$pkgver.tar.xz"
+
+if [ "$CARCH" = "armhf" ]; then
+	options="!check" # one test fails on armhf
+fi
+
+# secfixes:
+#   3.32.1-r0:
+#     - CVE-2019-11461
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		-Dtests=headless \
+		. output
+	meson compile -C output
+}
+
+check() {
+	XDG_RUNTIME_DIR="$(mktemp -d -p "$builddir")" \
+	wlheadless-run -- \
+	dbus-run-session -- \
+	meson test --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+d88ae5ec502cd13499a7178dc90199a520b4c4daa08530b98fcfe0da9f737204103793a2fd25d9b0fac4e593a26ca58f46c5ede22af8bfb62bebe706c20d79a4  nautilus-49.2.tar.xz
+"

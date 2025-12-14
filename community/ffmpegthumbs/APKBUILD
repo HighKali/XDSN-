@@ -1,0 +1,44 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=ffmpegthumbs
+pkgver=25.08.3
+pkgrel=0
+# armhf blocked by qt6-qtdeclarative -> ki18n
+arch="all !armhf"
+url="https://www.kde.org/applications/multimedia/"
+pkgdesc="FFmpeg-based thumbnail creator for video files"
+license="GPL-2.0-or-later"
+makedepends="
+	extra-cmake-modules
+	ffmpeg-dev
+	kconfig-dev
+	ki18n-dev
+	kio-dev
+	qt6-qtbase-dev
+	samurai
+	taglib-dev
+	"
+_repo_url="https://invent.kde.org/multimedia/ffmpegthumbs.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/ffmpegthumbs-$pkgver.tar.xz"
+options="!check" # No usable tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+32ec32603a5dfa283becf872c4ac3cc4a15db6d270a48070c26a58f598dd3cbdcb8abd67e6ea845efbe9af8e4b2077a458eaa90c9b1d981ddb1cfd00c674729f  ffmpegthumbs-25.08.3.tar.xz
+"

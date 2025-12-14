@@ -1,0 +1,21 @@
+maintainer="Achill Gilgenast <achill@achill.org>"
+pkgname=distribution-gpg-keys
+pkgver=1.115
+pkgrel=0
+pkgdesc="GPG keys used by various Linux distributions to sign packages"
+url="https://github.com/rpm-software-management/distribution-gpg-keys"
+arch="noarch"
+license="CC0-1.0"
+source="https://github.com/rpm-software-management/distribution-gpg-keys/archive/distribution-gpg-keys-$pkgver-1.tar.gz"
+builddir="$srcdir/$pkgname-$pkgname-$pkgver-1"
+options="!check" # no tests
+
+package() {
+	rm -r keys/copr # ~400M
+	mkdir -p "$pkgdir"/usr/share/distribution-gpg-keys/
+	cp -r keys/* "$pkgdir"/usr/share/distribution-gpg-keys/
+}
+
+sha512sums="
+f77f98548197fd10a57ddb7fc0af0281b5e0a98865279358b7849930f195e3757de90f06dad189b67de3a15c3cf2e47119ba8926beabf2b97aae96131a890156  distribution-gpg-keys-1.115-1.tar.gz
+"

@@ -1,0 +1,37 @@
+# Contributor: Krassy Boykinov <kboykinov@teamcentrixx.com>
+maintainer="Krassy Boykinov <kboykinov@teamcentrixx.com>"
+pkgname=livi
+pkgver=0.3.2
+pkgrel=0
+pkgdesc="A small video player targeting mobile devices"
+url="https://gitlab.gnome.org/guidog/livi"
+arch="all"
+license="LGPL-2.1-or-later"
+makedepends="
+	desktop-file-utils
+	gst-plugins-bad-dev
+	gstreamer-dev
+	gtk4.0-dev
+	libadwaita-dev
+	meson
+	"
+checkdepends="appstream-glib"
+source="https://gitlab.gnome.org/guidog/livi/-/archive/v$pkgver/livi-v$pkgver.tar.gz"
+builddir="$srcdir/$pkgname-v$pkgver"
+
+build() {
+	abuild-meson . output
+	meson compile -C output
+}
+
+check() {
+	meson test --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+db4cbc8a7c210411d76d8ab68b34ac3b32832c4b0b0c4974d971bac361d400cf90e53e5863ffb380db18e246d4d2295b928c7526061d9ad9e1175e4bcee88deb  livi-v0.3.2.tar.gz
+"

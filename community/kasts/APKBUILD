@@ -1,0 +1,63 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=kasts
+pkgver=25.08.3
+pkgrel=1
+pkgdesc="Kirigami-based podcast player"
+# armhf blocked by qt6-qtdeclarative
+arch="all !armhf"
+url="https://invent.kde.org/plasma-mobile/kasts"
+license="LicenseRef-KDE-Accepted-GPL AND CC0-1.0"
+depends="
+	gst-plugins-good
+	kirigami-addons
+	kirigami
+	qt6-qtbase-sqlite
+	vlc
+	"
+makedepends="
+	extra-cmake-modules
+	kcolorscheme-dev
+	kconfig-dev
+	kcoreaddons-dev
+	kcrash-dev
+	kdbusaddons-dev
+	ki18n-dev
+	kiconthemes-dev
+	kirigami-addons-dev
+	kirigami-dev
+	networkmanager-qt-dev
+	openssl-dev>3
+	qt6-qtbase-dev
+	qt6-qtdeclarative-dev
+	qt6-qtdeclarative-private-dev
+	qt6-qtmultimedia-dev
+	qt6-qtsvg-dev
+	qtkeychain-dev
+	samurai
+	syndication-dev
+	taglib-dev
+	threadweaver-dev
+	vlc-dev
+	"
+subpackages="$pkgname-lang"
+_repo_url="https://invent.kde.org/multimedia/kasts.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kasts-$pkgver.tar.xz"
+options="!check" # No tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+9a867703fd4dd5164c62eb955f26a6f3811f0a1f9d8219d083c4d1d10d0d4279574618b58e95d8b59d663b81cc511e5e4d559dd916bfcb830ae4a2689180cc6f  kasts-25.08.3.tar.xz
+"

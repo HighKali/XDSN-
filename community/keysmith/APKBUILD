@@ -1,0 +1,63 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=keysmith
+pkgver=25.08.3
+pkgrel=1
+pkgdesc="OTP client for Plasma Mobile and Desktop"
+url="https://invent.kde.org/kde/keysmith"
+# armhf blocked by qt6-qtdeclarative
+arch="all !armhf"
+license="GPL-3.0-or-later"
+depends="
+	kirigami
+	kirigami-addons
+	prison
+	"
+makedepends="
+	extra-cmake-modules
+	kdbusaddons-dev
+	ki18n-dev
+	kirigami-dev
+	kirigami-addons-dev
+	libsodium-dev
+	qqc2-desktop-style-dev
+	qt6-qt5compat-dev
+	qt6-qtbase-dev
+	qt6-qtdeclarative-dev
+	qt6-qtdeclarative-private-dev
+	qt6-qtsvg-dev
+	samurai
+	"
+subpackages="$pkgname-lang"
+_repo_url="https://invent.kde.org/utilities/keysmith.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/keysmith-$pkgver.tar.xz"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr
+	cmake --build build
+}
+
+check() {
+	local skipped_tests="account-(jobs-dispatcher-next|"
+	local tests="
+		storage-object-lifecycles
+		storage-default-lifecycle
+		storage-hotp-counter-update
+		"
+	for test in $tests; do
+		skipped_tests="$skipped_tests|$test"
+	done
+	skipped_tests="$skipped_tests)"
+	ctest --test-dir build -E "$skipped_tests"
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+a9b8199329359cb1e40b601ead4da23df48cefe6857b09628959d0d85a5b9ca1318caa2cf25f127c5980c54d2c9aeea7b77b286ff610a4b937e465d82631c251  keysmith-25.08.3.tar.xz
+"

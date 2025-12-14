@@ -1,0 +1,36 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+maintainer="Achill Gilgenast <achill@achill.org>"
+pkgname=zenity
+pkgver=4.2.1
+pkgrel=0
+# NOTE: X.X.9[0-9] releases are not stable releases and shouldn't be packaged in Alpine
+pkgdesc="Display dialog boxes from the command line and shell scripts"
+url="https://gitlab.gnome.org/GNOME/zenity"
+arch="all"
+license="LGPL-2.1-or-later"
+makedepends="
+	help2man
+	intltool
+	itstool
+	libadwaita-dev
+	libxml2-utils
+	meson
+	"
+options="!check" # no tests
+subpackages="$pkgname-dbg $pkgname-lang $pkgname-doc"
+source="https://download.gnome.org/sources/zenity/${pkgver%.*}/zenity-$pkgver.tar.xz"
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		. output
+	meson compile -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+7114ca2af5fcccf917d20702891754838cbca61d37b9adc3f7d7fb0fff2cc006904c4d6bfacecedd9b0c0d2a440fdf4ce65fa027c813f1a453894436f72e4149  zenity-4.2.1.tar.xz
+"

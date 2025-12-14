@@ -1,0 +1,40 @@
+maintainer="Achill Gilgenast <achill@achill.org>"
+pkgname=refine
+pkgver=0.6.3
+pkgrel=0
+pkgdesc="Explore and tweak advanced settings in GNOME"
+url="https://tesk.page/refine/"
+arch="noarch"
+license="GPL-3.0-or-later"
+depends="
+	gtk4.0
+	libadwaita
+	"
+makedepends="
+	blueprint-compiler
+	desktop-file-utils
+	gettext
+	glib-dev
+	meson
+	"
+subpackages="$pkgname-lang"
+source="https://gitlab.gnome.org/TheEvilSkeleton/Refine/-/archive/$pkgver/Refine-$pkgver.tar.gz"
+builddir="$srcdir/Refine-$pkgver"
+
+build() {
+	abuild-meson \
+		output .
+	meson compile -C output
+}
+
+check() {
+	meson test --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+d5c57569820d0249122d3300d3258e2b51620a8b5afecbd7c090f09a894e3acbfe32a959c12c1af5ec0d2a5ce511c80bec1c7a953d3b17b29fef5bc19d25c637  Refine-0.6.3.tar.gz
+"

@@ -1,0 +1,40 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=glibmm
+pkgver=2.84.0
+pkgrel=0
+# NOTE: Upgrade only to even-numbered versions (e.g. 1.18.x, 1.20.x)!
+pkgdesc="C++ wrapper for the GLib toolkit"
+url="https://www.gtkmm.org/"
+arch="all"
+license="LGPL-2.1-or-later"
+makedepends="glib-dev libsigc++3-dev perl meson m4"
+checkdepends="glib-networking"
+subpackages="$pkgname-dev"
+source="https://download.gnome.org/sources/glibmm/${pkgver%.*}/glibmm-$pkgver.tar.xz"
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		-Dbuild-documentation=false \
+		-Dbuild-examples=false \
+		. output
+	meson compile -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+dev() {
+	amove usr/lib/glibmm-* usr/lib/giomm-*
+	default_dev
+}
+
+check() {
+	meson test --print-errorlogs -C output
+}
+
+sha512sums="
+dbe7d7b39ccf4a4acb0a67a0eab1a4b5f47dff3c0ae645aa2eaca498b646ee2da0f6f8ef81b3253621119d94bcdc3b1d4dcbf234eedfbd20aaa065c430e67daf  glibmm-2.84.0.tar.xz
+"

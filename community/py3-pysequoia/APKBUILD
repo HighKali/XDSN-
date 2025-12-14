@@ -1,0 +1,54 @@
+maintainer="Wiktor Kwapisiewicz <wiktor@metacode.biz>"
+pkgname=py3-pysequoia
+pkgver=0.1.29
+pkgrel=0
+pkgdesc="Python bindings for the Sequoia PGP library"
+url="https://github.com/wiktor-k/pysequoia"
+arch="all !ppc64le"
+license="Apache-2.0"
+makedepends="
+	cargo
+	py3-gpep517
+	py3-maturin
+	py3-wheel
+	"
+checkdepends="
+	py3-pytest
+	"
+subpackages="$pkgname-pyc"
+source="
+	$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz
+	"
+builddir="$srcdir/pysequoia-$pkgver"
+options="net" # cargo
+
+prepare() {
+	default_prepare
+
+	cargo fetch --locked
+}
+
+build() {
+	# Increase stack size to avoid cargo build failure
+	# see: https://github.com/RustCrypto/elliptic-curves/issues/1097#issuecomment-2435508686
+	export RUST_MIN_STACK="4194304"
+
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--config-json '{"build-args": "--frozen"}' \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	# RustCrypto crates are extremely slow unoptimized so run the tests in release mode
+	cargo test --release
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+b306d5fe66501876566c135d49ed137456e68cff382b020330f70a4958ac2f038624ecaf6fffc60cbf689f354a4145584632a2bde4e1633b346a305048c56506  py3-pysequoia-0.1.29.tar.gz
+"

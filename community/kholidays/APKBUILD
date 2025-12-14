@@ -1,0 +1,54 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-frameworks
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=kholidays
+pkgver=6.20.0
+pkgrel=0
+pkgdesc="Support for icon themes"
+# armhf blocked by qt6-qtdeclarative
+arch="all !armhf"
+url="https://community.kde.org/Frameworks"
+license="LGPL-2.0-or-later"
+depends_dev="
+	qt6-qtbase-dev
+	qt6-qtdeclarative-dev
+	"
+makedepends="$depends_dev
+	doxygen
+	extra-cmake-modules
+	kde-qdoc-common
+	qt6-qtdeclarative-private-dev
+	qt6-qttools-dev
+	samurai
+	"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+_repo_url="https://invent.kde.org/frameworks/kholidays.git"
+source="https://download.kde.org/stable/frameworks/${pkgver%.*}/kholidays-$pkgver.tar.xz"
+
+build() {
+	export KDE_DOCS=/usr/share/kde/documentation
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+
+	cmake --build build --target prepare_docs
+	cmake --build build --target generate_docs
+	cmake --build build --target generate_qch
+}
+
+check() {
+	ctest --test-dir build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+
+	DESTDIR="$pkgdir" cmake --build build --target install_html_docs
+	DESTDIR="$pkgdir" cmake --build build --target install_qch_docs
+}
+
+sha512sums="
+65e1de814364538bc6ef2550e84bbd32862da9496a6f75f36e9e8f4a2015eb24ae3ee6bdf20d58c7a8f78a41abcea382bbf05853a999f45edf18724bd488508d  kholidays-6.20.0.tar.xz
+"

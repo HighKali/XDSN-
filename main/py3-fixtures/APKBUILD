@@ -1,0 +1,51 @@
+# Contributor: Francesco Colista <fcolista@alpinelinux.org>
+# Maintainer: Francesco Colista <fcolista@alpinelinux.org>
+pkgname=py3-fixtures
+pkgver=4.2.6
+pkgrel=0
+pkgdesc="Fixtures, reusable state for writing clean tests and more."
+url="https://pypi.org/project/fixtures/"
+arch="noarch"
+license="MIT"
+depends="
+	py3-pbr
+	python3
+	"
+makedepends="
+	py3-gpep517
+	py3-hatchling
+	py3-hatch-vcs
+	"
+checkdepends="
+	py3-mock
+	py3-testtools
+	"
+subpackages="$pkgname-pyc"
+source="https://files.pythonhosted.org/packages/source/f/fixtures/fixtures-$pkgver.tar.gz"
+builddir="$srcdir/fixtures-$pkgver"
+options="!check" # py3-testtools depends on this
+
+replaces="py-fixtures" # Backwards compatibility
+provides="py-fixtures=$pkgver-r$pkgrel" # Backwards compatibility
+
+build() {
+	export SETUPTOOLS_SCM_PRETEND_VERSION=$pkgver
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m testtools.run
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+58c0dec249071f7ff6dc8063ad52a54b43a518d01758b3979b62393f2d58ff39fc58e20b1324eb1f8518cb4b155859777c6d7570c09551ef2baee4167cd7ac6d  fixtures-4.2.6.tar.gz
+"

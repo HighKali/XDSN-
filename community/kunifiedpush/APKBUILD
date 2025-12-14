@@ -1,0 +1,55 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=kunifiedpush
+pkgver=25.08.3
+pkgrel=1
+# armhf blocked by qt6-qtdeclarative
+arch="all !armhf"
+url="https://invent.kde.org/libraries/kunifiedpush"
+pkgdesc="UnifiedPush client library and distributor daemon"
+license="BSD-2-Clause AND BSD-3-Clause AND LGPL-2.0-or-later"
+depends_dev="
+	kcmutils-dev
+	kcoreaddons-dev
+	kdeclarative-dev
+	kpackage-dev
+	kservice-dev
+	qt6-qtbase-dev
+	qt6-qtwebsockets-dev
+	"
+makedepends="$depends_dev
+	extra-cmake-modules
+	qt6-qtdeclarative-dev
+	qt6-qttools-dev
+	samurai
+	"
+checkdepends="dbus"
+subpackages="
+	$pkgname-dev
+	$pkgname-libs
+	$pkgname-lang
+	$pkgname-systemd
+	"
+_repo_url="https://invent.kde.org/libraries/kunifiedpush.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kunifiedpush-$pkgver.tar.xz"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	dbus-run-session ctest --test-dir build -E "connectortest"
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+561ccfe84df8fcc6c66bb0fa67ccd30b670ccaeb660895be09575e45e9618bed22af74d0ce89fc19e1c345c8da7adf943d05c6ce3559edc9b0c5b47a7a9afdc3  kunifiedpush-25.08.3.tar.xz
+"

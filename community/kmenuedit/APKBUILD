@@ -1,0 +1,51 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-plasma
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=kmenuedit
+pkgver=6.5.4
+pkgrel=0
+pkgdesc="Menu editor for Plasma Workspaces"
+# armhf blocked by qt6-qtdeclarative
+arch="all !armhf"
+url="https://kde.org/plasma-desktop/"
+license="GPL-2.0-or-later"
+makedepends="
+	extra-cmake-modules
+	kdbusaddons-dev
+	kdoctools-dev
+	kglobalaccel-dev
+	ki18n-dev
+	kiconthemes-dev
+	kio-dev
+	kitemviews-dev
+	kxmlgui-dev
+	qt6-qtbase-dev
+	samurai
+	sonnet-dev
+	"
+subpackages="$pkgname-doc $pkgname-lang"
+
+case "$pkgver" in
+	*.*.9*) _rel=unstable;;
+	*) _rel=stable;;
+esac
+
+_repo_url="https://invent.kde.org/plasma/kmenuedit.git"
+source="https://download.kde.org/$_rel/plasma/$pkgver/kmenuedit-$pkgver.tar.xz"
+options="!check" # No tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+375c52fdff5d91fbdf639348beadf7fd440a9f409090055994f080d6f09eb224f4f887e4db9792b4420f61ea96771ffee31e24de9ac48593cf2678f5d76e9a5a  kmenuedit-6.5.4.tar.xz
+"

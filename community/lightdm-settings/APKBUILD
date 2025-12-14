@@ -1,0 +1,35 @@
+# Contributor: Jakko <jahau@rocketmail.com>
+maintainer="Jakko <jahau@rocketmail.com>"
+pkgname=lightdm-settings
+pkgver=2.0.9
+pkgrel=0
+pkgdesc="LightDM configuration tool – supports slick-greeter only"
+url="https://github.com/linuxmint/lightdm-settings"
+arch="noarch"
+license="GPL-3.0-or-later"
+depends="py3-setproctitle xrandr"
+makedepends="gettext-dev"
+subpackages="$pkgname-lang"
+source="$pkgname-$pkgver.tar.gz::https://github.com/linuxmint/lightdm-settings/archive/refs/tags/$pkgver.tar.gz"
+options="!check" # no test suite
+
+build() {
+	make
+}
+
+package() {
+	install -Dm755 usr/bin/lightdm-settings \
+		"$pkgdir"/usr/bin/lightdm-settings
+
+	install -Dm755 usr/lib/lightdm-settings/SettingsWidgets.py \
+		"$pkgdir"/usr/lib/lightdm-settings/SettingsWidgets.py
+
+	install -Dm755 usr/lib/lightdm-settings/lightdm-settings \
+		"$pkgdir"/usr/lib/lightdm-settings/lightdm-settings
+
+	cp -a usr/share "$pkgdir"/usr/share
+}
+
+sha512sums="
+de6c62ac4b3499157a5375c679e728f547748f4067d01f5828e8ef2ba2760d418c859af1dad8ef36ee48d4e5439447eaf3edd5822dccafaa6d80c73870c82500  lightdm-settings-2.0.9.tar.gz
+"

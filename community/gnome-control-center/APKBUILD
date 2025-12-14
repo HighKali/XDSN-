@@ -1,0 +1,92 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Contributor: Pablo Correa Gomez <pabloyoyoista@postmarketos.org>
+# Maintainer: team/gnome <achill@achill.org>
+pkgname=gnome-control-center
+pkgver=49.2.2
+pkgrel=2
+pkgdesc="GNOME control center"
+url="https://gitlab.gnome.org/GNOME/gnome-control-center"
+arch="all"
+license="GPL-2.0-or-later"
+depends="
+	accountsservice
+	colord
+	cups-pk-helper
+	dbus:org.freedesktop.Secrets
+	openrc-settingsd
+	setxkbmap
+	"
+makedepends="
+	blueprint-compiler
+	accountsservice-dev
+	cairo-dev
+	colord-dev
+	colord-gtk-dev
+	cups-dev
+	docbook-xml
+	docbook-xsl
+	gcr4-dev
+	glib-dev
+	gnome-bluetooth-dev
+	gnome-desktop-dev
+	gnome-online-accounts-dev
+	gnome-settings-daemon-dev
+	gsettings-desktop-schemas-dev
+	gsound-dev
+	ibus-dev
+	itstool
+	krb5-dev
+	libadwaita-dev
+	libgtop-dev
+	libgudev-dev
+	libnma-dev
+	libpwquality-dev
+	libsecret-dev
+	libwacom-dev
+	libxml2-utils
+	libxslt
+	meson
+	modemmanager-dev
+	networkmanager-dev
+	polkit-dev
+	pulseaudio-dev
+	samba-dev
+	tecla-dev
+	udisks2-dev
+	upower-dev
+	"
+options="!check" # needs unpackaged py-dbusmock
+install="$pkgname.pre-install $pkgname.pre-upgrade"
+subpackages="$pkgname-dbg $pkgname-dev $pkgname-lang $pkgname-doc $pkgname-bash-completion"
+source="https://download.gnome.org/sources/gnome-control-center/${pkgver%%.*}/gnome-control-center-$pkgver.tar.xz
+	README.alpine
+	"
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		-Dibus=true \
+		-Dlocation-services=enabled \
+		. output
+
+	meson compile -C output
+}
+
+check() {
+	meson test --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+
+	mkdir -p "$pkgdir"/usr/lib/pkgconfig
+	mv "$pkgdir"/usr/share/pkgconfig/* "$pkgdir"/usr/lib/pkgconfig
+	rmdir "$pkgdir"/usr/share/pkgconfig
+
+	install -Dm0644 "$srcdir"/README.alpine -t "$pkgdir"/usr/share/doc/"$pkgname"
+}
+
+sha512sums="
+1f4c5db95d401c295361b03d73b44fdd4569fd013daafab7a0aa8c3f8a7e8d8fed1ab814b70a67e337d1a352dc6d99ab3f41de669b318a6b93309fdcd9eaf715  gnome-control-center-49.2.2.tar.xz
+350aa443149c71851ad4de0976c7fc5cb626ba0c57a8d41e6ef80da1c65ed84a4dfa2483ae92630a3b611c4bfa9360ded82b55e8cd0e3907294c025e4f6b1671  README.alpine
+"

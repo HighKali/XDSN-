@@ -1,0 +1,50 @@
+# Contributor: Carlo Landmeter
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=libcdio
+pkgver=2.2.0
+pkgrel=0
+pkgdesc="GNU Compact Disc Input and Control Library"
+url="https://www.gnu.org/software/libcdio/"
+arch="all"
+license="GPL-3.0-or-later"
+checkdepends="bash"
+makedepends="libcddb-dev ncurses-dev linux-headers"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-tools $pkgname++:_cpp"
+source="https://github.com/libcdio/libcdio/releases/download/$pkgver/libcdio-$pkgver.tar.gz"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--infodir=/usr/share/info \
+		--disable-vcd-info \
+		--disable-static \
+		--disable-rpath \
+		--disable-cpp-progs
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make -j1 DESTDIR="$pkgdir" install
+}
+
+tools() {
+	pkgdesc="libcdio example tools"
+	amove usr/bin
+}
+
+_cpp() {
+	pkgdesc="libcdio bindings for C++"
+	amove 'usr/lib/*++.*'
+}
+
+sha512sums="
+a06451d1183f167439387fbb972db8039322dba56f0405f06bb046eabd0d747389d7eac912bcccbf59c33457efa04e7aaa913e99c9737c2368c97a604d04b230  libcdio-2.2.0.tar.gz
+"

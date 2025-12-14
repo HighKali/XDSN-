@@ -1,0 +1,41 @@
+maintainer="Achill Gilgenast <achill@achill.org>"
+pkgname=rygel
+pkgver=45.0
+pkgrel=1
+pkgdesc="UPnP AV MediaServer and MediaRenderer"
+url="https://gnome.pages.gitlab.gnome.org/rygel/"
+arch="all"
+license="LGPL-2.1-or-later"
+makedepends="
+	gst-editing-services-dev
+	gtk4.0-dev
+	gupnp-av-dev
+	gupnp-dev
+	gupnp-dlna-dev
+	libgee-dev
+	libmediaart-dev
+	meson
+	vala
+	"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang $pkgname-systemd"
+source="https://download.gnome.org/sources/rygel/${pkgver%.*}/rygel-$pkgver.tar.xz"
+
+build() {
+	abuild-meson \
+		-Dsystemd-user-units-dir=/usr/lib/systemd/user \
+		-Dtests="$(want_check && echo true || echo false)" \
+		output .
+	meson compile -C output
+}
+
+check() {
+	meson test --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+2d3fc8f4fff18359049516d5409984088021808c053a4b90cc9fbb52bbb9265d0f17f9310fc3f1c54b6cb900132c7e8c7a58f1ccee07c7e8d11048a86c524281  rygel-45.0.tar.xz
+"

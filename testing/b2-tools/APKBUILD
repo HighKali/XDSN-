@@ -1,0 +1,64 @@
+# Contributor: lauren n. liberda <lauren@selfisekai.rocks>
+maintainer="lauren n. liberda <lauren@selfisekai.rocks>"
+pkgname=b2-tools
+pkgver=4.3.2
+pkgrel=0
+pkgdesc="Command-line tool for Backblaze B2"
+url="https://github.com/Backblaze/B2_Command_Line_Tool"
+arch="noarch"
+license="MIT"
+depends="
+	py3-argcomplete
+	py3-arrow
+	py3-b2sdk
+	py3-docutils
+	py3-phx-class-registry
+	py3-platformdirs
+	py3-rst2ansi
+	py3-tabulate
+	py3-tqdm
+	python3
+	"
+makedepends="
+	py3-gpep517
+	py3-pdm-backend
+	py3-installer
+	py3-virtualenv
+	"
+checkdepends="
+	py3-backoff
+	py3-more-itertools
+	py3-pexpect
+	py3-pytest-xdist
+	pytest
+	"
+subpackages="$pkgname-pyc"
+source="
+	https://github.com/Backblaze/B2_Command_Line_Tool/archive/v$pkgver/b2-tools-$pkgver.tar.gz
+	"
+builddir="$srcdir/B2_Command_Line_Tool-$pkgver"
+
+export PDM_BUILD_SCM_VERSION="$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	# integration: tests require backblaze credentials
+	# forked: broken since pytest7: https://github.com/pytest-dev/pytest-forked/issues/67
+	.testenv/bin/python3 -m pytest -n"$(nproc)" -k 'not integration and not forked'
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+d2feea3b5521fd7211efa48d50e66c1e603001986e33adacdd64618d25e1e4efb8d86377c4dff243d8c584bde2bfb1648243834194dfc0b3cdde5cebe6633194  b2-tools-4.3.2.tar.gz
+"

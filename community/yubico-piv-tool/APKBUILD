@@ -1,0 +1,41 @@
+# Contributor: Christophe BERAUD-DUFOUR <christophe.berauddufour@gmail.com>
+# Maintainer: Will Sinatra <wpsinatra@gmail.com>
+pkgname=yubico-piv-tool
+pkgver=2.7.2
+pkgrel=0
+pkgdesc="PIV Tools for yubikey"
+url="https://developers.yubico.com/yubico-piv-tool"
+arch="all"
+license="BSD-2-Clause"
+makedepends="
+	check-dev
+	cmake
+	gengetopt-dev
+	help2man
+	openssl-dev
+	pcsc-lite-dev
+	samurai
+	zlib-dev
+	"
+subpackages="$pkgname-static $pkgname-dev $pkgname-libs $pkgname-doc"
+source="https://developers.yubico.com/yubico-piv-tool/Releases/yubico-piv-tool-$pkgver.tar.gz"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/usr
+
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+8a809ac77a763e19bcc0ec983ca5aaa34077fd8d57522fe180596b4b36107cb361df8c590821d33b2f0693094001e17372934687e4446c366e475ef74c27e56c  yubico-piv-tool-2.7.2.tar.gz
+"

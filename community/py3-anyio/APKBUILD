@@ -1,0 +1,51 @@
+maintainer="Michał Polański <michal@polanski.me>"
+pkgname=py3-anyio
+pkgver=4.11.0
+pkgrel=0
+pkgdesc="High level compatibility layer for multiple asynchronous event loop implementations"
+url="https://github.com/agronholm/anyio"
+license="MIT"
+arch="noarch"
+depends="py3-idna py3-sniffio py3-typing-extensions"
+makedepends="py3-gpep517 py3-setuptools py3-wheel py3-pytest-xdist"
+checkdepends="
+	py3-hypothesis
+	py3-psutil
+	py3-pytest
+	py3-pytest-mock
+	py3-trio
+	py3-trustme
+	py3-uvloop
+	"
+subpackages="$pkgname-pyc"
+source="https://github.com/agronholm/anyio/archive/$pkgver/py3-anyio-$pkgver.tar.gz
+	test-excgroup.patch
+	test-synchronization.patch
+	"
+builddir="$srcdir/anyio-$pkgver"
+
+build() {
+	SETUPTOOLS_SCM_PRETEND_VERSION="$pkgver" \
+		gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	# test_sockets.py: disable tests that requires network
+	.testenv/bin/python3 -m pytest -n auto \
+		--ignore tests/test_sockets.py \
+		-k "not test_nonexistent_main_module and not test_keyboardinterrupt_during_test"
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" .dist/*.whl
+}
+
+sha512sums="
+139e0fc1bd58dc1b6fb94e3f85f6b85da7f7773cab2755a3eab55517f3f961a41ffbda5141e73da6e6956a48b58dba7e615f2c3e7e96dcf846f8c9fed0fa294f  py3-anyio-4.11.0.tar.gz
+0fc0eb95128e89ca102c621c45d3d7799563ed98f6348c621b0915c2cb00d489b39cf8db0377c97a5e5f386045dbc712c00e9137c4c904b5f32bbada81346a2a  test-excgroup.patch
+b7377204ce02d0c4693103310deda425949de30dc2b63867b36c7a8a29a7fa2cff981bb637785be41e1e49fb5c8b48b0d982a0c1e64fa10ff5dd1eba37741579  test-synchronization.patch
+"

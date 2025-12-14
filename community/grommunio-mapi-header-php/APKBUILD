@@ -1,0 +1,21 @@
+# Maintainer: Noel Kuntze <noel.kuntze@contauro.com>
+pkgname=grommunio-mapi-header-php
+pkgver=1.6
+pkgrel=0
+pkgdesc="Common PHP MAPI header files for grommunio"
+arch="noarch"
+url="https://grommunio.com/"
+license="AGPL-3.0-or-later"
+source="$pkgname-$pkgver.tar.gz::https://github.com/grommunio/mapi-header-php/archive/refs/tags/$pkgver.tar.gz"
+builddir="$srcdir/mapi-header-php-$pkgver/"
+options="!check" # No test suite
+
+package() {
+	mkdir -p "$pkgdir"
+	make install DESTDIR="$(realpath $pkgdir)"
+
+}
+
+sha512sums="
+42230b5dc7395db7f70f452c7ebd4de368aec7a5ae535be90a652d60ff9a8a7928d1d758d4be23ce0981855020a18fe0203c97c71f483de93b727baf796bacd4  grommunio-mapi-header-php-1.6.tar.gz
+"

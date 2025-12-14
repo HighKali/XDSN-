@@ -1,0 +1,36 @@
+# Contributor: Dhruvin Gandhi <contact@dhru.vin>
+# Maintainer: qaqland <qaq@qaq.land>
+pkgname=py3-debian
+pkgver=1.0.1
+pkgrel=1
+pkgdesc="Debian package related python modules"
+url="https://salsa.debian.org/python-debian-team/python-debian"
+arch="noarch"
+license="GPL-3.0-or-later"
+depends="python3 py3-charset-normalizer"
+makedepends="py3-gpep517 py3-setuptools py3-setuptools_scm py3-wheel"
+checkdepends="py3-pytest py3-pytest-cov dpkg gpgv zstd"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver-1.tar.gz::https://salsa.debian.org/python-debian-team/python-debian/-/archive/$pkgver/python-debian-$pkgver.tar.gz"
+builddir="$srcdir/python-debian-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+3cb84ffe8b804652dcb31ea49577122dfc777b7953a375d5484d4a591ddb68895f633763b6092c94fe94dd41820f6ddd8ae662c3b28925ddafc5caf4b3661443  py3-debian-1.0.1-1.tar.gz
+"

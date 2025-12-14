@@ -1,0 +1,38 @@
+# Maintainer: Dave Henderson <dhenderson@gmail.com>
+pkgname=gomplate
+pkgver=4.3.3
+pkgrel=4
+pkgdesc="A versatile Go template processor"
+url="https://github.com/hairyhenderson/gomplate"
+arch="all"
+license="MIT"
+depends="ca-certificates"
+makedepends="go"
+options="net"
+source="$pkgname-$pkgver.tar.gz::https://github.com/hairyhenderson/gomplate/archive/v$pkgver.tar.gz"
+
+export GOFLAGS="$GOFLAGS -trimpath -modcacherw"
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	# CGO needs to be able to be enabled for -buildmode=pie, setting it to an
+	# empty string is a workaround for now.
+	# See: https://gitlab.alpinelinux.org/alpine/aports/-/issues/15809
+	make build \
+		CGO_ENABLED= \
+		VERSION="$pkgver" \
+		COMMIT="unknown"
+}
+
+check() {
+	# Note: make test (that runs go test -race) doesn't work.
+	go test -v
+}
+
+package() {
+	install -D -m 755 bin/gomplate "$pkgdir"/usr/bin/gomplate
+}
+
+sha512sums="3057b08b2ad4e7dfe45a9de62e6c56ed479e32a6acc700bfb7eaa934f43bade31f736ba2a77b44ee114758bbb15f97777e046158de10832ad4d5f2bf73f79efc  gomplate-4.3.3.tar.gz"

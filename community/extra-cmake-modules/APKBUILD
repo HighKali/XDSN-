@@ -1,0 +1,69 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-frameworks
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=extra-cmake-modules
+pkgver=6.20.0
+pkgrel=0
+pkgdesc="Extra CMake modules"
+url="https://invent.kde.org/frameworks/extra-cmake-modules"
+arch="noarch"
+license="BSD-3-Clause"
+depends="cmake"
+makedepends="
+	py3-sphinx
+	samurai
+	"
+checkdepends="
+	qt5-qtbase-dev
+	qt6-qtbase-dev
+	"
+case "$CARCH" in
+	armhf) ;;
+	*)
+		checkdepends="$checkdepends
+			qt6-qtdeclarative-dev
+			qt6-qtdeclarative-dev
+			"
+		;;
+esac
+subpackages="$pkgname-doc"
+_repo_url="https://invent.kde.org/frameworks/extra-cmake-modules.git"
+source="https://download.kde.org/stable/frameworks/${pkgver%.*}/extra-cmake-modules-$pkgver.tar.xz"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DSphinx_BUILD_EXECUTABLE=/usr/bin/sphinx-build \
+		-DBUILD_QTHELP_DOCS=ON
+	cmake --build build
+}
+
+check() {
+	# KDEFetchTranslations expects KDE's git setup
+	local skipped_tests="KDEFetchTranslations|ECMGeneratePkgConfigFile"
+	local tests="
+		ecm_setup_version-old_header
+		ecm_setup_version-old_header_abspath
+		ecm_setup_version-old_simple
+		ecm_setup_version-old_simple_no_version_string_vars
+		ecm_setup_version-old_soversion
+		ecm_setup_version-old_version_file
+		ecm_setup_version-old_version_file_abspath
+		ecm_setup_version-old_version_file_anynewer
+		ecm_setup_version-old_version_file_exact
+		ecm_setup_version-old_version_file_samemajor
+		"
+	for test in $tests; do
+		skipped_tests="$skipped_tests|$test"
+	done
+	ctest --test-dir build -E "$skipped_tests"
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+f72fdd399c3f6b4f642df1abb0fb34b219b40e96bd9300316677051dbb1cb7debfec64e5eac14ab6e6a44b21be9571faa46e03a29b29aa1d07d73b4a3b5c6e7c  extra-cmake-modules-6.20.0.tar.xz
+"

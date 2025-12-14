@@ -1,0 +1,91 @@
+# Contributor: Jean-Louis Fuchs <safe.pen2857@rhizoome.ch>
+# Maintainer: Celeste <cielesti@protonmail.com>
+maintainer="Celeste <cielesti@protonmail.com>"
+pkgname=pandoc-cli
+pkgver=3.8.3
+pkgrel=0
+pkgdesc="Universal markup converter"
+url="https://pandoc.org/"
+# limited by ghc
+arch="aarch64 x86_64"
+license="GPL-2.0-or-later"
+makedepends="ghc cabal zlib-dev libffi-dev"
+subpackages="$pkgname-doc"
+source="https://hackage.haskell.org/package/pandoc-cli-$pkgver/pandoc-cli-$pkgver.tar.gz
+	cabal.project.freeze
+	"
+options="net !check" # TODO
+
+# but everyone probably used this for cli, so provide the name,
+# even though renamed
+provides="pandoc=$pkgver-r$pkgrel"
+replaces="pandoc"
+
+# Cabal seems to be built without sandbox, moving the cabal-dir into src
+export CABAL_DIR="${CABAL_DIR:-"$srcdir/.cabal"}"
+
+cabal_update() {
+	local repo="hackage.haskell.org"
+
+	# Default config uses HTTP, change it to HTTPS.
+	[ -f "$CABAL_DIR"/config ] || {
+		cabal user-config init
+		cabal user-config update -a \
+			"repository $repo {url: https://$repo/}"
+	}
+
+	cd "$startdir"
+	[ -d "$builddir" ] || abuild unpack
+	msg "Freezing $pkgname dependencies"
+
+	# Resolve deps and generate fresh cabal.project.freeze with version constraints.
+	(
+		cd "$builddir" || {
+			error 'Is $builddir set correctly?'
+			return 1
+		}
+		cabal v2-update
+		cabal v2-freeze \
+			--strong-flags \
+			--shadow-installed-packages \
+			--constraint "pandoc +embed_data_files" \
+			--flags "+server +lua"
+
+		mv -v cabal.project.freeze "$startdir"/
+	)
+
+	if ! abuild checksum; then
+		die "Failed to update checksum, run 'abuild checksum' manually"
+	fi
+}
+
+prepare() {
+	default_prepare
+
+	ln -svf "$srcdir"/cabal.project.freeze "$builddir"/
+}
+
+build() {
+	cabal v2-update
+	cabal v2-build pandoc-cli:exes \
+		--jobs=${JOBS:-1} \
+		--prefix=/usr \
+		--docdir=/usr/share/doc/$pkgname \
+		--flags "+server +lua" \
+		--sysconfdir=/etc
+}
+
+package() {
+	# See https://github.com/haskell/cabal/issues/6919#issuecomment-761563498
+	cabal list-bin pandoc-cli:exes |
+		xargs install -Dvm755 -t "$pkgdir"/usr/bin/
+
+	ln -sfv pandoc "$pkgdir"/usr/bin/pandoc-server
+
+	install -Dvm644 man/*.1 -t "$pkgdir"/usr/share/man/man1/
+}
+
+sha512sums="
+c00eb50e0fe534d88ac801ea110cc57320cb252737f6da2c0c1345a08b8eb29da3e27ce7d5631395c51c543eaa2035d601f1c56421b49688792a21f517fa1b4e  pandoc-cli-3.8.3.tar.gz
+91835b4a1dbcab55ba1574cda32e2539d18756628cec950047f5c32da2bd67e78c7428f6576d64ffbecf2fa54fc652d3567783b67ed7824bd62bf1a2a5d38dfe  cabal.project.freeze
+"

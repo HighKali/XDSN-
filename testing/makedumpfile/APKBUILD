@@ -1,0 +1,38 @@
+# Contributor: Dominique Martinet <dominique.martinet@atmark-techno.com>
+# Maintainer: Dominique Martinet <dominique.martinet@atmark-techno.com>
+pkgname=makedumpfile
+pkgver=1.7.8
+pkgrel=0
+pkgdesc="VMcore extraction tool"
+url="https://github.com/makedumpfile/makedumpfile"
+arch="all !riscv64" # no kexec-tools on riscv64
+license="GPL-2.0-or-later"
+makedepends="musl-dev elfutils-dev bzip2-dev xz-dev lzo-dev zlib-dev zstd-dev musl-fts-dev"
+depends="kexec-tools"
+options="!check" # no test suite
+source="$pkgname-$pkgver.tar.gz::https://github.com/makedumpfile/makedumpfile/archive/$pkgver.tar.gz
+	kdump.initd
+	kdump.confd"
+subpackages="$pkgname-doc $pkgname-openrc"
+
+build() {
+	LINKTYPE=dynamic USELZO=on USEZSTD=on make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+
+	install -Dm755 "$srcdir"/kdump.initd "$pkgdir"/etc/init.d/kdump
+	install -Dm644 "$srcdir"/kdump.confd "$pkgdir"/etc/conf.d/kdump
+}
+
+doc() {
+	default_doc
+	amove "usr/share/$pkgname"
+}
+
+sha512sums="
+c5c1944076593eb64a966b61528b4a6c700fb21419d7dd8497f2fdec19afc47d0b437aca6d19f5727af0bf17759c7bd9a13e1c6bf8c97bf4bfbe26823257aaed  makedumpfile-1.7.8.tar.gz
+c645faf26efa6a6718e360c0782fa0dc366646e6fc19eb88131af4b08a4a85d79d30b1da157a4a588faff80aa77b01ca6adf95527d42a6ba6cacd2bea0e0d0b7  kdump.initd
+2c5de66d56f59d4814064ba24b3f20d33c638cefb93b6258f082c96caa366c14be58efb4f0bccdcb9950dd4d6410683356c7e0fb5eadbb2793e2995c253bf95e  kdump.confd
+"

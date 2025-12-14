@@ -1,0 +1,19 @@
+# Maintainer: Luca Weiss <luca@lucaweiss.eu>
+pkgname=suru-icon-theme
+pkgver=2025.05.0
+pkgrel=0
+pkgdesc="Icon Theme for Lomiri Operating Environment"
+arch="noarch"
+url="https://gitlab.com/ubports/development/core/suru-icon-theme"
+license="CC-BY-SA-3.0"
+source="https://gitlab.com/ubports/development/core/suru-icon-theme/-/archive/$pkgver/suru-icon-theme-$pkgver.tar.gz"
+options="!check" # No tests
+
+package() {
+	mkdir -p "$pkgdir"/usr/share/icons
+	cp -r suru "$pkgdir"/usr/share/icons/suru
+}
+
+sha512sums="
+0c96738f2c6afc0faaa7d68a227d144465e1a50031191e17b45816f86dc0479769323e1bf21fe7c2c72c501ccdcd80b14635584b3a81ad94f95a1e03e2897313  suru-icon-theme-2025.05.0.tar.gz
+"

@@ -1,0 +1,56 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=py3-skia-pathops
+pkgver=0.8.0
+_pkgver=$pkgver.post2
+pkgrel=1
+pkgdesc="Python bindings for the Skia library's Path Ops"
+url="https://github.com/fonttools/skia-pathops"
+arch="all !s390x" # doesn't support big endian
+license="BSD-3-Clause"
+depends="python3 cython"
+makedepends="
+	gn
+	py3-gpep517
+	py3-setuptools
+	py3-setuptools_scm
+	py3-wheel
+	python3-dev
+	samurai
+	"
+checkdepends="py3-pytest-xdist"
+subpackages="$pkgname-pyc"
+source="https://files.pythonhosted.org/packages/source/s/skia_pathops/skia_pathops-$_pkgver.zip
+	disable-musttail-ppc64le.patch
+	gn-ninja.patch
+	"
+builddir="$srcdir/skia_pathops-$_pkgver"
+options="net"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--config-json '{"no-fetch-gn": true}' \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	# disable tests that fails with setuptools 77
+	# re-enable tests when upstream remove pinning on setuptools
+	# https://github.com/fonttools/skia-pathops/blob/b8a88f6ae7cb003670a95a70315c202e45b5a7b2/pyproject.toml#L4
+	.testenv/bin/python3 -m pytest -n auto -p no:warnings \
+		-k 'not arc_to_quads-operations4-expected4 and not conic_2_quad-operations3-expected3'
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+ae3634613551b4465919bbbab4030a03e4c2cb4776d7257a690694a34fdfe246374d406585aa08c4fbf4760be0da8d0aae7dd8a4f84d9e3702b17c62b35449ca  skia_pathops-0.8.0.post2.zip
+c02660059962ac7b21f47ebdf19d68affd61f9a98213f63299895a048e0fd0326570602ac2ec2f7a5869aab5b18e47a935c877e2ba6f67c0476bd632d371cf16  disable-musttail-ppc64le.patch
+1df0382cfb70a7cacad2ed68b6fe50c47835d613045ab2a3b403c02b7d16e88606adbd2b3f4db01afd7998673b4844632fe2405aa2d234917fd59e7de41ae595  gn-ninja.patch
+"

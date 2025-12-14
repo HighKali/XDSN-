@@ -1,0 +1,61 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=krfb
+pkgver=25.08.3
+pkgrel=0
+arch="all !armhf"
+url="https://kde.org/applications/internet/org.kde.krfb"
+pkgdesc="Desktop sharing"
+license="GPL-3.0-or-later AND GFDL-1.2-only"
+makedepends="
+	extra-cmake-modules
+	kcompletion-dev
+	kconfig-dev
+	kcoreaddons-dev
+	kcrash-dev
+	kdbusaddons-dev
+	kdnssd-dev
+	kdoctools-dev
+	ki18n-dev
+	knotifications-dev
+	kpipewire-dev
+	kstatusnotifieritem-dev
+	kwallet-dev
+	kwayland-dev
+	kwidgetsaddons-dev
+	kxmlgui-dev
+	libvncserver-dev
+	pipewire-dev
+	plasma-wayland-protocols
+	qt6-qtbase-dev
+	samurai
+	xcb-util-dev
+	xcb-util-image-dev
+	"
+subpackages="$pkgname-doc $pkgname-lang"
+_repo_url="https://invent.kde.org/network/krfb.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/krfb-$pkgver.tar.xz"
+options="!check" # No tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+0de331cd25f3b54168b77e98ce0040080d96f500148d7e4d7ba953abd678247ab73a2dfcfdd49feae0350a1360436743af643ad9bd81c93fecde1f0d991e0492  krfb-25.08.3.tar.xz
+"

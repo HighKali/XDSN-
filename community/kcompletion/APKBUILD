@@ -1,0 +1,56 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-frameworks
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=kcompletion
+pkgver=6.20.0
+pkgrel=0
+pkgdesc="Text completion helpers and widgets"
+# armhf blocked by qt6-qtdeclarative -> kconfig
+arch="all !armhf"
+url="https://community.kde.org/Frameworks"
+license="LGPL-2.1-or-later"
+depends_dev="
+	kcodecs-dev
+	kconfig-dev
+	kwidgetsaddons-dev
+	"
+makedepends="$depends_dev
+	doxygen
+	extra-cmake-modules
+	graphviz
+	kde-qdoc-common
+	qt6-qttools-dev
+	samurai
+	"
+checkdepends="xwayland-run"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+_repo_url="https://invent.kde.org/frameworks/kcompletion.git"
+source="https://download.kde.org/stable/frameworks/${pkgver%.*}/kcompletion-$pkgver.tar.xz"
+
+build() {
+	export KDE_DOCS=/usr/share/kde/documentation
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+
+	cmake --build build --target prepare_docs
+	cmake --build build --target generate_docs
+	cmake --build build --target generate_qch
+}
+
+check() {
+	wlheadless-run -- ctest --test-dir build -E "klineedit_unittest"
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+
+	DESTDIR="$pkgdir" cmake --build build --target install_html_docs
+	DESTDIR="$pkgdir" cmake --build build --target install_qch_docs
+}
+
+sha512sums="
+cb029cf1fc0e95da8c772676a6a1a1134d9fe336701b7a76dfa6beeffe6e6a5c29ba16f07fc43b25cea90909ed69942a56998548a1c682b7c54df548505428f9  kcompletion-6.20.0.tar.xz
+"

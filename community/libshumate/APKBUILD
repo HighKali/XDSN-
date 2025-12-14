@@ -1,0 +1,44 @@
+# Maintainer: team/gnome <achill@achill.org>
+pkgname=libshumate
+pkgver=1.5.1
+pkgrel=1
+pkgdesc="GTK4 widget to display maps"
+url="https://gitlab.gnome.org/GNOME/libshumate"
+arch="all"
+license="LGPL-2.1-or-later"
+makedepends="
+	gobject-introspection-dev
+	gperf
+	gtk4.0-dev
+	json-glib-dev
+	libsoup3-dev
+	meson
+	protobuf-c-dev
+	vala
+	"
+checkdepends="dbus mesa-dri-gallium xvfb-run"
+subpackages="$pkgname-dev $pkgname-lang"
+source="https://gitlab.gnome.org/GNOME/libshumate/-/archive/$pkgver/libshumate-$pkgver.tar.gz"
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		-Dgtk_doc=false \
+		-Dvector_renderer=true \
+		. output
+	meson compile -C output
+}
+
+check() {
+	dbus-run-session \
+		xvfb-run -a \
+		meson test --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+42f79d18f1119a712aba1aad41bac1d53c45aae982440aa46ff5608c9f312847f98bb32845a682225f0fc697d712aa56de1498c1586cd2184a0ecf56005ae85f  libshumate-1.5.1.tar.gz
+"

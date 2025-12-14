@@ -1,0 +1,65 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=akonadi-search
+pkgver=25.08.3
+pkgrel=0
+pkgdesc="Libraries and daemons to implement searching in Akonadi"
+# riscv64 blocked by akonadi
+# s390x blocked by multiple KDE Frameworks
+# armhf blocked by qt6-qtwebengine -> akonadi
+arch="all !armhf !s390x !riscv64"
+url="https://community.kde.org/KDE_PIM"
+license="( GPL-2.0-only OR GPL-3.0-only ) AND ( LGPL-2.1-only OR LGPL-3.0-only )"
+depends_dev="
+	akonadi-dev
+	akonadi-mime-dev
+	corrosion
+	kcalendarcore-dev
+	kcmutils-dev
+	kconfig-dev
+	kcontacts-dev
+	kcrash-dev
+	kdbusaddons-dev
+	ki18n-dev
+	kio-dev
+	kmime-dev
+	krunner-dev
+	ktextaddons-dev
+	qt6-qtbase-dev
+	xapian-core-dev
+	"
+makedepends="$depends_dev
+	doxygen
+	extra-cmake-modules
+	graphviz
+	samurai
+	"
+checkdepends="
+	dbus
+	xwayland-run
+	"
+subpackages="$pkgname-dev $pkgname-lang"
+_repo_url="https://invent.kde.org/pim/akonadi-search.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/akonadi-search-$pkgver.tar.xz"
+options="net" # Required to download Rust crates
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_QCH=ON
+	cmake --build build
+}
+
+check() {
+	dbus-run-session wlheadless-run -- ctest --test-dir build -E "(queryparser|searchplugin)test"
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+sha512sums="
+71891ef7d849b445e8020ead6100b5b5040bcb37cc4baa36ed896e1b07f0a6c58d7628b442459be5c09809982d7b5d5be58027a1567c7cfdde494af96d7b41ff  akonadi-search-25.08.3.tar.xz
+"

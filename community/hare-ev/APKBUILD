@@ -1,0 +1,28 @@
+# Maintainer: Willow Barraco <contact@willowbarraco.fr>
+pkgname=hare-ev
+pkgver=0.25.2.0
+pkgrel=0
+pkgdesc="Event loop for Hare"
+url="https://git.sr.ht/~sircmpwn/hare-ev"
+arch="noarch !armhf !ppc64le !s390x !armv7 !x86 !loongarch64" # hare
+license="MPL-2.0"
+makedepends="hare"
+source="
+	$pkgname-$pkgver.tar.gz::https://git.sr.ht/~sircmpwn/hare-ev/archive/$pkgver.tar.gz
+"
+
+build() {
+	make -j1 PREFIX=/usr
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" PREFIX=/usr install
+}
+
+sha512sums="
+22969e9819a3081d11f180a5c4c9e2c72938e0593b08d191a4e81f73dc4456a0bd5deedb7192017516b37880fbb30d8f396d40eeb53895474d0a69a6832b97fc  hare-ev-0.25.2.0.tar.gz
+"

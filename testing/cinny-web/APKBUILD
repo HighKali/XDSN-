@@ -1,0 +1,39 @@
+# Contributor: Lindsay Zhou <i@lin.moe>
+# Maintainer: Lindsay Zhou <i@lin.moe>
+maintainer="Lindsay Zhou <i@lin.moe>"
+_pkgname=cinny
+pkgname="$_pkgname"-web
+pkgver=4.10.2
+pkgrel=0
+pkgdesc="A Matrix client focusing primarily on simple, elegant and secure interface. (website)"
+url="https://cinny.in/"
+# limited by nodejs module rollup
+arch="x86_64 aarch64"
+license="AGPL-3.0-or-later "
+makedepends="npm"
+source="
+	$_pkgname-$pkgver.tar.gz::https://github.com/cinnyapp/cinny/archive/v$pkgver.tar.gz
+	use-hash-router-default.patch
+"
+builddir="$srcdir/$_pkgname-$pkgver"
+options="!check" # no test suite
+
+build() {
+	export NODE_OPTIONS="--max-old-space-size=4000"
+	npm ci
+	npm run build
+}
+
+package() {
+	local webroot="$pkgdir"/usr/share/webapps/cinny
+	install -d "$webroot"
+	cp -r "$builddir"/dist/* "$webroot"
+
+	install -Dm644 "$builddir"/dist/config.json "$pkgdir"/etc/cinny/config.json
+	ln -sf /etc/cinny/config.json "$pkgdir"/usr/share/webapps/cinny/config.json
+}
+
+sha512sums="
+303ff547b190627225dd1d1108bb6540225c9ca842b43bc4e318eb533af0ff5ef51619c68513039aedb1a54814d5993586df19117204963c3d710b64014d99b0  cinny-4.10.2.tar.gz
+d0e71e0b9874b13fb2a76c9ebf3a410f76a002e42d171c30cad887cff5317c3f84080f00f85b9b431c0321da221956295525d4bc74d00451a07680ebf4813d2c  use-hash-router-default.patch
+"

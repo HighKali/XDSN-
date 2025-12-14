@@ -1,0 +1,69 @@
+# Contributor: Michał Adamski <michal@ert.pl>
+# Contributor: Rdbo <rdbodev@gmail.com>
+# Maintainer: Rdbo <rdbodev@gmail.com>
+pkgname=electrum
+pkgver=4.5.8
+pkgrel=0
+pkgdesc="Lightweight Bitcoin Wallet"
+url="https://electrum.org/"
+arch="noarch"
+license="MIT"
+depends="
+	libsecp256k1
+	py3-aiohttp
+	py3-aiohttp-socks
+	py3-aiorpcx
+	py3-attrs
+	py3-bitstring
+	py3-certifi
+	py3-dnspython
+	py3-ecdsa
+	py3-jsonpatch
+	py3-protobuf
+	py3-pycryptodomex
+	py3-qrcode
+	"
+makedepends="
+	py3-gpep517
+	py3-setuptools
+	py3-wheel
+	"
+checkdepends="py3-pytest-xdist py3-cryptography py3-pyaes"
+subpackages="$pkgname-pyc $pkgname-gui"
+source="
+	electrum-$pkgver.tar.gz::https://github.com/spesmilo/electrum/archive/refs/tags/$pkgver.tar.gz
+	0001-apk-add-instead-of-apt-get-install.patch
+"
+
+gui() {
+	pkgdesc="GUI for $pkgname"
+	install_if="$pkgname=$pkgver-r$pkgrel" # The GUI will be installed by default, and can
+	                                       # be disabled with !electrum-gui
+	depends="$pkgname=$pkgver-r$pkgrel py3-qt5"
+
+	mkdir -p "$subpkgdir"
+}
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest -n auto \
+		--ignore tests/test_qml_types.py \
+		tests
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+0e7b15747fcce94ad60f068c013a5f6051402b049bb63493179768f6a4c6cb7b8d1b7b1750861afd89f7ed6a83313dee6d40022098ed2dbb9897fbf31e978350  electrum-4.5.8.tar.gz
+797f684a8df30176129335e9e09868be8a4db7a76b3b89dd0b48d93e577a90aa378839a7cc2bf7804494e1cfea77e392fcf74d55243ad51531f4e42c6c747aac  0001-apk-add-instead-of-apt-get-install.patch
+"

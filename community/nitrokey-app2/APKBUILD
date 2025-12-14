@@ -1,0 +1,41 @@
+maintainer="Bart Ribbers <bribbers@disroot.org>"
+pkgname=nitrokey-app2
+pkgver=2.4.1
+pkgrel=1
+pkgdesc="Nitrokey management application"
+url="https://github.com/Nitrokey/nitrokey-app2"
+# blocked by py3-spsdk -> py3-pynitrokey
+# armhf blocked by qt6-qtdeclarative -> py3-pyside6
+arch="aarch64 x86_64"
+license="Apache-2.0"
+depends="
+	py3-pynitrokey
+	py3-pyside6
+	py3-qt-material
+	py3-qt5
+	py3-usb-monitor
+	"
+makedepends="
+	poetry
+	py3-flit-core
+	py3-gpep517
+	py3-installer
+	"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/Nitrokey/nitrokey-app2/archive/refs/tags/v$pkgver.tar.gz"
+options="!check" # No tests
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+95d2c682332bc5ca60c844d21229d35b344548717b4a51ec4101701fa65229c4e6e3fdccde25438e8dd4f5282d16cb6911c49bbb079345e48fa518ff6ec06d45  nitrokey-app2-2.4.1.tar.gz
+"

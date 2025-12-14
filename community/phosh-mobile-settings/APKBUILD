@@ -1,0 +1,54 @@
+# Contributor: Newbyte <newbie13xd@gmail.com>
+# Maintainer: team/phosh <newbie13xd@gmail.com>
+pkgname=phosh-mobile-settings
+pkgver=0.51.0
+pkgrel=0
+pkgdesc="Settings app for mobile specific things"
+url="https://gitlab.gnome.org/World/Phosh/phosh-mobile-settings"
+# blocked by phosh
+arch="all !armhf !s390x"
+license="GPL-3.0-or-later"
+makedepends="
+	cellbroadcastd-dev
+	desktop-file-utils
+	feedbackd-dev
+	glib-dev>=2.62
+	gmobile-dev
+	gnome-desktop-dev
+	gsound-dev
+	gtk4.0-dev
+	json-glib-dev
+	libadwaita-dev
+	libportal-dev
+	lm-sensors-dev
+	meson
+	phosh-dev
+	pulseaudio-dev
+	yaml-dev
+	"
+checkdepends="xvfb-run gsettings-desktop-schemas phosh"
+subpackages="
+	$pkgname-lang
+	$pkgname-dbg
+	"
+source="https://sources.phosh.mobi/releases/phosh-mobile-settings/phosh-mobile-settings-${pkgver/_/.}.tar.xz"
+builddir="$srcdir/$pkgname-${pkgver/_/.}"
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		. output
+	meson compile -C output
+}
+
+check() {
+	xvfb-run meson test --print-errorlogs --suite unit -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild --skip-subprojects -C output
+}
+
+sha512sums="
+04c21b09e734d96300e895710b91bf9a8c8e95e6af1f5dbd47bf01e2b74351ed904b4a81ec14bc41463a28d806e92ae9017f58bdc9d8f792473f6258dfd52b4c  phosh-mobile-settings-0.51.0.tar.xz
+"

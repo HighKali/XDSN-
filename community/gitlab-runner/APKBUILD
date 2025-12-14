@@ -1,0 +1,83 @@
+# Contributor: Carlo Landmeter <clandmeter@alpinelinux.org>
+# Contributor: Rasmus Thomsen <oss@cogitir.dev>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=gitlab-runner
+pkgver=18.6.1
+pkgrel=1
+pkgdesc="GitLab runner for CI/CD jobs"
+url="https://docs.gitlab.com/runner/"
+arch="all"
+license="MIT"
+makedepends="go jq"
+install="$pkgname.pre-install $pkgname.pre-upgrade"
+pkgusers="gitlab-runner"
+pkggroups="gitlab-runner"
+subpackages="$pkgname-helper $pkgname-openrc"
+source="https://gitlab.com/gitlab-org/gitlab-runner/-/archive/v$pkgver/gitlab-runner-v$pkgver.tar.gz
+	$pkgname-$pkgver-tags.json::https://gitlab.com/api/v4/projects/250833/repository/tags/v$pkgver
+	syslog-log-format.patch
+	use-logrus-syslog-hook.patch
+	$pkgname.initd
+	$pkgname.confd
+	$pkgname.logrotate
+	"
+builddir="$srcdir/$pkgname-v$pkgver"
+# check: need to be run in a git repo
+# net: required for pulling dependencies
+options="!check net"
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+# secfixes:
+#   15.10.0-r0:
+#     - CVE-2022-1996
+
+build() {
+	# This is used to determine what version of
+	# https://hub.docker.com/r/gitlab/gitlab-runner-helper/tags to use.
+	local gitrev
+	gitrev="$(jq -r '.commit.short_id' "$srcdir/$pkgname-$pkgver-tags.json")"
+	echo "Tag v$pkgver resolved to SHA $gitrev" >&2
+
+	local ldflags="
+		-X gitlab.com/gitlab-org/$pkgname/common.NAME=$pkgname
+		-X gitlab.com/gitlab-org/$pkgname/common.VERSION=$pkgver
+		-X gitlab.com/gitlab-org/$pkgname/common.REVISION=$gitrev
+		-X gitlab.com/gitlab-org/$pkgname/common.BUILT=$(date -d @"$SOURCE_DATE_EPOCH" -u +%Y-%m-%dT%H:%M:%S%z)
+		-X gitlab.com/gitlab-org/$pkgname/common.BRANCH=master
+		"
+	# required for github.com/docker/docker
+	export GO111MODULE=auto
+	go build -ldflags "$ldflags" -o bin/gitlab-runner
+	go build -ldflags "$ldflags" -o bin/gitlab-runner-helper \
+		./apps/gitlab-runner-helper
+}
+
+package() {
+	install -Dm755 bin/gitlab-runner -t "$pkgdir"/usr/bin/
+
+	install -Dm755 "$srcdir"/$pkgname.initd "$pkgdir"/etc/init.d/$pkgname
+	install -Dm644 "$srcdir"/$pkgname.confd "$pkgdir"/etc/conf.d/$pkgname
+	install -Dm644 "$srcdir"/$pkgname.logrotate "$pkgdir"/etc/logrotate.d/$pkgname
+
+	install -d -m750 -o "$pkgusers" -g "$pkggroups" "$pkgdir"/etc/$pkgname
+	install -d -m700 -o "$pkgusers" -g "$pkggroups" "$pkgdir"/var/lib/$pkgname
+}
+
+helper() {
+	pkgdesc="$pkgdesc (helper)"
+
+	install -Dm755 "$builddir"/bin/gitlab-runner-helper -t "$subpkgdir"/usr/bin/
+}
+
+sha512sums="
+3d750027adbbba03eed14a099ad46ce37497c80b8fbb072edfe65ec239602ea133a0eb2eb25dd4dc2af8a683c2e9c6e38a104c44ee77b9cf0c57fa6b4837ad24  gitlab-runner-v18.6.1.tar.gz
+9c4d8f5c28e8c6395f176b5eb50e94618fbbb29abfad7d3e4666ea026bf1093c2a28c052ea952c66446d72ca77eb27b7df7b33c0a7cdb62d94c2674ebd43a5f7  gitlab-runner-18.6.1-tags.json
+413aebe6ab49f3e466ac8433155a120991f77f5d544f03f28a69ba261a1a2d88a0fc8ab112d9c16cceeb4a9df70a3134b10f4efe6b8bcbbacd83e3a574a54289  syslog-log-format.patch
+dfc0ab4cc934b65da33e31a0f767fd655e82c5eb87ad6f7ff331325e402e4e0aec623707f2bdd1c346d087a2df6d1ecd77d9bdd460f9be2b7cd7bd200064e82f  use-logrus-syslog-hook.patch
+8cdcea1e07b30b720d0e18a12f06fff69f2a7804d0038b2bfd6a880a5c99eb4b2b06dd8ccd21edc501a2205d89decb176b725211a03253068fa45b6861e75f11  gitlab-runner.initd
+45c3727a4b2544c59db50b3a93d917bbce14441453ebd0b81c981568ccc71338e564213f7bed449f0712fbcfb96ce6e51ac5759d5bde82e3986265e26d9db315  gitlab-runner.confd
+2ddd42622b72135a95ac1c09061b61e73c4f89d4f0a86d1a3c902760d4a5f2c749a04f2d81568c973c83b1aae60ada71360a6bf74a31f8e5d9b10b90af4cdcfe  gitlab-runner.logrotate
+"

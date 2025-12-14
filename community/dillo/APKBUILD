@@ -1,0 +1,154 @@
+# Contributor: ScrumpyJack <scrumpyjack@st.ilet.to>
+# Maintainer: Celeste <cielesti@protonmail.com>
+maintainer="Celeste <cielesti@protonmail.com>"
+pkgname=dillo
+pkgver=3.2.0
+#_gitrev=dc3c3bc087ee5ae5a25e936eab62124685564d4b
+pkgrel=0
+pkgdesc="Fast and small graphical web browser"
+url="https://github.com/dillo-browser/dillo"
+arch="all"
+license="GPL-3.0-or-later"
+depends="$pkgname-common=$pkgver-r$pkgrel"
+makedepends="
+	autoconf
+	automake
+	fltk-dev
+	libjpeg-turbo-dev
+	libpng-dev
+	libwebp-dev
+	libx11-dev
+	mbedtls-dev
+	openssl-dev
+	zlib-dev
+	"
+checkdepends="expect xvfb-run"
+subpackages="
+	$pkgname-common
+	$pkgname-doc
+	$pkgname-mbedtls
+	"
+if [ -n "$_gitrev" ]; then
+	source="https://github.com/dillo-browser/dillo/archive/$_gitrev/dillo-browser-$_gitrev.tar.gz"
+	builddir="$srcdir/$pkgname-$_gitrev"
+else
+	source="https://github.com/dillo-browser/dillo/archive/refs/tags/v${pkgver/_rc/-rc}/dillo-browser-$pkgver.tar.gz"
+	builddir="$srcdir/$pkgname-${pkgver/_rc/-rc}"
+fi
+source="$source dillo-mbedtls.desktop"
+options="net" # tests check HTTPS connectivity
+
+prepare() {
+	default_prepare
+
+	./autogen.sh
+
+	cp -r "$builddir" "$builddir-mbedtls"
+}
+
+_build() {
+	CXXFLAGS="$CXXFLAGS ${_gitrev:+-DGIT_COMMIT='\"$_gitrev\"'}" \
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var \
+		--enable-gif \
+		--enable-ipv6 \
+		--enable-jpeg \
+		--enable-png \
+		--enable-tls \
+		--enable-webp \
+		--with-ca-certs-dir=/etc/ssl/certs \
+		"$@"
+
+	make
+}
+
+build() {
+	_build \
+		--enable-openssl \
+		--disable-mbedtls
+
+	cd "$builddir-mbedtls"
+	_build \
+		--enable-mbedtls \
+		--disable-openssl
+}
+
+_check() {
+	local builddir="$1"
+
+	export DILLO_TESTBIN="$builddir/src/dillo"
+	export DILLO_TESTSITE="${DILLO_TESTSITE:-"alpinelinux.org"}"
+
+	msg "Running tests for $($DILLO_TESTBIN --version)"
+
+	msg "Running Dillo HTTPS check"
+	HOME="$srcdir" xvfb-run -a expect -f - <<-'END'
+		set testsite $env(DILLO_TESTSITE)
+		spawn $env(DILLO_TESTBIN) https://${testsite}
+		set domain [lindex [split $testsite /] 0]
+		expect {
+			timeout { exit 1 }
+			-re [concat $domain:? {TLSv1.\d, cipher}] {
+				exit 0
+			}
+		}
+	END
+
+	msg "Running the Dillo test suite" # TODO: run the full test suite
+	make -C "$builddir" check || {
+		cat "$builddir"/test/html/test-suite.log
+		return 1
+	}
+}
+
+check() {
+	_check "$builddir"
+
+	_check "$builddir-mbedtls"
+}
+
+package() {
+	pkgdesc="$pkgdesc using OpenSSL"
+
+	make DESTDIR="$pkgdir" install
+
+	install -Dvm644 AUTHORS ChangeLog README NEWS \
+		-t "$pkgdir"/usr/share/doc/$pkgname/
+
+	install -Dvm755 "$builddir-mbedtls"/src/dillo \
+		"$pkgdir"/usr/bin/dillo-mbedtls
+	install -Dvm644 "$srcdir"/dillo-mbedtls.desktop \
+		"$pkgdir"/usr/share/applications/
+}
+
+common() {
+	pkgdesc="$pkgdesc (common files)"
+	depends="ca-certificates wget"
+
+	amove \
+		etc/dillo \
+		usr/bin/dillo-install-hyphenation \
+		usr/bin/dpid \
+		usr/bin/dpidc \
+		usr/lib/dillo \
+		usr/share/doc/dillo/user_help.html \
+		usr/share/icons/hicolor/*/apps/dillo.png
+}
+
+mbedtls() {
+	pkgdesc="$pkgdesc using MbedTLS"
+
+	amove \
+		usr/bin/dillo-mbedtls \
+		usr/share/applications/dillo-mbedtls.desktop
+}
+
+sha512sums="
+ff6aa64c79a5dac3bd5152e7501a20c129924c20df712003fc2cd0f18ab55886b0959aea4765f3c893e450e9f95781c10d393108cae8240804d4740f8121f066  dillo-browser-3.2.0.tar.gz
+a3e3d9a66ae3cab9a0849b3c89761115a697513bb02b0a2d1b9da7975b50608fac539802af3b03588adea1c14b10bb890238214a742d336881a9f1b66e24787f  dillo-mbedtls.desktop
+"

@@ -1,0 +1,53 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+maintainer="Achill Gilgenast <achill@achill.org>"
+pkgname=gtk-layer-shell
+pkgver=0.10.0
+pkgrel=0
+pkgdesc="Create panels and other desktop components in Wayland using the Layer Shell protocol"
+url="https://github.com/wmww/gtk-layer-shell"
+arch="all"
+license="LGPL-3.0-or-later AND MIT"
+makedepends="
+	gobject-introspection-dev
+	gtk+3.0-dev
+	meson
+	vala
+	wayland-dev
+	"
+checkdepends="
+	font-dejavu
+	xvfb-run
+	"
+subpackages="$pkgname-dev $pkgname-demo"
+source="$pkgname-$pkgver.tar.gz::https://github.com/wmww/gtk-layer-shell/archive/v$pkgver.tar.gz"
+options="!check" # tests fail
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		-Dexamples=true \
+		-Ddocs=false \
+		-Dtests=true \
+		. output
+	meson compile -C output
+}
+
+check() {
+	XDG_RUNTIME_DIR="$(mktemp -d -p "$builddir")" \
+		xvfb-run -a \
+		meson test --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+demo() {
+	pkgdesc="Demo of GTK Layer Shell"
+
+	amove usr/bin/gtk-layer-demo
+}
+
+sha512sums="
+126ad6a407a026fea4e740c2578bb218c9d19de10c03ba759b57b60c19e4ea86481a1c80bcbde9003e0c27a70d83b3ae853512ad5014c04e8c4949f9573e746f  gtk-layer-shell-0.10.0.tar.gz
+"

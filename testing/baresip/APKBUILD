@@ -1,0 +1,67 @@
+# Contributor: Francesco Colista <fcolista@alpinelinux.org>
+# Maintainer: Francesco Colista <fcolista@alpinelinux.org>
+pkgname=baresip
+pkgver=4.1.0
+pkgrel=0
+pkgdesc="Baresip is a modular SIP User-Agent with audio and video support"
+url="https://github.com/baresip/baresip"
+arch="all"
+license="BSD-3-Clause"
+makedepends="cmake ninja libre-dev
+alsa-lib-dev
+aom-dev
+directfb-dev
+fdk-aac-dev
+ffmpeg-dev
+glib-dev
+gsm-dev
+gst-plugins-bad-dev
+gst-plugins-base-dev
+gst-plugins-good
+gst-plugins-rs
+gst-plugins-ugly
+gtk+3.0-dev
+jack-dev
+lame-dev
+libfreeaptx-dev
+libpng-dev
+libre-dev
+libsndfile-dev
+libvpx-dev
+mosquitto-dev
+mpg123-dev
+opencore-amr-dev
+openssl-dev
+opus-dev
+pipewire-dev
+portaudio-dev
+pulseaudio-dev
+python3-dev
+sdl12-compat-dev
+sdl2-dev
+spandsp3-dev
+speexdsp-dev
+v4l-utils-dev
+"
+subpackages="$pkgname-dev"
+source="$pkgname-$pkgver.tar.gz::https://github.com/baresip/baresip/archive/v$pkgver.tar.gz"
+
+build() {
+	cmake -B . -G Ninja \
+		-DCMAKE_BUILD_TYPE='Release' \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-Wno-dev
+	cmake --build .
+}
+
+check() {
+	cd test && python3 ccheck.py
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install .
+}
+
+sha512sums="
+1d9e42d2f2f92c7aeda3a911c7d4082f4524a654d5afcfbd8ac1671e79012475d3f95dd374b9de18fc17ae3c392705746927b3e447b4f3b16c78273e058cdf4d  baresip-4.1.0.tar.gz
+"

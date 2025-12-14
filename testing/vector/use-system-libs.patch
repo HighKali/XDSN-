@@ -1,0 +1,60 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index 3aa69b7e6..0826ed4e9 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -3855,6 +3855,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "4a3d7db9596fecd151c5f638c0ee5d5bd487b6e0ea232e5dc96d5250f6f94b1d"
+ dependencies = [
+  "crc32fast",
++ "libz-ng-sys",
+  "libz-rs-sys",
+  "miniz_oxide",
+ ]
+@@ -5969,6 +5970,16 @@ dependencies = [
+  "vcpkg",
+ ]
+ 
++[[package]]
++name = "libz-ng-sys"
++version = "1.1.22"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "a7118c2c2a3c7b6edc279a8b19507672b9c4d716f95e671172dfa4e23f9fd824"
++dependencies = [
++ "cmake",
++ "libc",
++]
++
+ [[package]]
+ name = "libz-rs-sys"
+ version = "0.5.1"
+diff --git a/Cargo.toml b/Cargo.toml
+index e05a78d8d..d7200a0c9 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -149,7 +149,7 @@ crossbeam-utils = { version = "0.8.21", default-features = false }
+ darling = { version = "0.20.11", default-features = false, features = ["suggestions"] }
+ dashmap = { version = "6.1.0", default-features = false }
+ derivative = { version = "2.2.0", default-features = false }
+-flate2 = { version = "1.1.2", default-features = false, features = ["zlib-rs"] }
++flate2 = { version = "1.1.2", default-features = false, features = ["zlib-ng"] }
+ futures = { version = "0.3.31", default-features = false, features = ["compat", "io-compat", "std"], package = "futures" }
+ futures-util = { version = "0.3.29", default-features = false }
+ glob = { version = "0.3.3", default-features = false }
+@@ -423,7 +423,7 @@ thread_local = { version = "1.1.9", default-features = false, optional = true }
+ typetag = { version = "0.2.20", default-features = false }
+ url = { version = "2.5.4", default-features = false, features = ["serde"] }
+ warp = { version = "0.3.7", default-features = false }
+-zstd = { version = "0.13.0", default-features = false }
++zstd = { version = "0.13.0", default-features = false, features = ["pkg-config"] }
+ arr_macro = { version = "0.2.1" }
+ 
+ # depending on fork for bumped nix dependency
+@@ -499,7 +499,7 @@ default-cmake = ["api", "api-client", "enrichment-tables", "rdkafka?/cmake_build
+ # Default features for *-pc-windows-msvc
+ # TODO: Enable SASL https://github.com/vectordotdev/vector/pull/3081#issuecomment-659298042
+ default-msvc = ["api", "api-client", "enrichment-tables", "rdkafka?/cmake_build", "sinks", "sources", "transforms", "secrets"]
+-default-musl = ["api", "api-client", "enrichment-tables", "rdkafka?/cmake_build", "sinks", "sources", "sources-dnstap", "transforms", "unix", "rdkafka?/gssapi-vendored", "secrets"]
++default-musl = ["api", "api-client", "enrichment-tables", "rdkafka?/dynamic-linking", "sinks", "sources", "sources-dnstap", "transforms", "unix", "rdkafka?/gssapi", "secrets"]
+ default-no-api-client = ["api", "enrichment-tables", "sinks", "sources", "sources-dnstap", "transforms", "unix", "rdkafka?/gssapi-vendored", "secrets"]
+ default-no-vrl-cli = ["api", "sinks", "sources", "sources-dnstap", "transforms", "unix", "rdkafka?/gssapi-vendored", "secrets"]
+ tokio-console = ["dep:console-subscriber", "tokio/tracing"]

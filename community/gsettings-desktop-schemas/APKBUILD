@@ -1,0 +1,30 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: team/gnome <achill@achill.org>
+pkgname=gsettings-desktop-schemas
+pkgver=49.1
+pkgrel=1
+pkgdesc="A collection of GSettings schemas"
+url="https://gitlab.gnome.org/GNOME/gsettings-desktop-schemas"
+arch="noarch"
+license="LGPL-2.0-or-later"
+depends_dev="$pkgname=$pkgver-r$pkgrel"
+makedepends="glib-dev gobject-introspection-dev meson"
+subpackages="$pkgname-dev $pkgname-lang"
+source="https://download.gnome.org/sources/gsettings-desktop-schemas/${pkgver%.*}/gsettings-desktop-schemas-$pkgver.tar.xz"
+
+build() {
+	abuild-meson . output
+	meson compile -C output
+}
+
+check() {
+	meson test --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+60924480d92bbb56d0f61e3b923398e9eb355c5c998989861dd25b8540f042bc70d174646c286946b868367fb8e74d5bd6b90885f7a48a2ec75b87ec447e964b  gsettings-desktop-schemas-49.1.tar.xz
+"

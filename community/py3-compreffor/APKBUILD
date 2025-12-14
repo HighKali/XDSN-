@@ -1,0 +1,47 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=py3-compreffor
+pkgver=0.5.6
+pkgrel=0
+pkgdesc="CFF table subroutinizer for FontTools"
+url="https://github.com/googlefonts/compreffor"
+arch="all"
+license="Apache-2.0"
+depends="
+	py3-fonttools
+	python3
+	"
+makedepends="
+	cython
+	py3-pytest-runner
+	py3-setuptools
+	py3-setuptools_scm
+	python3-dev
+	"
+checkdepends="py3-pytest"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/googlefonts/compreffor/archive/$pkgver.tar.gz
+	0001-Drop-the-setuptools_git_ls_files-dependency.patch
+	"
+builddir="$srcdir/compreffor-$pkgver"
+
+export SETUPTOOLS_SCM_PRETEND_VERSION=$pkgver
+
+build() {
+	python3 setup.py build_ext --inplace
+	python3 setup.py build
+}
+
+check() {
+	pytest
+}
+
+package() {
+	python3 setup.py install --skip-build --root="$pkgdir"
+	rm -rf "$pkgdir"/usr/lib/python3*/site-packages/compreffor/test
+}
+
+sha512sums="
+5bad53a074d59b95360604434247e50740333ae45a87331246e8098f3ec8b98319d9386a0d9df08f862d4c52f5d97c97651e75fea1ae37b1cab8fb2cad6acad4  py3-compreffor-0.5.6.tar.gz
+3fc7f6b9686d1af7e45dd26c43920a7424759cea3c362d79ae72e7c6a36cc4ffb0f71806387a1d897dbdf5cc1ca00bcfc2661622ec9b7013b2ade5b400b4d2c2  0001-Drop-the-setuptools_git_ls_files-dependency.patch
+"

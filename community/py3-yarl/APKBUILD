@@ -1,0 +1,50 @@
+# Contributor: Fabian Affolter <fabian@affolter-engineering.ch>
+maintainer="Achill Gilgenast <achill@achill.org>"
+pkgname=py3-yarl
+pkgver=1.20.0
+pkgrel=1
+pkgdesc="Yet another URL library"
+url="https://yarl.aio-libs.org/"
+license="Apache-2.0"
+arch="all"
+depends="python3 py3-idna py3-multidict py3-propcache"
+makedepends="
+	cython
+	py3-expandvars
+	py3-gpep517
+	py3-propcache
+	py3-setuptools
+	py3-wheel
+	python3-dev
+	"
+checkdepends="
+	py3-hypothesis
+	py3-pytest-codspeed
+	py3-pytest-cov
+	py3-pytest-xdist
+	"
+subpackages="$pkgname-pyc"
+source="https://github.com/aio-libs/yarl/releases/download/v$pkgver/yarl-$pkgver.tar.gz"
+builddir="$srcdir/yarl-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir "$builddir"/.dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	cd .testenv
+	bin/python3 -m pytest -n auto -p no:warnings ../tests
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+826bd2d95a8de05630a597b2427a3c37e50b6d44a73d7003ffb20add68abed4742fb5102c7bdfdb69509b39e7e63bf506ffa0f22138715bf9c8c1a3836bb7607  yarl-1.20.0.tar.gz
+"

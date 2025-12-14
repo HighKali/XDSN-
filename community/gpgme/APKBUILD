@@ -1,0 +1,104 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=gpgme
+pkgver=1.24.2
+pkgrel=3
+pkgdesc="gnupg made easy"
+url="https://www.gnupg.org/related_software/gpgme/"
+arch="all"
+license="LGPL-2.1-or-later AND GPL-3.0-or-later"
+# NOTE: gpgme needs at least gpg or gpgsm, but most programs use only gpg.
+# Some packages depending on gpgme need more GnuPG components (e.g.
+# gnupg-dirmngr); these must be explicitly defined in the package's depends
+# (not here!).
+depends="gpg gpg-agent gpgsm"
+makedepends="
+	libassuan-dev
+	libgpg-error-dev
+	py3-setuptools
+	py3-wheel
+	python3-dev
+	qt6-qtbase-dev
+	swig
+	texinfo
+	"
+checkdepends="gnupg"
+install="$pkgname.post-upgrade gpgmepp.post-upgrade qgpgme6.post-upgrade"
+subpackages="
+	$pkgname-dev
+	$pkgname-doc
+	gpgmepp
+	py3-gpgme-pyc
+	py3-gpgme:py3
+	q${pkgname}6
+	$pkgname-lisp::noarch
+	"
+source="https://www.gnupg.org/ftp/gcrypt/gpgme/gpgme-$pkgver.tar.bz2
+	lfs64.patch
+	"
+
+case "$CARCH" in
+x86|armhf|armv7)
+	# the tests fail here despite some fixes above;
+	#
+	# FAIL!  : AddExistingSubkeyJobTest::testAddExistingSubkeyWithExpiration() Compared values are not the same
+	#    Actual   (result.code())                     : 1
+	#    Expected (static_cast<int>(GPG_ERR_INV_TIME)): 161
+	#    Loc: [t-addexistingsubkey.cpp(238)]
+	options="$options !check"
+	;;
+esac
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--infodir=/usr/share/info \
+		--localstatedir=/var \
+		--enable-languages="python cl qt6 cpp" \
+		--enable-static \
+		--disable-dependency-tracking
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+check() {
+	make check
+}
+
+lisp() {
+	pkgdesc="Common Lisp bindings for GPGME"
+	depends="$depends $pkgname=$pkgver-r$pkgrel"
+
+	amove usr/share
+}
+
+gpgmepp() {
+	pkgdesc="C++ bindings for GPGME"
+
+	amove usr/lib/libgpgmepp.so.*
+}
+
+py3() {
+	pkgdesc="Python 3 bindings for $pkgname"
+	depends="$depends $pkgname=$pkgver-r$pkgrel python3"
+
+	amove usr/lib/python3*
+}
+
+qgpgme6() {
+	pkgdesc="Qt6 bindings for GPGME"
+
+	amove usr/lib/libqgpgmeqt6.so.*
+}
+
+sha512sums="
+ad69101d1fceef6cd1dd6d5348f6f2be06912da6b6a7d0fece3ce08cf35054e6953b80ca9c4748554882892faa44e7c54e705cf25bbf2b796cd4ad12b09da185  gpgme-1.24.2.tar.bz2
+14856041423365463d0e479b85c721f88761e507b480dfde3cda2deb2a323055f016125651a55f7c1b821cec76d2721196407c40c37dbe256959d9b3e1fdecf5  lfs64.patch
+"

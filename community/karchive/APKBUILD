@@ -1,0 +1,58 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-frameworks
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=karchive
+pkgver=6.20.0
+pkgrel=0
+pkgdesc="Qt addon providing access to numerous types of archives"
+arch="all"
+url="https://community.kde.org/Frameworks"
+license="LGPL-2.0-or-later AND LGPL-2.1-or-later"
+depends_dev="
+	bzip2-dev
+	qt6-qtbase-dev
+	xz-dev
+	"
+makedepends="$depends_dev
+	doxygen
+	extra-cmake-modules
+	graphviz
+	kde-qdoc-common
+	qt6-qttools-dev
+	samurai
+	"
+subpackages="$pkgname-dev $pkgname-lang"
+_repo_url="https://invent.kde.org/frameworks/karchive.git"
+source="https://download.kde.org/stable/frameworks/${pkgver%.*}/karchive-$pkgver.tar.xz"
+case "$CARCH" in
+	armhf) ;;
+	*) subpackages="$subpackages $pkgname-doc" ;;
+esac
+
+build() {
+	export KDE_DOCS=/usr/share/kde/documentation
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+
+	cmake --build build --target prepare_docs
+	cmake --build build --target generate_docs
+	cmake --build build --target generate_qch
+}
+
+check() {
+	ctest --test-dir build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+
+	DESTDIR="$pkgdir" cmake --build build --target install_html_docs
+	DESTDIR="$pkgdir" cmake --build build --target install_qch_docs
+}
+
+sha512sums="
+79e2775958f0b751a625e87c7d2ac27f878479e90ec082414f0499d4a7c4c74925c75c3f1b8839981da6a9025dea287d5ba96091b550f8122b56b63b90f00fa1  karchive-6.20.0.tar.xz
+"

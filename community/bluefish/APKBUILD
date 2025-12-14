@@ -1,0 +1,33 @@
+# Contributor: ScrumpyJack <scrumpyjack@st.ilet.to>
+# Maintainer: ScrumpyJack <scrumpyjack@st.ilet.to>
+pkgname=bluefish
+pkgver=2.2.19
+pkgrel=0
+pkgdesc="Bluefish is an editor targeted towards programmers and webdevelopers"
+url="https://bluefish.openoffice.nl/"
+arch="all"
+license="GPL-3.0-or-later"
+makedepends="libtool libxml2-dev gtk+3.0-dev enchant2-dev gucharmap-dev intltool"
+subpackages="$pkgname-lang $pkgname-doc"
+source="https://www.bennewitz.com/bluefish/stable/source/bluefish-$pkgver.tar.bz2"
+
+prepare() {
+	default_prepare
+	update_config_sub
+}
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+e66de6b0a7181b824d50a7765f045754e57d9039df08b874b0abc0a3bab43210162ff495ac778dbd8f3a707f70f16d44dbaa62c62b6d0aad3c8d110082fe36bd  bluefish-2.2.19.tar.bz2
+"

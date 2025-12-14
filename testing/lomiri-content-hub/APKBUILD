@@ -1,0 +1,72 @@
+# Contributor: Antoni Aloy <aaloytorrens@gmail.com>
+# Maintainer: Luca Weiss <luca@lucaweiss.eu>
+pkgname=lomiri-content-hub
+pkgver=2.2.1
+pkgrel=0
+pkgdesc="Content sharing/picking infrastructure and service, designed to allow apps to securely and efficiently exchange content"
+url="https://gitlab.com/ubports/development/core/lomiri-content-hub"
+arch="all !armhf" # blocked by lomiri-ui-toolkit-dev
+license="GPL-3.0-only AND LGPL-3.0-only"
+depends_dev="
+	gsettings-qt-dev
+	libapparmor-dev
+	libnih-dev
+	libnotify-dev
+	lomiri-app-launch-dev
+	lomiri-download-manager-dev
+	lomiri-ui-toolkit-dev
+	qt5-qtdeclarative-dev
+	"
+makedepends="
+	$depends_dev
+	cmake
+	cmake-extras
+	doxygen
+	graphviz
+	gtest-dev
+	libapparmor
+	qt5-qttools-dev
+	samurai
+	"
+checkdepends="
+	dbus-test-runner
+	gmock
+	xvfb-run
+	"
+source="https://gitlab.com/ubports/development/core/lomiri-content-hub/-/archive/$pkgver/lomiri-content-hub-$pkgver.tar.gz
+	0001-Use-qdoc-qt5.patch
+	"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=ON \
+		-DCMAKE_BUILD_TYPE=None
+	cmake --build build
+}
+
+check() {
+	# Some app_hub_communication_* tests require some custom dbus extension
+	# (GetConnectionAppArmorSecurityContext).
+	xvfb-run ctest --test-dir build \
+		-E 'app_hub_communication_store_migration|app_hub_communication_transfer|app_hub_communication_handler'
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+
+	# Remove files for testing only
+	# https://gitlab.com/ubports/development/core/lomiri-content-hub/-/blob/main/debian/lomiri-content-hub-testability.install
+	rm "$pkgdir"/usr/bin/lomiri-content-hub-test*
+	rm "$pkgdir"/usr/share/lomiri-content-hub/peers/lomiri-content-hub-test*
+	rm "$pkgdir"/usr/share/applications/lomiri-content-hub-test*
+	rm -r "$pkgdir"/usr/share/lomiri-content-hub/testability/data
+	rm "$pkgdir"/usr/share/icons/hicolor/512x512/apps/lomiri-content-hub-test*
+}
+
+sha512sums="
+3024a364c2b9b6d901f2c6d6c532a06ad2b462fbced9dab33a91ae76548426743c42dcef40a9dff6c610269572fdbec938c6c615711f58355122eaf75d10dfe2  lomiri-content-hub-2.2.1.tar.gz
+e378ecbf02a692cabcc6870724c680884f74a68960ddff07d5ea90a01263c70e7a609c070ceeef633939ba63f19aa3d98953a491d5f60c23b7f6277e2cd0ba9d  0001-Use-qdoc-qt5.patch
+"

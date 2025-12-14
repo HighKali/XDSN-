@@ -1,0 +1,28 @@
+# Contributor: Michał Polański <michal@polanski.me>
+# Maintainer: Michał Polański <michal@polanski.me>
+pkgname=conmon
+pkgver=2.1.13
+pkgrel=0
+pkgdesc="OCI container runtime monitor"
+url="https://github.com/containers/conmon"
+license="Apache-2.0"
+arch="all"
+makedepends="bash go-md2man glib-dev libseccomp-dev"
+subpackages="$pkgname-doc"
+source="https://github.com/containers/conmon/archive/v$pkgver/conmon-$pkgver.tar.gz"
+
+build() {
+	make
+}
+
+check() {
+	./bin/conmon --version
+}
+
+package() {
+	make install GOMD2MAN=/usr/bin/go-md2man PREFIX=/usr DESTDIR="$pkgdir"
+}
+
+sha512sums="
+cb98b26b3c5f5e5f0b09f5373bd58dc958b66ac4edcac2aa509f48be8b7e9a33001428016290944c4002ddbf63e11fb4657aaad879c89c5776f8c8031f4d1d08  conmon-2.1.13.tar.gz
+"

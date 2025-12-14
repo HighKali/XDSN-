@@ -1,0 +1,68 @@
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -1774,7 +1774,6 @@
+  "bytes",
+  "capacity_builder",
+  "cooked-waker",
+- "deno_core_icudata",
+  "deno_error",
+  "deno_ops",
+  "deno_path_util",
+@@ -1799,12 +1798,6 @@
+ ]
+ 
+ [[package]]
+-name = "deno_core_icudata"
+-version = "0.74.0"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "fe4dccb6147bb3f3ba0c7a48e993bfeb999d2c2e47a81badee80e2b370c8d695"
+-
+-[[package]]
+ name = "deno_cron"
+ version = "0.84.0"
+ dependencies = [
+@@ -2730,7 +2723,6 @@
+  "serde",
+  "thiserror 2.0.12",
+  "tokio",
+- "webpki-roots",
+ ]
+ 
+ [[package]]
+@@ -5215,7 +5207,6 @@
+ checksum = "fbb8270bb4060bd76c6e96f20c52d80620f1d82a3470885694e41e0f81ef6fe7"
+ dependencies = [
+  "bindgen 0.71.1",
+- "cc",
+  "pkg-config",
+  "vcpkg",
+ ]
+@@ -6540,9 +6531,7 @@
+ 
+ [[package]]
+ name = "psm"
+-version = "0.1.21"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "5787f7cda34e3033a72192c018bc5883100330f362ef279a8cbccfce8bb4e874"
++version = "0.1.20"
+ dependencies = [
+  "cc",
+ ]
+@@ -7743,8 +7732,6 @@
+ [[package]]
+ name = "stacker"
+ version = "0.1.15"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "c886bd4480155fd3ef527d45e9ac8dd7118a898a46530b7b94c3e21866259fce"
+ dependencies = [
+  "cc",
+  "cfg-if",
+@@ -9227,8 +9214,6 @@
+ [[package]]
+ name = "v8"
+ version = "135.1.0"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "5861d62596971e448da865320a9ac547e2526fdf9eaf4fb40bf8a9f465bccecb"
+ dependencies = [
+  "bindgen 0.71.1",
+  "bitflags 2.8.0",

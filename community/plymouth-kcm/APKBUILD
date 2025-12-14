@@ -1,0 +1,52 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-plasma
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=plymouth-kcm
+pkgver=6.5.4
+pkgrel=0
+# armhf blocked by qt6-qtdeclarative -> ki18n
+arch="all !armhf"
+url="https://invent.kde.org/plasma/plymouth-kcm"
+pkgdesc="KCM to manage the Plymouth (Boot) theme"
+license="GPL-2.0-or-later"
+depends="plymouth"
+makedepends="
+	extra-cmake-modules
+	karchive-dev
+	kcmutils-dev
+	kconfig-dev
+	kconfigwidgets-dev
+	kdeclarative-dev
+	ki18n-dev
+	kio-dev
+	knewstuff-dev
+	plymouth-dev
+	qt6-qtbase-dev
+	samurai
+	"
+subpackages="$pkgname-lang"
+
+case "$pkgver" in
+	*.*.9*) _rel=unstable;;
+	*) _rel=stable;;
+esac
+
+_repo_url="https://invent.kde.org/plasma/plymouth-kcm.git"
+source="https://download.kde.org/$_rel/plasma/$pkgver/plymouth-kcm-$pkgver.tar.xz"
+options="!check" # No tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+6b195358b470a51a9397ea479c75f4ac53b79835d12aa97f4ee4a0260a1f93a75b0b00b00b18c5fbaa624191f3ce43e532aca7f0dadb1254314500b0e687d317  plymouth-kcm-6.5.4.tar.xz
+"

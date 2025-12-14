@@ -1,0 +1,49 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=ghostwriter
+pkgver=25.08.3
+pkgrel=0
+pkgdesc="Distraction-free markdown editor"
+url="https://invent.kde.org/office/ghostwriter/"
+arch="aarch64 x86_64 loongarch64 ppc64le"
+license="GPL-3.0-or-later"
+depends="qt6-qtsvg"
+makedepends="
+	extra-cmake-modules
+	hunspell-dev
+	kconfigwidgets-dev
+	kcoreaddons-dev
+	kdoctools-dev
+	kxmlgui-dev
+	qt6-qt5compat-dev
+	qt6-qtbase-dev
+	qt6-qtsvg-dev
+	qt6-qttools-dev
+	qt6-qtwebchannel-dev
+	qt6-qtwebengine-dev
+	samurai
+	sonnet-dev
+	"
+subpackages="$pkgname-doc $pkgname-lang"
+_repo_url="https://invent.kde.org/office/ghostwriter.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/ghostwriter-$pkgver.tar.xz"
+# No tests
+options="!check"
+
+build() {
+	CXXFLAGS="$CXXFLAGS -flto=auto" \
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=None \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-Wno-dev
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+39fc55fc12b4c1211a97b3a6a84b2000b0167f925973c1f85cf628e863c2a927974957a0c12f6b79f03c804c03bb5522ec2147b97aac240353bf26c3215a0cad  ghostwriter-25.08.3.tar.xz
+"

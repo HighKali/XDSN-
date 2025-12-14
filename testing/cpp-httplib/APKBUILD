@@ -1,0 +1,33 @@
+maintainer="Achill Gilgenast <achill@achill.org>"
+pkgname=cpp-httplib
+pkgver=0.28.0
+pkgrel=0
+pkgdesc="C++ header-only HTTP/HTTPS server and client library"
+url="https://github.com/yhirose/cpp-httplib"
+arch="noarch"
+license="MIT"
+makedepends="cmake samurai"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/yhirose/cpp-httplib/archive/refs/tags/v$pkgver.tar.gz"
+options="!check" # no tests
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		local crossopts="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	cmake -B build \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=ON \
+		-DCMAKE_BUILD_TYPE=None \
+		$crossopts
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+e7a8877d489c97669a8ee536e1498575be921e558ed947253013fe6b67a49d4569eedd01f543caa70183b92d8ac0e8687d662a70d880954412e387317008a239  cpp-httplib-0.28.0.tar.gz
+"

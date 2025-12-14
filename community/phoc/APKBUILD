@@ -1,0 +1,88 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Contributor: Danct12 <danct12@disroot.org>
+# Contributor: Clayton Craft <clayton@craftyguy.net>
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: team/phosh <newbie13xd@gmail.com>
+pkgname=phoc
+pkgver=0.51.0
+pkgrel=0
+pkgdesc="wlroots based Phone compositor for the Phosh shell"
+arch="all"
+url="https://gitlab.gnome.org/World/Phosh/phoc"
+license="GPL-3.0-only"
+depends="
+	dbus
+	mutter-schemas
+	gsettings-desktop-schemas
+	"
+_wlrootsmakedepends="
+	eudev-dev
+	glslang
+	hwdata-dev
+	libcap-dev
+	libdisplay-info-dev
+	libseat-dev
+	libxcb-dev
+	xcb-util-image-dev
+	xcb-util-renderutil-dev
+	xcb-util-wm-dev
+	xkeyboard-config-dev
+	xwayland-dev
+	"
+makedepends="
+	glib-dev
+	gmobile-dev
+	gnome-desktop-dev
+	json-glib-dev
+	libdrm-dev
+	libinput-dev
+	libxkbcommon-dev
+	mesa-dev
+	meson
+	pixman-dev
+	wayland-dev
+	wayland-protocols
+	$_wlrootsmakedepends
+	"
+checkdepends="xvfb-run"
+subpackages="$pkgname-dbg"
+options="!check" # Needs fullblown EGL
+source="https://sources.phosh.mobi/releases/phoc/phoc-${pkgver/_/.}.tar.xz"
+replaces="wlroots-phosh"
+builddir="$srcdir/$pkgname-${pkgver/_/.}"
+
+prepare() {
+	default_prepare
+
+	patch -Np1 < subprojects/packagefiles/wlroots/0001-Revert-layer-shell-error-on-0-dimension-without-anch.patch \
+		-d subprojects/wlroots-0.19.x
+}
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		-Dembed-wlroots=enabled \
+		-Dtests="$(want_check && echo true || echo false)" \
+		--default-library=static \
+		. output
+	meson compile -C output
+}
+
+check() {
+	xvfb-run -a meson test --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir/" meson install --no-rebuild -C output
+	install -Dm755 tools/scale-to-fit \
+		-t "$pkgdir"/usr/bin
+
+	# remove unneeded wlroots dev. files
+	rm -r "$pkgdir"/usr/include
+	rm -r "$pkgdir"/usr/lib/libwlroots-*.a
+	rm -r "$pkgdir"/usr/lib/pkgconfig
+}
+
+sha512sums="
+4b7eb4ddfa0392a192a61f35c6469aa8407b8e002a16fa8c5ae419c37057882197dfc8ffbbecbddf8b3de3390b770e62f975b55dffa9c1b766ad27c451bcd381  phoc-0.51.0.tar.xz
+"

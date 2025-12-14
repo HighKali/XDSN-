@@ -1,0 +1,54 @@
+# Contributor: crapStone <crapstone01@gmail.com>
+# Maintainer: Clayton Craft <clayton@craftyguy.net>
+pkgname=rbw
+pkgver=1.14.1
+pkgrel=0
+pkgdesc="Unofficial command line client for Bitwarden."
+url="https://git.tozt.net/rbw"
+arch="all"
+license="MIT"
+depends="pinentry"
+makedepends="rust cargo cargo-auditable"
+subpackages="
+	$pkgname-bash-completion
+	$pkgname-fish-completion
+	$pkgname-zsh-completion
+	"
+source="https://git.tozt.net/rbw/snapshot/rbw-$pkgver.tar.gz"
+export CARGO_HOME="$srcdir"/cargo
+
+
+prepare() {
+	default_prepare
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	# p521 fails with stack overflow unless stack size is increased
+	export RUST_MIN_STACK=$((16 * 1024 * 1024))
+	cargo auditable build --frozen --release
+
+	target/release/rbw gen-completions bash > rbw.bash
+	target/release/rbw gen-completions fish > rbw.fish
+	target/release/rbw gen-completions zsh > _rbw
+}
+
+check() {
+	cargo test --frozen
+}
+
+package() {
+	install -Dm755 target/release/rbw "$pkgdir"/usr/bin/rbw
+	install -Dm755 target/release/rbw-agent "$pkgdir"/usr/bin/rbw-agent
+
+	install -Dm644 rbw.bash \
+		"$pkgdir"/usr/share/bash-completion/completions/rbw
+	install -Dm644 rbw.fish \
+		"$pkgdir"/usr/share/fish/vendor_completions.d/rbw.fish
+	install -Dm644 _rbw \
+		"$pkgdir"/usr/share/zsh/site-functions/_rbw
+}
+
+sha512sums="
+e1d6906a1e24da1718a25a6584aaecb1d67824109fd57164c466cdf28c526f875cda965f155e76923081bb37137d91602ad390ed6b4360c4c517c32e09432df4  rbw-1.14.1.tar.gz
+"

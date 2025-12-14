@@ -1,0 +1,28 @@
+# Maintainer: Simon Zeni <simon@bl4ckb0ne.ca>
+pkgname=hare-json
+pkgver=0.25.2.0
+pkgrel=0
+pkgdesc="JSON support for Hare"
+url="https://sr.ht/~sircmpwn/hare-json"
+arch="noarch !armhf !ppc64le !s390x !armv7 !x86 !loongarch64" # hare
+license="MPL-2.0"
+makedepends="hare"
+source="
+	$pkgname-$pkgver.tar.gz::https://git.sr.ht/~sircmpwn/hare-json/archive/$pkgver.tar.gz
+"
+
+build() {
+	make -j1 PREFIX=/usr
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" PREFIX=/usr install
+}
+
+sha512sums="
+a132e0b60851d346fb5be2a60010456a61b08b7b70fe3a0c0550a978986b869e6e7bf2efd87e0b543b37b2f5cac12cda6650089b6a7e1ea38ab8be78c373a9b8  hare-json-0.25.2.0.tar.gz
+"

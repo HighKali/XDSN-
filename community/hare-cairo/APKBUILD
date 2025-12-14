@@ -1,0 +1,22 @@
+# Maintainer: Willow Barraco <contact@willowbarraco.fr>
+pkgname=hare-cairo
+pkgver=0.25.2.0
+pkgrel=0
+pkgdesc="Hare interface to the cairo 2D graphics library"
+url="https://codeberg.org/une/hare-cairo"
+options="!check" # no test suite
+arch="x86_64 aarch64 riscv64" # hare
+license="MPL-1.1"
+makedepends="hare"
+source="
+	$pkgname-$pkgver.tar.gz::https://codeberg.org/une/hare-cairo/archive/$pkgver.tar.gz
+"
+builddir="$srcdir/$pkgname"
+
+package() {
+	make DESTDIR="$pkgdir" PREFIX=/usr install
+}
+
+sha512sums="
+3bb43413b02368dddb7058c4e5f5e95559d4c5ec10b97c3145aaa3cf18432fd86fe9e1238f7d983bb89274259503e42ab3028483bdb75a945bbdd3eb4c17ff3c  hare-cairo-0.25.2.0.tar.gz
+"

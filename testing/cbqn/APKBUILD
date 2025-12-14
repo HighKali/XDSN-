@@ -1,0 +1,40 @@
+# Maintainer: Siva Mahadevan <me@svmhdvn.name>
+pkgname=cbqn
+pkgver=0.10.0
+pkgrel=0
+pkgdesc="BQN implementation in C"
+url="https://github.com/dzaima/CBQN"
+arch="all !armhf !armv7 !s390x" # CBQN fails to compile on these archs
+makedepends="bash libffi-dev"
+license="LGPL-3.0-only OR GPL-3.0-only OR MPL-2.0"
+options="!check" # TODO Testsuite requires fetching mlochbaum/BQN
+_singeli_ver=2936c66b061b9df61cafc1f8d07a7ed53bf10bee
+_replxx_ver=c1ce5b0bcabd96ec93ebf630a85619295ec7c2f3
+_cbqn_bytecode_ver=cca48b93b2e3260d2fa371c578d94cf044e39042
+source="$pkgname-$pkgver.tar.gz::https://github.com/dzaima/CBQN/archive/v$pkgver.tar.gz
+	Singeli-$_singeli_ver.tar.gz::https://github.com/mlochbaum/Singeli/archive/$_singeli_ver.tar.gz
+	replxx-$_replxx_ver.tar.gz::https://github.com/dzaima/replxx/archive/$_replxx_ver.tar.gz
+	cbqnBytecode-$_cbqn_bytecode_ver.tar.gz::https://github.com/dzaima/cbqnBytecode/archive/$_cbqn_bytecode_ver.tar.gz
+	"
+builddir="$srcdir/CBQN-$pkgver"
+
+prepare() {
+	default_prepare
+	ln -s "$srcdir/Singeli-$_singeli_ver" "$builddir/build/singeliLocal"
+	ln -s "$srcdir/replxx-$_replxx_ver" "$builddir/build/replxxLocal"
+	ln -s "$srcdir/cbqnBytecode-$_cbqn_bytecode_ver" "$builddir/build/bytecodeLocal"
+}
+
+build() {
+	make version="$pkgver" notui=1 nogit=1
+}
+
+package() {
+	make PREFIX="/usr" DESTDIR="$pkgdir" install
+}
+sha512sums="
+6f64f132f13d84f93763a55645ef72716cf5fad787c300b4eb67367fafe035394c837abdb2e17b6da4c08cb661d30840f4971abe7fdf6766ef32911b391a398e  cbqn-0.10.0.tar.gz
+bde10e9909d84e0bf40164320a742c23f0cc6775f48971dd3dbda800f6b6689cb2dbece1216a0370ad9686aae1b5d7d8b38efe39312189dfd3734620279a9b4d  Singeli-2936c66b061b9df61cafc1f8d07a7ed53bf10bee.tar.gz
+00499318154c1f46b34933ae835dcdd7094a547057c429b1006250ebf01402efb320f5dae17657a70e23822c15b6dba8596d5feb5c130cab11928ed0e31f6ea2  replxx-c1ce5b0bcabd96ec93ebf630a85619295ec7c2f3.tar.gz
+8ba0bda8e681496dcedc10029d2efa2f43b69865fcd2c8d9d3c99f3d23ef611100dd045fa791893edca1d9b501eead135391ee4745a68adea3885fbd9a5496eb  cbqnBytecode-cca48b93b2e3260d2fa371c578d94cf044e39042.tar.gz
+"

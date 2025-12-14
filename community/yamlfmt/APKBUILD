@@ -1,0 +1,25 @@
+# Maintainer: Thiago Perrotta <tbperrotta@gmail.com>
+pkgname=yamlfmt
+pkgver=0.20.0
+pkgrel=1
+pkgdesc="An extensible command line tool or library to format yaml files"
+url="https://github.com/google/yamlfmt"
+arch="all"
+license="Apache-2.0"
+makedepends="go"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/google/yamlfmt/archive/refs/tags/v$pkgver.tar.gz"
+options="!check net"
+
+build() {
+	go build -o yamlfmt ./cmd/yamlfmt
+}
+
+package() {
+	install -Dm755 yamlfmt "$pkgdir/usr/bin/yamlfmt"
+	install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
+
+sha512sums="
+b0a0f2a72309f1de81c1e66ae84771dbd4d45544b3e46fce979f906119b08db48c5d1b7e3c69a34a57c29c91ce0cf32afcd4aa5b9f5ff2128b461a5f2ef9ee36  yamlfmt-0.20.0.tar.gz
+"

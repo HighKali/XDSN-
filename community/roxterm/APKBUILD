@@ -1,0 +1,36 @@
+# Maintainer: Celeste <cielesti@protonmail.com>
+maintainer="Celeste <cielesti@protonmail.com>"
+pkgname=roxterm
+pkgver=3.17.2
+pkgrel=0
+pkgdesc="Highly configurable terminal emulator"
+url="https://github.com/realh/roxterm"
+arch="all"
+license="GPL-2.0-or-later"
+makedepends="
+	cmake
+	dbus-glib-dev
+	samurai
+	vte3-dev
+	"
+subpackages="$pkgname-doc $pkgname-lang"
+source="$pkgname-$pkgver.tar.gz::https://github.com/realh/roxterm/archive/refs/tags/$pkgver.tar.gz
+	version.patch
+	"
+options="!check" # no tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=None \
+		-DCMAKE_INSTALL_PREFIX=/usr
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+ffad0711ada38a938318275d140de5a4b54a130c5abab748da89d3d76807a3d34537c044bfd09ed0a7d65964952331969d047d374849f8b6179ca41c02846609  roxterm-3.17.2.tar.gz
+23475aaaaa062204bd307e04467a270c4e2d2d24ba4957b7ef2be006db851966bc9fc6d053b08102b18cde070c572115a991eb0de8e0089e10b03a90f3296706  version.patch
+"

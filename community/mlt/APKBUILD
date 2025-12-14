@@ -1,0 +1,92 @@
+# Contributor: Carlo Landmeter <clandmeter@alpinelinux.org>
+# Maintainer: Kevin Daudt <kdaudt@alpinelinux.org>
+pkgname=mlt
+pkgver=7.34.0
+pkgrel=1
+pkgdesc="MLT Multimedia Framework"
+url="https://www.mltframework.org/"
+arch="all"
+license="GPL-2.0-or-later AND LGPL-2.1-or-later AND GPL-3.0-or-later"
+makedepends="
+	cmake
+	ffmpeg-dev
+	fftw-dev
+	frei0r-plugins-dev
+	gtk+2.0-dev
+	jack-dev
+	ladspa-dev
+	libarchive-dev
+	libexif-dev
+	libsamplerate-dev
+	libvorbis-dev
+	libxml2-dev
+	python3-dev
+	qt6-qt5compat-dev
+	qt6-qtbase-dev
+	qt6-qtsvg-dev
+	samurai
+	sdl2-dev
+	sox-dev
+	swig
+	vidstab-dev
+	"
+subpackages="$pkgname-dev $pkgname-doc py3-$pkgname:py3 $pkgname-qt6"
+source="https://github.com/mltframework/mlt/releases/download/v$pkgver/mlt-$pkgver.tar.gz
+	musl.patch
+	"
+
+case $CARCH in
+s390x)
+	_opencv=OFF
+	;;
+*)
+	makedepends="$makedepends opencv-dev"
+	_opencv=ON
+	;;
+esac
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_SKIP_INSTALL_RPATH=ON \
+		-DBUILD_TESTING="$(want_check && echo YES || echo NO)" \
+		-DBUILD_TESTS_WITH_QT6=ON \
+		-DMOD_OPENCV=$_opencv \
+		-DMOD_MOVIT=OFF \
+		-DMOD_PLUS=OFF \
+		-DMOD_RTAUDIO=OFF \
+		-DMOD_RUBBERBAND=OFF \
+		-DMOD_QT=OFF \
+		-DMOD_QT6=ON \
+		-DMOD_GLAXNIMATE_QT6=ON \
+		-DSWIG_PYTHON=ON \
+		-DKwalify_EXECUTABLE=/bin/true
+	cmake --build build
+}
+
+check() (
+	cd build
+	. ../setenv
+	ctest -E 'QtTest:properties'
+)
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+py3() {
+	pkgdesc="$pkgdesc (Python bindings)"
+
+	amove usr/lib/python*
+}
+
+qt6() {
+	amove usr/lib/mlt-7/libmltqt6.so
+	amove usr/lib/mlt-7/libmltglaxnimate-qt6.so
+}
+
+sha512sums="
+90b2ddb4b5c93a566146eace99b0aeca87bcbb66972f8fc1aa9f550e98666c8a76235dfc3c05f05987d03cc629d1481004d6f2b6288e6650a71b33dadfb67528  mlt-7.34.0.tar.gz
+18e8d87b8eda186c60002c31993aa615bebefe40037c76891812f6ff3201b0b8704d928da9f84d3bbda231149d1827448eebf81c5a7081d1afd05505547e479d  musl.patch
+"

@@ -1,0 +1,40 @@
+# Contributor: Saijin-Naib <Saijin-Naib_package-maintenance@outlook.com>
+# Maintainer: Saijin-Naib <Saijin-Naib_package-maintenance@outlook.com>
+pkgname=cobang
+pkgver=1.8.1
+pkgrel=0
+pkgdesc="A QR code and barcode scanner desktop app for Linux"
+url="https://github.com/hongquan/CoBang"
+arch="noarch"
+license="GPL-3.0-or-later"
+depends="gtk4.0 py3-logbook py3-pillow py3-zbar"
+makedepends="
+	appstream-glib
+	blueprint-compiler
+	desktop-file-utils
+	glib-dev
+	gobject-introspection-dev
+	gtk4.0-dev
+	meson
+	"
+subpackages="$pkgname-lang"
+source="$pkgname-$pkgver.tar.gz::https://github.com/hongquan/CoBang/archive/refs/tags/v$pkgver.tar.gz"
+builddir="$srcdir/CoBang-$pkgver/"
+
+build() {
+	abuild-meson \
+		. output
+	meson compile -C output
+}
+
+check() {
+	meson test --no-rebuild --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+e0d49ac2359e9203a85d0ff6fbab495876c323022d09a08de93a21a9cba4eab1e0122614089c0277c621b8bde01d2348c354c75219b365b690654e46cfa63e6b  cobang-1.8.1.tar.gz
+"

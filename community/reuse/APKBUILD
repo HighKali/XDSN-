@@ -1,0 +1,70 @@
+# Contributor: Dhruvin Gandhi <contact@dhru.vin>
+maintainer="Achill Gilgenast <achill@achill.org>"
+pkgname=reuse
+pkgver=5.1.1
+pkgrel=0
+pkgdesc="Tool for compliance with the REUSE recommendations"
+url="https://reuse.software"
+arch="noarch"
+license="Apache-2.0 AND CC-BY-SA-4.0 AND CC0-1.0 AND GPL-3.0-or-later"
+depends="
+	py3-attrs
+	py3-binaryornot
+	py3-boolean.py
+	py3-click
+	py3-debian
+	py3-jinja2
+	py3-license-expression
+	py3-tomlkit
+	"
+makedepends="
+	bash
+	poetry
+	py3-gpep517
+	py3-installer
+	py3-myst-parser
+	py3-poetry-core
+	py3-pbr
+	py3-sphinx
+	py3-sphinxcontrib-apidoc
+	"
+checkdepends="py3-pytest py3-pytest-xdist py3-pytest-cov py3-freezegun"
+subpackages="
+	$pkgname-bash-completion
+	$pkgname-doc
+	$pkgname-fish-completion
+	$pkgname-pyc
+	$pkgname-zsh-completion
+	"
+source="https://files.pythonhosted.org/packages/source/r/reuse/reuse-$pkgver.tar.gz
+	skip-failing-tests.patch"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+	python3 -m venv --system-site-packages --clear --without-pip venv
+	./venv/bin/python3 -m installer .dist/reuse*.whl
+	_REUSE_COMPLETE=bash_source ./venv/bin/reuse >reuse.bash
+	_REUSE_COMPLETE=fish_source ./venv/bin/reuse >reuse.fish
+	_REUSE_COMPLETE=zsh_source ./venv/bin/reuse >reuse.zsh
+	make -C docs man
+}
+
+check() {
+	pytest -n auto
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/reuse*.whl
+	install -Dm644 reuse.bash "$pkgdir"/usr/share/bash-completion/completions/reuse
+	install -Dm644 reuse.fish "$pkgdir"/usr/share/fish/vendor_completions.d/reuse.fish
+	install -Dm644 reuse.zsh "$pkgdir"/usr/share/zsh/site-functions/_reuse
+	install -Dm644 ./docs/_build/man/*.1 -t "$pkgdir/usr/share/man/man1"
+}
+
+sha512sums="
+3c4896cc524bc8301319ade07c83bbdf9455faadf1158ad0fcaec17f59e20f0e3e7912bc26d630b4851231461f12ca634c1f7f54f58d3470699fb7a925ca981f  reuse-5.1.1.tar.gz
+ac8038203ce522b027b2435d1beea05ea2b813eb2e598fc237e5b8fce826e40cf0266f408cbafcdd9c3f6af6fad56e59cae796b42c0e85a578d83e2d11abc2f8  skip-failing-tests.patch
+"
