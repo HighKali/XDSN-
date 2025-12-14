@@ -1,4 +1,7 @@
 
+# zDOS Ethical PenTest Lite 🚀
+=======
+
 # Ai-pine by zdos
 # zDOS Ethical PenTest Lite 🚀
 
@@ -26,4 +29,5 @@ Clona il repo e lancia lo script di setup:
 git clone https://github.com/RZA-pulciz/zdos-ethical-pentest.git
 cd zdos-ethical-pentest
 bash install.sh
+
 
