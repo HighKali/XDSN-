@@ -1,0 +1,12 @@
+# File temporanei e di backup
+*.log
+*.tmp
+*.bak
+
+# Cache Python
+__pycache__/
+*.pyc
+
+# Cartelle di build e temporanee
+.logs/
+.temp/

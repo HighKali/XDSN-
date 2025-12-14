@@ -1,2 +1,1 @@
-# zdos-ethical-pentest
-Ai-pine by zdos
+# zDOS Ethical PenTest Lite 🚀
